@@ -92,6 +92,8 @@ function! s:inc.on_enter(cmdline)
     " disable previous highlight
     nohlsearch
     let s:w = winsaveview()
+    call s:highlighter.add(s:groups.cursor, s:groups.cursor, '\%#', 100)
+    call s:update_hl()
 endfunction
 
 function! s:inc.on_leave(cmdline)
