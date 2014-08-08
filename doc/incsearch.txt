@@ -1,0 +1,111 @@
+*incsearch.txt*	Incrementally highlight all pattern matches
+
+Author  : haya14busa <hayabusa1419@gmail.com>
+Version : 0.0.1
+License : MIT license {{{
+
+	Copyright (c) 2014 haya14busa
+
+	Permission is hereby granted, free of charge, to any person obtaining
+	a copy of this software and associated documentation files (the
+	"Software"), to deal in the Software without restriction, including
+	without limitation the rights to use, copy, modify, merge, publish,
+	distribute, sublicense, and/or sell copies of the Software, and to
+	permit persons to whom the Software is furnished to do so, subject to
+	the following conditions:
+	The above copyright notice and this permission notice shall be
+	included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+	IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+	CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+}}}
+
+CONTENTS				*incsearch-contents*
+
+	Introduction			|incsearch-introduction|
+	Install				|incsearch-install|
+	Usage				|incsearch-usage|
+	Known Issues			|incsearch-known-issues|
+	ChangeLog			|incsearch-changelog|
+
+==============================================================================
+INTRODUCTION					    *incsearch-introduction*
+
+	*incsearch.vim* provide inclemental highlighting for __ALL__ pattern
+	matches unlike default |'incsearch'|.
+	You can use incsearch.vim as improved |/| & |?|.
+
+==============================================================================
+INSTALL						    *incsearch-install*
+
+	Install with |NeoBundle|:
+
+		1. Add the following configuration to your vimrc.
+>
+		NeoBundle 'haya14busa/incsearch'
+<
+		2. Install with |:NeoBundleInstall|.
+
+	Install with |NeoBundleLazy|:
+
+		1. Add the following configuration sample to your vimrc.
+>
+		NeoBundleLazy 'haya14busa/incsearch', {
+		\   'autoload' : {
+		\     'mappings' : ['<Plug>(incsearch-']
+		\   }
+		\ }
+<
+		2. Install with |:NeoBundleInstall|.
+
+
+==============================================================================
+USAGE							*incsearch-usage*
+
+Basic Usage~
+						*<Plug>(incsearch-forward)*
+						*<Plug>(incsearch-backward)*
+						*<Plug>(incsearch-stay)*
+	Write following lines to your vimrc:
+>
+		map /  <Plug>(incsearch-forward)
+		map ?  <Plug>(incsearch-backward)
+		map g/ <Plug>(incsearch-stay)
+<
+    |<Plug>(incsearch-stay)| doesn't move the cursor.
+
+Command line interface~
+
+:IncSearchNoreMap {lhs} {rhs}				*IncSearchNoreMap*
+							*<Inc>(next)*
+							*<Inc>(prev)*
+	Map the key sequence {lhs} to {rhs} for the |incsearch.vim| command
+	line interface.
+
+	Emacs-like incsearch: move the cursor while incremental searching
+>
+		IncSearchNoreMap <Tab>   <Inc>(next)
+		IncSearchNoreMap <S-Tab> <Inc>(prev)
+<
+
+==============================================================================
+KNOWN ISSUES						*incsearch-issues*
+
+	Issues
+	  https://github.com/haya14busa/incsearch/issues
+
+
+==============================================================================
+CHANGELOG						*incsearch-changelog*
+
+0.0.1	2014-08-08
+
+	- Init.
+
+vim:tw=78:ts=8:ft=help:norl:noet:fen:fdl=0:fdm=marker:
