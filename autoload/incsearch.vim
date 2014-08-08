@@ -33,15 +33,26 @@ let s:FALSE = 0
 
 let s:V = vital#of('incsearch')
 
+" Highlight: {{{
+let s:highlighter = s:V.import("Coaster.Highlight").make()
+let s:groups = {
+\   'match'     : 'Search',
+\   'cursor'    : 'Cursor',
+\   'on_cursor' : 'IncSearch',
+\   }
+
+function! s:update_hl()
+    call s:highlighter.disable_all()
+    call s:highlighter.enable_all()
+endfunction
+
+"}}}
+
 " CommandLine Interface: {{{
-" let s:cmdline = s:V.import('Over.Commandline.Base')
 let s:cmdline = s:V.import('Over.Commandline')
 let s:modules = s:V.import('Over.Commandline.Modules')
 
-" let s:search = s:cmdline.make()
 let s:search = s:cmdline.make_default("/")
-
-" let s:search = s:cmdline.make_standard("$ ")
 
 " Add modules
 call s:search.connect('Exit')
@@ -71,12 +82,42 @@ function! s:search.keymapping()
 endfunction
 
 function! s:inc.on_enter(cmdline)
+    let s:w = winsaveview()
 endfunction
 
 function! s:inc.on_leave(cmdline)
+    call s:highlighter.disable_all()
+endfunction
+
+function! s:inc.on_char_pre(cmdline)
+    " XXX: I don't know why, but if you use vital-over in <expr> mapping, some
+    "      unexpected char will be automatically inserted.
+    let charnr = char2nr(s:search.char())
+    if charnr == 128 || charnr == 253 ||
+    \   (exists('s:old_charnr') && s:old_charnr == 253 && charnr == 96)
+        call a:cmdline.setchar('')
+    endif
+    let s:old_charnr = charnr
 endfunction
 
 function! s:inc.on_char(cmdline)
+    call winrestview(s:w)
+    try
+        " get `pattern` and ignore flags
+        let [pattern, flags] = incsearch#parse_pattern(s:search.getline(), s:search.get_prompt())
+        " pseud-move cursor position: this is restored afterward
+        for _ in range(v:count1)
+            call search(pattern, a:cmdline.flag)
+        endfor
+        call s:highlighter.add(s:groups.match, s:groups.match, pattern)
+        call s:highlighter.add(s:groups.on_cursor, s:groups.on_cursor, '\%#' . pattern, 99)
+        call s:highlighter.add(s:groups.cursor, s:groups.cursor, '\%#', 100)
+        call s:update_hl()
+    catch /E867/ " E867: (NFA) Unknown operator
+        call s:highlighter.disable_all()
+    catch
+        echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
+    endtry
 endfunction
 
 call s:search.connect(s:inc)
@@ -93,17 +134,49 @@ function! incsearch#backward()
 endfunction
 
 function! incsearch#stay()
-    " TODO:
-    call incsearch#main('/')
-    return ''
+    call incsearch#main('')
+    return "\<ESC>"
 endfunction
 
 function! incsearch#main(search_key)
-    call s:search.set_prompt(a:search_key)
+    let prompt = a:search_key ==# '' ? '/' : a:search_key
+    call s:search.set_prompt(prompt)
+    let s:search.flag = a:search_key ==# '/' ? ''
+    \                 : a:search_key ==# '?' ? 'b'
+    \                 : a:search_key ==# ''  ? 'n'
+    \                 : ''
     let pattern = s:search.get()
     return a:search_key . pattern . "\<CR>"
 endfunction
 
+"}}}
+
+" Helper: {{{
+function! incsearch#parse_pattern(expr, search_key)
+    " /{pattern}/{flags}
+    " ?{pattern}?{flags}
+    " //{flags}
+    " /{pattern\/pattern}/{flags}
+    " return [{pattern\/pattern}, {flags}]
+    let very_magic = '\v'
+    let pattern  = '(%(\\.|.){-})'
+    let slash = '(\' . a:search_key . '&[^\\"|[:alnum:][:blank:]])'
+    let flags = '(.*)'
+
+    let parse_pattern
+    \       = very_magic
+    \       . pattern
+    \       . '%('
+    \       . slash
+    \       . flags
+    \       . ')?$'
+    let result = matchlist(a:expr, parse_pattern)[1:3]
+    if type(result) == type(0) || empty(result)
+        return []
+    endif
+    unlet result[1]
+    return result
+endfunction
 "}}}
 
 " Restore 'cpoptions' {{{
