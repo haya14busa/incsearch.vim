@@ -114,19 +114,24 @@ function! s:inc.on_char_pre(cmdline)
 endfunction
 
 function! s:inc.on_char(cmdline)
-    call winrestview(s:w)
     try
         " get `pattern` and ignore flags
         let [pattern, flags] = incsearch#parse_pattern(s:search.getline(), s:search.get_prompt())
         " pseud-move cursor position: this is restored afterward
-        for _ in range(v:count1)
-            call search(pattern, a:cmdline.flag)
-        endfor
+        if pattern !=# ''
+            let pattern = incsearch#convert(pattern)
+            call winrestview(s:w)
+            for _ in range(v:count1)
+                call search(pattern, a:cmdline.flag)
+            endfor
+        endif
         call s:highlighter.add(s:groups.match, s:groups.match, pattern)
         call s:highlighter.add(s:groups.on_cursor, s:groups.on_cursor, '\%#' . pattern, 99)
         call s:highlighter.add(s:groups.cursor, s:groups.cursor, '\%#', 100)
         call s:update_hl()
-    catch /E867/ " E867: (NFA) Unknown operator
+    catch /E54:/
+    catch /E55:/
+    catch /E867:/ " E867: (NFA) Unknown operator
         call s:highlighter.disable_all()
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
@@ -201,6 +206,24 @@ function! incsearch#parse_pattern(expr, search_key)
     unlet result[1]
     return result
 endfunction
+
+function! incsearch#convert(pattern)
+    if &ignorecase == s:FALSE
+        return '\C' . a:pattern " noignorecase
+    endif
+
+    if &smartcase == s:FALSE
+        return '\c' . a:pattern " ignorecase & nosmartcase
+    endif
+
+    " FIXME: ignore \\[A-Z] which should be treated as a upper case
+    if a:pattern =~# '\v%(^|[^\\])[A-Z]'
+        return '\C' . a:pattern " smartcase with [A-Z]
+    else
+        return '\c' . a:pattern " smartcase without [A-Z]
+    endif
+endfunction
+
 "}}}
 
 " Restore 'cpoptions' {{{
