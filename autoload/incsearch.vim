@@ -31,6 +31,10 @@ set cpo&vim
 let s:TRUE = !0
 let s:FALSE = 0
 
+" Option:
+let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FALSE)
+
+
 let s:V = vital#of('incsearch')
 
 " Highlight: {{{
@@ -66,6 +70,9 @@ call s:search.connect('ExceptionExit')
 call s:search.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:search.connect(s:modules.get('History').make('/'))
 call s:search.connect(s:modules.get('NoInsert').make_special_chars())
+if g:incsearch#emacs_like_keymap
+    call s:search.connect(s:modules.get('KeyMapping').make_emacs())
+endif
 
 let s:inc = {
 \   "name" : "incsearch",
