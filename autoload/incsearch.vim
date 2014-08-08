@@ -28,17 +28,83 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+let s:TRUE = !0
+let s:FALSE = 0
+
+let s:V = vital#of('incsearch')
+
+" CommandLine Interface: {{{
+" let s:cmdline = s:V.import('Over.Commandline.Base')
+let s:cmdline = s:V.import('Over.Commandline')
+let s:modules = s:V.import('Over.Commandline.Modules')
+
+" let s:search = s:cmdline.make()
+let s:search = s:cmdline.make_default("/")
+
+" let s:search = s:cmdline.make_standard("$ ")
+
+" Add modules
+call s:search.connect('Exit')
+call s:search.connect('Cancel')
+call s:search.connect('DrawCommandline')
+call s:search.connect('Delete')
+call s:search.connect('CursorMove')
+call s:search.connect('Paste')
+call s:search.connect('InsertRegister')
+call s:search.connect('ExceptionExit')
+call s:search.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
+call s:search.connect(s:modules.get('History').make('/'))
+call s:search.connect(s:modules.get('NoInsert').make_special_chars())
+
+let s:inc = {
+\   "name" : "incsearch",
+\}
+
+function! s:search.keymapping()
+    return {
+\       "\<CR>"   : {
+\           "key" : "<Over>(exit)",
+\           "noremap" : 1,
+\           "lock" : 1,
+\       },
+\   }
+endfunction
+
+function! s:inc.on_enter(cmdline)
+endfunction
+
+function! s:inc.on_leave(cmdline)
+endfunction
+
+function! s:inc.on_char(cmdline)
+endfunction
+
+call s:search.connect(s:inc)
+"}}}
+
+" Main: {{{
+
 function! incsearch#forward()
-    return ''
+    return incsearch#main('/')
 endfunction
 
 function! incsearch#backward()
-    return ''
+    return incsearch#main('?')
 endfunction
 
 function! incsearch#stay()
+    " TODO:
+    call incsearch#main('/')
     return ''
 endfunction
+
+function! incsearch#main(search_key)
+    call s:search.set_prompt(a:search_key)
+    let pattern = s:search.get()
+    return a:search_key . pattern . "\<CR>"
+endfunction
+
+"}}}
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
