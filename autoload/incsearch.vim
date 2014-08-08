@@ -133,27 +133,38 @@ call s:search.connect(s:inc)
 " Main: {{{
 
 function! incsearch#forward()
-    return incsearch#main('/')
+    return incsearch#search('/')
 endfunction
 
 function! incsearch#backward()
-    return incsearch#main('?')
+    return incsearch#search('?')
 endfunction
 
 function! incsearch#stay()
-    call incsearch#main('')
+    let pattern = incsearch#get('')
+    call histadd(pattern)
+    let @/ = pattern
     return "\<ESC>"
 endfunction
 
-function! incsearch#main(search_key)
+function! incsearch#get(search_key)
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:search.set_prompt(prompt)
     let s:search.flag = a:search_key ==# '/' ? ''
     \                 : a:search_key ==# '?' ? 'b'
     \                 : a:search_key ==# ''  ? 'n'
     \                 : ''
-    let pattern = s:search.get()
-    return a:search_key . pattern . "\<CR>"
+    return s:search.get()
+endfunction
+
+function! incsearch#search(search_key)
+    let pattern = incsearch#get(a:search_key)
+    if (s:search.exit_code() == 0)
+        return a:search_key . pattern . "\<CR>"
+    else
+        " Cancel
+        return "\<ESC>"
+    endif
 endfunction
 
 "}}}
