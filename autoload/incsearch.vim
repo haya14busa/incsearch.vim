@@ -146,7 +146,7 @@ endfunction
 
 function! incsearch#stay()
     let pattern = incsearch#get('')
-    call histadd(pattern)
+    call histadd('/', pattern)
     let @/ = pattern
     return "\<ESC>"
 endfunction
