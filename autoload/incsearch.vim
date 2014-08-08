@@ -89,11 +89,15 @@ function! s:search.keymapping()
 endfunction
 
 function! s:inc.on_enter(cmdline)
+    " disable previous highlight
+    nohlsearch
     let s:w = winsaveview()
 endfunction
 
 function! s:inc.on_leave(cmdline)
     call s:highlighter.disable_all()
+    " redraw: hide pseud-cursor
+    echo s:search.get_prompt() . s:search.getline()
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
