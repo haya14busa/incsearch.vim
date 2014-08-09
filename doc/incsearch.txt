@@ -87,15 +87,27 @@ Command line interface~
 					*incsearch-commandline-interface*
 
 :IncSearchNoreMap {lhs} {rhs}				*IncSearchNoreMap*
+
+	Map the key sequence {lhs} to {rhs} for the |incsearch.vim| command
+	line interface. This command doesn't loaded while loading your vimrc,
+	so please call by |VimEnter| or |neobundle-hooks-on_post_source| if
+	you use |NeoBundle|.
+
 							*<Over>(incsearch-next)*
 							*<Over>(incsearch-prev)*
-	Map the key sequence {lhs} to {rhs} for the |incsearch.vim| command
-	line interface.
-
 	Emacs-like incsearch: move the cursor while incremental searching
+
+	<Over>(incsearch-next)   to the next match. default: <Tab>
+	<Over>(incsearch-prev)   to the prev match. default: <S-Tab>
 >
-		IncSearchNoreMap <Tab>   <Inc>(next)
-		IncSearchNoreMap <S-Tab> <Inc>(prev)
+		augroup incsearch-keymap
+		    autocmd!
+		    autocmd VimEnter call s:incsearch_keymap()
+		augroup END
+		function! s:incsearch_keymap()
+		    IncSearchNoreMap <Right> <Over>(incsearch-next)
+		    IncSearchNoreMap <Left>  <Over>(incsearch-prev)
+		endfunction
 <
 						*g:incsearch#emacs_like_keymap*
 	It enable Emacs-like keymappings if you set
@@ -117,12 +129,18 @@ Command line interface~
 Buffer completion			*incsearch-<Over>(buffer-complete)*
 	Completion with the buffer text.
 
-	    <Over>(buffer-complete): start buffer text completion
-	    <Right>  : move to the next candidate while completion
-	    <Left>   : move to the previous candidate while completion
+	<Over>(buffer-complete)  start buffer text completion. default: <C-l>
+	<Right>			 select next candidate while completion
+	<Left>			 select candidate while completion
 
 	Example: >
-		IncSearchNoreMap <C-l> <Over>(buffer-complete)
+		augroup incsearch-keymap
+		    autocmd!
+		    autocmd VimEnter call s:incsearch_keymap()
+		augroup END
+		function! s:incsearch_keymap()
+		    IncSearchNoreMap <Tab> <Over>(buffer-complete)
+		endfunction
 <
 ------------------------------------------------------------------------------
 Highlight ~

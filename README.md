@@ -24,11 +24,18 @@ map g/ <Plug>(incsearch-stay)
 
 ### Command Line Interface Keymappings
 incsearch.vim use custom command line interface, so it provide custom
-keymapping interface(`IncSearchNoreMap`) like `cnoremap`.
+keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
+in your vimrc, please call it by `VimEnter`.
 
-```
-IncSearchNoreMap <C-f> <Right>
-IncSearchNoreMap <C-b> <Left>
+```vim
+augroup incsearch-keymap
+    autocmd!
+    autocmd VimEnter call s:incsearch_keymap()
+augroup END
+function! s:incsearch_keymap()
+    IncSearchNoreMap <C-f> <Right>
+    IncSearchNoreMap <C-b> <Left>
+endfunction
 ```
 
 #### Emacs-like keymappings
@@ -57,18 +64,21 @@ let g:incsearch#emacs_like_keymap = 1
 ### Emacs-like incsearch: move the cursor while incremental searching
 TODO: cool gif!
 
-```vim
-IncSearchNoreMap <Tab>   <Over>(incsearch-next)
-IncSearchNoreMap <S-Tab> <Over>(incsearch-prev)
-```
 Move the cursor to next/previous matches while incremental searching like Emacs.
+
+| Mapping                  | description                       |
+| ------------------------ | --------------------------------- |
+| `<Over>(incsearch-next)` | to next match. default: `<Tab>`   |
+| `<Over>(incsearch-prev)` | to prev match. default: `<S-Tab>` |
+
 
 ### BufferCompletion
 TODO: cool gif!
 
-```vim
-IncSearchNoreMap <C-l> <Over>(buffer-complete)
-```
+| Mapping                   | description                         |
+| ------------------------- | ----------------------------------  |
+| `<Over>(buffer-complete)` | buffer completion. default: `<C-l>` |
+
 
 ### Highlight
 
