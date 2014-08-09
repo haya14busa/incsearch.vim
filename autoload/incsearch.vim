@@ -65,10 +65,13 @@ let s:default_highlight = {
 \       'priority' : '51'
 \   },
 \ }
-let g:incsearch#highlight = {}
-let g:incsearch#highlight = extend(s:default_highlight, get(g:, 'incsearch#highlight', {}))
-function! s:hig() " highlight group management
-    return extend(s:default_highlight, g:incsearch#highlight)
+let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
+function! s:hgm() " highlight group management
+    let hgm = copy(s:default_highlight)
+    for key in keys(hgm)
+        call extend(hgm[key], get(g:incsearch#highlight, key, {}))
+    endfor
+    return hgm
 endfunction
 
 function! s:update_hl()
@@ -119,8 +122,8 @@ function! s:inc.on_enter(cmdline)
     " disable previous highlight
     nohlsearch
     let s:w = winsaveview()
-    let hig = s:hig()
-    let c = hig.cursor
+    let hgm = s:hgm()
+    let c = hgm.cursor
     call s:hi.add(c.group, c.group, '\%#', c.priority)
     call s:update_hl()
 endfunction
@@ -166,10 +169,10 @@ function! s:inc.on_char(cmdline)
                 call search(pattern, a:cmdline.flag)
             endfor
         endif
-        let hig = s:hig()
-        call s:hi.add(hig.match.group, hig.match.group, pattern, hig.match.priority)
-        call s:hi.add(hig.on_cursor.group, hig.on_cursor.group, '\%#' . pattern, hig.on_cursor.priority)
-        call s:hi.add(hig.cursor.group, hig.cursor.group, '\%#', hig.cursor.priority)
+        let hgm = s:hgm()
+        call s:hi.add(hgm.match.group, hgm.match.group, pattern, hgm.match.priority)
+        call s:hi.add(hgm.on_cursor.group, hgm.on_cursor.group, '\%#' . pattern, hgm.on_cursor.priority)
+        call s:hi.add(hgm.cursor.group, hgm.cursor.group, '\%#', hgm.cursor.priority)
         call s:update_hl()
     catch /E53:/ " E53: Unmatched %(
     catch /E54:/
