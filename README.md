@@ -5,8 +5,8 @@ TODO: cool gif!
 
 Introduction
 ------------
-Incrementally highlight __ALL__ pattern matches unlike default 'incsearch'.
-You can use incsearch.vim as improved `/` & `?`.
+incsearch.vim incrementally highlight __ALL__ pattern matches unlike default
+'incsearch'.
 
 Usage
 -----
@@ -22,14 +22,90 @@ map g/ <Plug>(incsearch-stay)
 
 `<Plug>(incsearch-stay)` doesn't move the cursor.
 
+### Command Line Interface Keymappings
+incsearch.vim use custom command line interface, so it provide custom
+keymapping interface(`IncSearchNoreMap`) like `cnoremap`.
+
+```
+IncSearchNoreMap <C-f> <Right>
+IncSearchNoreMap <C-b> <Left>
+```
+
+#### Emacs-like keymappings
+
+If you want to set emacs-like keymappings, just set `g:incsearch#emacs_like_keymap`
+to 1 and basic emacs-like keymappings will be set.
+
+```vim
+let g:incsearch#emacs_like_keymap = 1
+```
+
+#### Emacs-like keymapping table
+
+| {lhs}    | {rhs}      |
+|--------- |----------- |
+| `<C-f>`  | `<Right>`  |
+| `<C-b>`  | `<Left>`   |
+| `<C-n>`  | `<Down>`   |
+| `<C-p>`  | `<Up>`     |
+| `<C-a>`  | `<Home>`   |
+| `<C-e>`  | `<End>`    |
+| `<C-d>`  | `<Del>`    |
+| `<A-d>`  | `<C-w>`    |
+
+
 ### Emacs-like incsearch: move the cursor while incremental searching
 TODO: cool gif!
 
 ```vim
-IncSearchNoreMap <Tab>   <Inc>(next)
-IncSearchNoreMap <S-Tab> <Inc>(prev)
+IncSearchNoreMap <Tab>   <Over>(incsearch-next)
+IncSearchNoreMap <S-Tab> <Over>(incsearch-prev)
 ```
-Move the cursor to next and previous matches while incremental searching like Emacs.
+Move the cursor to next/previous matches while incremental searching like Emacs.
+
+### BufferCompletion
+TODO: cool gif!
+
+```vim
+IncSearchNoreMap <C-l> <Over>(buffer-complete)
+```
+
+### Highlight
+
+#### highlight group
+
+| highlight group      | description                                                 |
+| -------------------  | ----------------------------------------------------------- |
+| `IncSearchMatch`     | For all matched pattern. default: `Search`                  |
+| `IncSearchOnCursor`  | For the matched pattern on the cursor. default: `IncSearch` |
+| `IncSearchCursor`    | For cursor position. default: `Cursor`                      |
+| `IncSearchUnderline` | It's not used by default. Just for the customization        |
+
+#### custom highlight
+
+Change cursor color to red
+
+```vim
+highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
+```
+
+or use the `g:incsearch#highlight` option like this.
+
+```vim
+let g:incsearch#highlight = {
+\   'match' : {
+\     'group' : 'IncSearchUnderline',
+\     'priority' : '10'
+\   },
+\   'on_cursor' : {
+\     'priority' : '100'
+\   },
+\   'cursor' : {
+\     'group' : 'ErrorMsg',
+\     'priority' : '1000'
+\   }
+\ }
+```
 
 Author
 ------
@@ -37,8 +113,9 @@ haya14busa (https://github.com/haya14busa)
 
 Special thanks
 --------------
-osyo-manga(https://github.com/osyo-manga), the author of https://github.com/osyo-manga/vital-over
-library which is custome command line library and incsearch.vim heavily depends on.
+osyo-manga(https://github.com/osyo-manga), the author of
+https://github.com/osyo-manga/vital-over which is custom command line library
+and incsearch.vim heavily depends on.
 
 License
 -------

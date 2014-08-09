@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.0.1
+Version : 0.9.0
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -78,13 +78,17 @@ Basic Usage~
 		map ?  <Plug>(incsearch-backward)
 		map g/ <Plug>(incsearch-stay)
 <
-    |<Plug>(incsearch-stay)| doesn't move the cursor.
+    <Plug>(incsearch-forward)  : Incremental searching to forward
+    <Plug>(incsearch-backward) : Incremental searching to backward
+    <Plug>(incsearch-stay)     : doesn't move the cursor.
 
+------------------------------------------------------------------------------
 Command line interface~
+					*incsearch-commandline-interface*
 
 :IncSearchNoreMap {lhs} {rhs}				*IncSearchNoreMap*
-							*<Inc>(next)*
-							*<Inc>(prev)*
+							*<Over>(incsearch-next)*
+							*<Over>(incsearch-prev)*
 	Map the key sequence {lhs} to {rhs} for the |incsearch.vim| command
 	line interface.
 
@@ -92,6 +96,75 @@ Command line interface~
 >
 		IncSearchNoreMap <Tab>   <Inc>(next)
 		IncSearchNoreMap <S-Tab> <Inc>(prev)
+<
+						*g:incsearch#emacs_like_keymap*
+	It enable Emacs-like keymappings if you set
+	|g:incsearch#emacs_like_keymap| to 1. default: 0
+
+		Emacs-like keymapping table~
+
+		{lhs}  | {rhs}
+		-------|----------
+		<C-f>  | |<Right>|
+		<C-b>  | |<Left>|
+		<C-n>  | |<Down>|
+		<C-p>  | |<Up>|
+		<C-a>  | |<Home>|
+		<C-e>  | |<End>|
+		<C-d>  | |<Del>|
+		<A-d>  | |<C-w>|
+
+Buffer completion			*incsearch-<Over>(buffer-complete)*
+	Completion with the buffer text.
+
+	    <Over>(buffer-complete): start buffer text completion
+	    <Right>  : move to the next candidate while completion
+	    <Left>   : move to the previous candidate while completion
+
+	Example: >
+		IncSearchNoreMap <C-l> <Over>(buffer-complete)
+<
+------------------------------------------------------------------------------
+Highlight ~
+							*incsearch-highlight*
+
+Highlight Group ~
+						    *incsearch-highlight-group*
+
+    | highlight group    | description                                     |
+    | -------------------| ---------------------------------------------   |
+    | *IncSearchMatch*     | For all matched pattern. default: `Search`        |
+    | *IncSearchOnCursor*  | For the matched pattern on the cursor.          |
+    |                    | default: `IncSearch`                              |
+    | *IncSearchCursor*    | For cursor position. default: `Cursor`            |
+    | *IncSearchUnderline* | It's not used by default. For the customization |
+
+Customize highlight ~
+
+	Change cursor color to red
+
+	Example: >
+
+    highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
+<
+							*g:incsearch#highlight*
+	or use the |g:incsearch#highlight| option.
+
+	Example: >
+
+		let g:incsearch#highlight = {
+		\   'match' : {
+		\     'group' : 'IncSearchUnderline',
+		\     'priority' : '10'
+		\   },
+		\   'on_cursor' : {
+		\     'priority' : '100'
+		\   },
+		\   'cursor' : {
+		\     'group' : 'ErrorMsg',
+		\     'priority' : '1000'
+		\   }
+		\ }
 <
 
 ==============================================================================
@@ -104,7 +177,7 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
-0.0.1	2014-08-08
+0.9.0	2014-08-08
 
 	- Init.
 
