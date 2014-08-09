@@ -143,6 +143,14 @@ function! s:inc.on_char_pre(cmdline)
     endif
     let s:old_charnr = charnr
     " }}}
+
+    if a:cmdline.is_input("<Over>(incsearch-next)")
+        let s:search.vcount1 += 1
+        call a:cmdline.setchar('')
+    elseif a:cmdline.is_input("<Over>(incsearch-prev)")
+        let s:search.vcount1 = max([1, s:search.vcount1 - 1])
+        call a:cmdline.setchar('')
+    endif
 endfunction
 
 function! s:inc.on_char(cmdline)
@@ -153,7 +161,7 @@ function! s:inc.on_char(cmdline)
         if pattern !=# ''
             let pattern = incsearch#convert(pattern)
             call winrestview(s:w)
-            for _ in range(v:count1)
+            for _ in range(s:search.vcount1)
                 call search(pattern, a:cmdline.flag)
             endfor
         endif
@@ -215,6 +223,7 @@ endfunction
 
 function! incsearch#get(search_key)
     " if search_key is empty, it means `stay` & do not move cursor
+    let s:search.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:search.set_prompt(prompt)
     let s:search.flag = a:search_key ==# '/' ? ''
@@ -227,9 +236,8 @@ endfunction
 function! incsearch#search(search_key)
     let pattern = incsearch#get(a:search_key)
     if (s:search.exit_code() == 0)
-        return a:search_key . pattern . "\<CR>"
-    else
-        " Cancel
+        return "\<ESC>" . s:search.vcount1 . a:search_key . pattern . "\<CR>"
+    else " Cancel
         return "\<ESC>"
     endif
 endfunction
