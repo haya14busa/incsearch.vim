@@ -158,6 +158,7 @@ function! s:inc.on_char(cmdline)
         call s:hi.add(hig.on_cursor.group, hig.on_cursor.group, '\%#' . pattern, hig.on_cursor.priority)
         call s:hi.add(hig.cursor.group, hig.cursor.group, '\%#', hig.cursor.priority)
         call s:update_hl()
+    catch /E53:/ " E53: Unmatched %(
     catch /E54:/
     catch /E55:/
     catch /E867:/ " E867: (NFA) Unknown operator
@@ -188,6 +189,7 @@ function! incsearch#stay()
 endfunction
 
 function! incsearch#get(search_key)
+    " if search_key is empty, it means `stay` & do not move cursor
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:search.set_prompt(prompt)
     let s:search.flag = a:search_key ==# '/' ? ''
