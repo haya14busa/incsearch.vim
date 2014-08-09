@@ -45,6 +45,7 @@ function! s:init_hl()
     hi link IncSearchMatch Search
     hi link IncSearchCursor Cursor
     hi link IncSearchOnCursor IncSearch
+    hi IncSearchUnderline term=underline cterm=underline gui=underline
 endfunction
 call s:init_hl()
 augroup plugin-incsearch-highlight
