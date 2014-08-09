@@ -185,9 +185,10 @@ function! s:inc.on_char(cmdline)
         let m = hgm.match
         let o = hgm.on_cursor
         let c = hgm.cursor
-        call s:hi.add(m.group , m.group , pattern         , m.priority)
-        call s:hi.add(o.group , o.group , '\%#' . pattern , o.priority)
-        call s:hi.add(c.group , c.group , '\%#'           , c.priority)
+        let on_cursor_pattern = '\v%#(\M' . pattern . '\v)'
+        call s:hi.add(m.group , m.group , pattern           , m.priority)
+        call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
+        call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
         call s:update_hl()
     catch /E53:/ " E53: Unmatched %(
     catch /E54:/
