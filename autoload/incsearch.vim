@@ -168,6 +168,27 @@ function! s:inc.on_char(cmdline)
     endtry
 endfunction
 
+" KeyMapping Interface: {{{
+function! incsearch#cmap(args)
+    let lhs = s:as_keymapping(a:args[0])
+    let rhs = s:as_keymapping(a:args[1])
+    call s:search.cmap(lhs, rhs)
+endfunction
+function! incsearch#cnoremap(args)
+    let lhs = s:as_keymapping(a:args[0])
+    let rhs = s:as_keymapping(a:args[1])
+    call s:search.cnoremap(lhs, rhs)
+endfunction
+function! incsearch#cunmap(lhs)
+    let lhs = s:as_keymapping(a:lhs)
+    call s:search.cunmap(lhs)
+endfunction
+function! s:as_keymapping(key)
+    execute 'let result = "' . substitute(a:key, '\(<.\{-}>\)', '\\\1', 'g') . '"'
+    return result
+endfunction
+"}}}
+
 call s:search.connect(s:inc)
 "}}}
 

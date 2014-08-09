@@ -42,6 +42,12 @@ noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward()
 noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward()
 noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay()
 
+" CommandLine Mapping {{{
+command! -nargs=* IncSearchNoreMap call incsearch#cnoremap([<f-args>])
+command! -nargs=* IncSearchMap     call incsearch#cmap([<f-args>])
+command! -nargs=1 IncSearchUnMap   call incsearch#cunmap(<f-args>)
+"}}}
+
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
 unlet s:save_cpo
