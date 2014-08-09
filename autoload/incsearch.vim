@@ -56,12 +56,12 @@ let s:default_highlight = {
 \       'group'    : 'IncSearchMatch',
 \       'priority' : '49'
 \   },
-\   'cursor' : {
-\       'group'    : 'IncSearchCursor',
-\       'priority' : '50'
-\   },
 \   'on_cursor' : {
 \       'group'    : 'IncSearchOnCursor',
+\       'priority' : '50'
+\   },
+\   'cursor' : {
+\       'group'    : 'IncSearchCursor',
 \       'priority' : '51'
 \   },
 \ }
