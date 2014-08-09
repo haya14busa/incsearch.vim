@@ -245,8 +245,10 @@ function! incsearch#convert(pattern)
         return '\c' . a:pattern " ignorecase & nosmartcase
     endif
 
-    " FIXME: ignore \\[A-Z] which should be treated as a upper case
-    if a:pattern =~# '\v%(^|[^\\])[A-Z]'
+    " Find uppercase letter which isn't' escaped
+    let very_magic = '\v'
+    let escaped_backslash = '%(^|[^\\])%(\\\\)*'
+    if a:pattern =~# very_magic . escaped_backslash . '[A-Z]'
         return '\C' . a:pattern " smartcase with [A-Z]
     else
         return '\c' . a:pattern " smartcase without [A-Z]
