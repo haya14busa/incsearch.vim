@@ -218,16 +218,34 @@ function! s:get_pattern(search_key)
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
     let s:cli.flag = a:search_key ==# '/' ? ''
-    \                 : a:search_key ==# '?' ? 'b'
-    \                 : a:search_key ==# ''  ? 'n'
-    \                 : ''
+    \              : a:search_key ==# '?' ? 'b'
+    \              : a:search_key ==# ''  ? 'n'
+    \              : ''
+
     return s:cli.get()
 endfunction
 
 function! s:search(search_key)
-    let pattern = s:get_pattern(a:search_key)
-    " Handle operator-pending mode
     let m = mode(1)
+
+    " Get pattern {{{
+    if (m =~# "[vV\<C-v>]") " Handle visual mode highlight
+        let visual_hl = s:highlight_capture('Visual')
+        try
+
+            call s:turn_off(visual_hl)
+            " TODO: Custom visual highlight
+            call s:pseud_visual_highlight()
+            let pattern = s:get_pattern(a:search_key)
+        finally
+            call s:turn_on(visual_hl)
+        endtry
+    else
+        let pattern = s:get_pattern(a:search_key)
+    endif
+    "}}}
+
+    " Handle operator-pending mode
     let op = (m == 'no')          ? v:operator
     \      : (m =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
@@ -279,7 +297,55 @@ function! incsearch#convert(pattern)
     endif
 endfunction
 
+function!s:highlight_capture(hlname) "{{{
+    " Based On: https://github.com/t9md/vim-ezbar
+    "           https://github.com/osyo-manga/vital-over
+    let hlname = a:hlname
+    if !hlexists(hlname)
+        return
+    endif
+    while 1
+        let save_verbose = &verbose
+        let &verbose = 0
+        try
+            redir => HL_SAVE
+            execute 'silent! highlight ' . hlname
+            redir END
+        finally
+            let &verbose = save_verbose
+        endtry
+        if !empty(matchstr(HL_SAVE, 'xxx cleared$'))
+            return ''
+        endif
+        " follow highlight link
+        let ml = matchlist(HL_SAVE, 'links to \zs.*')
+        if !empty(ml)
+            let hlname = ml[0]
+            continue
+        endif
+        break
+    endwhile
+    let HL_SAVE = substitute(matchstr(HL_SAVE, 'xxx \zs.*'),
+                           \ '[ \t\n]\+', ' ', 'g')
+    " return [hlname, HL_SAVE]
+    return { 'name': hlname, 'highlight': HL_SAVE }
+endfunction "}}}
+
+function! s:turn_off(highlight)
+    execute 'highlight' a:highlight.name 'NONE'
+endfunction
+
+function! s:turn_on(highlight)
+    execute 'highlight' a:highlight.name a:highlight.highlight
+endfunction
+
+function! s:pseud_visual_highlight()
+    " TODO
+endfunction
+
 "}}}
+
+
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
