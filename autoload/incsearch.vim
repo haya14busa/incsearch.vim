@@ -188,7 +188,7 @@ function! s:inc.on_char(cmdline)
         let m = hgm.match
         let o = hgm.on_cursor
         let c = hgm.cursor
-        let on_cursor_pattern = '\v%#(\M' . pattern . '\v)'
+        let on_cursor_pattern = '\M\%#(' . pattern . '\M\)'
         call s:hi.add(m.group , m.group , pattern           , m.priority)
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
