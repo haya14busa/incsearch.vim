@@ -236,7 +236,6 @@ function! s:search(search_key)
     if (m =~# "[vV\<C-v>]") " Handle visual mode highlight
         let visual_hl = s:highlight_capture('Visual')
         try
-
             call s:turn_off(visual_hl)
             call s:pseud_visual_highlight(visual_hl, m)
             let pattern = s:get_pattern(a:search_key)
@@ -290,7 +289,7 @@ function! incsearch#convert(pattern)
         return '\c' . a:pattern " ignorecase & nosmartcase
     endif
 
-    " Find uppercase letter which isn't' escaped
+    " Find uppercase letter which isn't escaped
     let very_magic = '\v'
     let escaped_backslash = '%(^|[^\\])%(\\\\)*'
     if a:pattern =~# very_magic . escaped_backslash . '[A-Z]'
@@ -330,7 +329,6 @@ function!s:highlight_capture(hlname) "{{{
     endwhile
     let HL_SAVE = substitute(matchstr(HL_SAVE, 'xxx \zs.*'),
                            \ '[ \t\n]\+', ' ', 'g')
-    " return [hlname, HL_SAVE]
     return { 'name': hlname, 'highlight': HL_SAVE }
 endfunction "}}}
 
@@ -381,7 +379,6 @@ function! s:is_pos_less_equal(x, y)
 endfunction
 
 "}}}
-
 
 
 " Restore 'cpoptions' {{{
