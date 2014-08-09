@@ -33,6 +33,7 @@ let s:FALSE = 0
 
 " Option:
 let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FALSE)
+let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
 
 
 let s:V = vital#of('incsearch')
@@ -65,7 +66,6 @@ let s:default_highlight = {
 \       'priority' : '51'
 \   },
 \ }
-let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
 function! s:hgm() " highlight group management
     let hgm = copy(s:default_highlight)
     for key in keys(hgm)
@@ -82,33 +82,28 @@ endfunction
 "}}}
 
 " CommandLine Interface: {{{
-let s:cmdline = s:V.import('Over.Commandline')
+let s:cli = s:V.import('Over.Commandline').make_default("/")
 let s:modules = s:V.import('Over.Commandline.Modules')
 
-let s:search = s:cmdline.make_default("/")
-
 " Add modules
-call s:search.connect('BufferComplete')
-call s:search.connect('Cancel')
-call s:search.connect('CursorMove')
-call s:search.connect('Delete')
-call s:search.connect('DrawCommandline')
-call s:search.connect('ExceptionExit')
-call s:search.connect('Exit')
-call s:search.connect('InsertRegister')
-call s:search.connect('Paste')
-call s:search.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
-call s:search.connect(s:modules.get('History').make('/'))
-call s:search.connect(s:modules.get('NoInsert').make_special_chars())
+call s:cli.connect('BufferComplete')
+call s:cli.connect('Cancel')
+call s:cli.connect('CursorMove')
+call s:cli.connect('Delete')
+call s:cli.connect('DrawCommandline')
+call s:cli.connect('ExceptionExit')
+call s:cli.connect('Exit')
+call s:cli.connect('InsertRegister')
+call s:cli.connect('Paste')
+call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
+call s:cli.connect(s:modules.get('History').make('/'))
+call s:cli.connect(s:modules.get('NoInsert').make_special_chars())
 if g:incsearch#emacs_like_keymap
-    call s:search.connect(s:modules.get('KeyMapping').make_emacs())
+    call s:cli.connect(s:modules.get('KeyMapping').make_emacs())
 endif
 
-let s:inc = {
-\   "name" : "incsearch",
-\}
 
-function! s:search.keymapping()
+function! s:cli.keymapping()
     return {
 \       "\<CR>"   : {
 \           "key" : "<Over>(exit)",
@@ -118,9 +113,12 @@ function! s:search.keymapping()
 \   }
 endfunction
 
+let s:inc = {
+\   "name" : "incsearch",
+\}
+
 function! s:inc.on_enter(cmdline)
-    " disable previous highlight
-    nohlsearch
+    nohlsearch " disable previous highlight
     let s:w = winsaveview()
     let hgm = s:hgm()
     let c = hgm.cursor
@@ -133,14 +131,14 @@ function! s:inc.on_leave(cmdline)
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
     redraw
-    echo s:search.get_prompt() . s:search.getline()
+    echo s:cli.get_prompt() . s:cli.getline()
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
-    " Filter unexpected char {{{
+    " Filter unexpected chars {{{
     " XXX: I don't know why, but if you use vital-over in <expr> mapping, some
-    "      unexpected char will be automatically inserted.
-    let charnr = char2nr(s:search.char())
+    "      unexpected chars will be automatically inserted.
+    let charnr = char2nr(s:cli.char())
     if charnr == 128 || charnr == 253 ||
     \   (exists('s:old_charnr') && s:old_charnr == 253 && charnr == 96)
         call a:cmdline.setchar('')
@@ -149,10 +147,10 @@ function! s:inc.on_char_pre(cmdline)
     " }}}
 
     if a:cmdline.is_input("<Over>(incsearch-next)")
-        let s:search.vcount1 += 1
+        let s:cli.vcount1 += 1
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
-        let s:search.vcount1 = max([1, s:search.vcount1 - 1])
+        let s:cli.vcount1 = max([1, s:cli.vcount1 - 1])
         call a:cmdline.setchar('')
     endif
 endfunction
@@ -160,19 +158,22 @@ endfunction
 function! s:inc.on_char(cmdline)
     try
         " get `pattern` and ignore flags
-        let [pattern, flags] = incsearch#parse_pattern(s:search.getline(), s:search.get_prompt())
+        let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
         " pseud-move cursor position: this is restored afterward
         if pattern !=# ''
             let pattern = incsearch#convert(pattern)
             call winrestview(s:w)
-            for _ in range(s:search.vcount1)
+            for _ in range(s:cli.vcount1)
                 call search(pattern, a:cmdline.flag)
             endfor
         endif
         let hgm = s:hgm()
-        call s:hi.add(hgm.match.group, hgm.match.group, pattern, hgm.match.priority)
-        call s:hi.add(hgm.on_cursor.group, hgm.on_cursor.group, '\%#' . pattern, hgm.on_cursor.priority)
-        call s:hi.add(hgm.cursor.group, hgm.cursor.group, '\%#', hgm.cursor.priority)
+        let m = hgm.match
+        let o = hgm.on_cursor
+        let c = hgm.cursor
+        call s:hi.add(m.group , m.group , pattern         , m.priority)
+        call s:hi.add(o.group , o.group , '\%#' . pattern , o.priority)
+        call s:hi.add(c.group , c.group , '\%#'           , c.priority)
         call s:update_hl()
     catch /E53:/ " E53: Unmatched %(
     catch /E54:/
@@ -188,16 +189,16 @@ endfunction
 function! incsearch#cmap(args)
     let lhs = s:as_keymapping(a:args[0])
     let rhs = s:as_keymapping(a:args[1])
-    call s:search.cmap(lhs, rhs)
+    call s:cli.cmap(lhs, rhs)
 endfunction
 function! incsearch#cnoremap(args)
     let lhs = s:as_keymapping(a:args[0])
     let rhs = s:as_keymapping(a:args[1])
-    call s:search.cnoremap(lhs, rhs)
+    call s:cli.cnoremap(lhs, rhs)
 endfunction
 function! incsearch#cunmap(lhs)
     let lhs = s:as_keymapping(a:lhs)
-    call s:search.cunmap(lhs)
+    call s:cli.cunmap(lhs)
 endfunction
 function! s:as_keymapping(key)
     execute 'let result = "' . substitute(a:key, '\(<.\{-}>\)', '\\\1', 'g') . '"'
@@ -205,44 +206,44 @@ function! s:as_keymapping(key)
 endfunction
 "}}}
 
-call s:search.connect(s:inc)
+call s:cli.connect(s:inc)
 "}}}
 
 " Main: {{{
 
 function! incsearch#forward()
-    return incsearch#search('/')
+    return s:search('/')
 endfunction
 
 function! incsearch#backward()
-    return incsearch#search('?')
+    return s:search('?')
 endfunction
 
 function! incsearch#stay()
-    let pattern = incsearch#get('')
+    let pattern = s:get_pattern('')
     call histadd('/', pattern)
     let @/ = pattern
     return "\<ESC>"
 endfunction
 
-function! incsearch#get(search_key)
+function! s:get_pattern(search_key)
     " if search_key is empty, it means `stay` & do not move cursor
-    let s:search.vcount1 = v:count1
+    let s:cli.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
-    call s:search.set_prompt(prompt)
-    let s:search.flag = a:search_key ==# '/' ? ''
+    call s:cli.set_prompt(prompt)
+    let s:cli.flag = a:search_key ==# '/' ? ''
     \                 : a:search_key ==# '?' ? 'b'
     \                 : a:search_key ==# ''  ? 'n'
     \                 : ''
-    return s:search.get()
+    return s:cli.get()
 endfunction
 
-function! incsearch#search(search_key)
-    let pattern = incsearch#get(a:search_key)
+function! s:search(search_key)
+    let pattern = s:get_pattern(a:search_key)
     " Handle operator-pending mode
     let op = mode(1) == 'no' ? v:operator : ''
-    if (s:search.exit_code() == 0)
-        return "\<ESC>" . op . s:search.vcount1 . a:search_key . pattern . "\<CR>"
+    if (s:cli.exit_code() == 0)
+        return "\<ESC>" . op . s:cli.vcount1 . a:search_key . pattern . "\<CR>"
     else " Cancel
         return "\<ESC>"
     endif
