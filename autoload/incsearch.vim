@@ -38,16 +38,42 @@ let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FAL
 let s:V = vital#of('incsearch')
 
 " Highlight: {{{
-let s:highlighter = s:V.import("Coaster.Highlight").make()
-let s:groups = {
-\   'match'     : 'Search',
-\   'cursor'    : 'Cursor',
-\   'on_cursor' : 'IncSearch',
-\   }
+let s:hi = s:V.import("Coaster.Highlight").make()
+
+function! s:init_hl()
+    hi link IncSearchMatch Search
+    hi link IncSearchCursor Cursor
+    hi link IncSearchOnCursor IncSearch
+endfunction
+call s:init_hl()
+augroup plugin-incsearch-highlight
+    autocmd!
+    autocmd ColorScheme * call s:init_hl()
+augroup END
+
+let s:default_highlight = {
+\   'match' : {
+\       'group'    : 'IncSearchMatch',
+\       'priority' : '49'
+\   },
+\   'cursor' : {
+\       'group'    : 'IncSearchCursor',
+\       'priority' : '50'
+\   },
+\   'on_cursor' : {
+\       'group'    : 'IncSearchOnCursor',
+\       'priority' : '51'
+\   },
+\ }
+let g:incsearch#highlight = {}
+let g:incsearch#highlight = extend(s:default_highlight, get(g:, 'incsearch#highlight', {}))
+function! s:hig() " highlight group management
+    return extend(s:default_highlight, g:incsearch#highlight)
+endfunction
 
 function! s:update_hl()
-    call s:highlighter.disable_all()
-    call s:highlighter.enable_all()
+    call s:hi.disable_all()
+    call s:hi.enable_all()
 endfunction
 
 "}}}
@@ -92,12 +118,14 @@ function! s:inc.on_enter(cmdline)
     " disable previous highlight
     nohlsearch
     let s:w = winsaveview()
-    call s:highlighter.add(s:groups.cursor, s:groups.cursor, '\%#', 100)
+    let hig = s:hig()
+    call s:hi.add(hig.cursor.group, hig.cursor.group, '\%#', hig.cursor.priority)
     call s:update_hl()
 endfunction
 
 function! s:inc.on_leave(cmdline)
-    call s:highlighter.disable_all()
+    call s:hi.disable_all()
+    call s:hi.delete_all()
     " redraw: hide pseud-cursor
     echo s:search.get_prompt() . s:search.getline()
 endfunction
@@ -125,14 +153,15 @@ function! s:inc.on_char(cmdline)
                 call search(pattern, a:cmdline.flag)
             endfor
         endif
-        call s:highlighter.add(s:groups.match, s:groups.match, pattern)
-        call s:highlighter.add(s:groups.on_cursor, s:groups.on_cursor, '\%#' . pattern, 99)
-        call s:highlighter.add(s:groups.cursor, s:groups.cursor, '\%#', 100)
+        let hig = s:hig()
+        call s:hi.add(hig.match.group, hig.match.group, pattern, hig.match.priority)
+        call s:hi.add(hig.on_cursor.group, hig.on_cursor.group, '\%#' . pattern, hig.on_cursor.priority)
+        call s:hi.add(hig.cursor.group, hig.cursor.group, '\%#', hig.cursor.priority)
         call s:update_hl()
     catch /E54:/
     catch /E55:/
     catch /E867:/ " E867: (NFA) Unknown operator
-        call s:highlighter.disable_all()
+        call s:hi.disable_all()
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
     endtry
