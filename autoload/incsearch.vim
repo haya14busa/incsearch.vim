@@ -85,14 +85,15 @@ let s:modules = s:V.import('Over.Commandline.Modules')
 let s:search = s:cmdline.make_default("/")
 
 " Add modules
-call s:search.connect('Exit')
+call s:search.connect('BufferComplete')
 call s:search.connect('Cancel')
-call s:search.connect('DrawCommandline')
-call s:search.connect('Delete')
 call s:search.connect('CursorMove')
-call s:search.connect('Paste')
-call s:search.connect('InsertRegister')
+call s:search.connect('Delete')
+call s:search.connect('DrawCommandline')
 call s:search.connect('ExceptionExit')
+call s:search.connect('Exit')
+call s:search.connect('InsertRegister')
+call s:search.connect('Paste')
 call s:search.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:search.connect(s:modules.get('History').make('/'))
 call s:search.connect(s:modules.get('NoInsert').make_special_chars())
@@ -131,6 +132,7 @@ function! s:inc.on_leave(cmdline)
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
+    " Filter unexpected char {{{
     " XXX: I don't know why, but if you use vital-over in <expr> mapping, some
     "      unexpected char will be automatically inserted.
     let charnr = char2nr(s:search.char())
@@ -139,6 +141,7 @@ function! s:inc.on_char_pre(cmdline)
         call a:cmdline.setchar('')
     endif
     let s:old_charnr = charnr
+    " }}}
 endfunction
 
 function! s:inc.on_char(cmdline)
