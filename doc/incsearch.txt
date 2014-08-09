@@ -166,6 +166,19 @@ Customize highlight ~
 		\   }
 		\ }
 <
+------------------------------------------------------------------------------
+AUTOCMD ~
+							    *incsearch-autocmd*
+
+|incsearch.vim| triggers those following |User| |autocmd|.
+
+Name			triggered by ~
+IncSearchEnter		triggered when you enter the command line
+IncSearchLeave		triggered when you leave the command line
+IncSearchExecutePre	triggered before a command execution
+IncSearchCharPre	triggered before every character insertion
+IncSearchChar		triggered after every character insertion
+IncSearchCancel		triggered when you exit without running the line
 
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*

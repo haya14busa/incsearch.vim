@@ -96,6 +96,7 @@ call s:cli.connect('ExceptionExit')
 call s:cli.connect('Exit')
 call s:cli.connect('InsertRegister')
 call s:cli.connect('Paste')
+call s:cli.connect(s:modules.get('Doautocmd').make('IncSearch'))
 call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:cli.connect(s:modules.get('History').make('/'))
 call s:cli.connect(s:modules.get('NoInsert').make_special_chars())
@@ -223,6 +224,7 @@ function! s:search(search_key)
     " Handle operator-pending mode
     let op = mode(1) == 'no' ? v:operator : ''
     if (s:cli.exit_code() == 0)
+        call s:cli.callevent('on_execute_pre')
         return "\<ESC>" . op . s:cli.vcount1 . a:search_key . pattern . "\<CR>"
     else " Cancel
         return "\<ESC>"
