@@ -238,7 +238,10 @@ endfunction
 function! s:search(search_key)
     let pattern = s:get_pattern(a:search_key)
     " Handle operator-pending mode
-    let op = mode(1) == 'no' ? v:operator : ''
+    let m = mode(1)
+    let op = (m == 'no')          ? v:operator
+    \      : (m =~# "[vV\<C-v>]") ? 'gv'
+    \      : ''
     if (s:cli.exit_code() == 0)
         call s:cli.callevent('on_execute_pre')
         return "\<ESC>" . op . s:cli.vcount1 . a:search_key . pattern . "\<CR>"
