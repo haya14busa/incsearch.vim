@@ -1,7 +1,7 @@
-incsearch.vim
-=============
+incsearch.vim: Improved incremental searching
+=============================================
 
-TODO: cool gif!
+![](https://cloud.githubusercontent.com/assets/3797062/3866249/573444b2-1fc8-11e4-859a-7e5fb940c1bb.gif)
 
 Introduction
 ------------
@@ -62,7 +62,8 @@ let g:incsearch#emacs_like_keymap = 1
 
 
 ### Emacs-like incsearch: move the cursor while incremental searching
-TODO: cool gif!
+
+![](https://cloud.githubusercontent.com/assets/3797062/3866152/40e11c48-1fc4-11e4-8cfd-ace452a19f90.gif)
 
 Move the cursor to next/previous matches while incremental searching like Emacs.
 
@@ -73,7 +74,8 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 
 
 ### BufferCompletion
-TODO: cool gif!
+
+![](https://cloud.githubusercontent.com/assets/3797062/3866279/2ce7939c-1fca-11e4-8851-d83773dff4a0.gif)
 
 | Mapping                   | description                         |
 | ------------------------- | ----------------------------------  |
