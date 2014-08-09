@@ -120,7 +120,8 @@ function! s:inc.on_enter(cmdline)
     nohlsearch
     let s:w = winsaveview()
     let hig = s:hig()
-    call s:hi.add(hig.cursor.group, hig.cursor.group, '\%#', hig.cursor.priority)
+    let c = hig.cursor
+    call s:hi.add(c.group, c.group, '\%#', c.priority)
     call s:update_hl()
 endfunction
 
@@ -237,23 +238,15 @@ endfunction
 
 " Helper: {{{
 function! incsearch#parse_pattern(expr, search_key)
-    " /{pattern}/{flags}
-    " ?{pattern}?{flags}
-    " //{flags}
-    " /{pattern\/pattern}/{flags}
-    " return [{pattern\/pattern}, {flags}]
+    " search_key : '/'
+    " expr       : /{pattern\/pattern}/{flags}
+    " return     : [{pattern\/pattern}, {flags}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
     let slash = '(\' . a:search_key . '&[^\\"|[:alnum:][:blank:]])'
     let flags = '(.*)'
 
-    let parse_pattern
-    \       = very_magic
-    \       . pattern
-    \       . '%('
-    \       . slash
-    \       . flags
-    \       . ')?$'
+    let parse_pattern = very_magic . pattern . '%(' . slash . flags . ')?$'
     let result = matchlist(a:expr, parse_pattern)[1:3]
     if type(result) == type(0) || empty(result)
         return []
