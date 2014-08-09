@@ -8,6 +8,24 @@ Introduction
 incsearch.vim incrementally highlight __ALL__ pattern matches unlike default
 'incsearch'.
 
+Concepts
+--------
+
+### 1. Simple
+incsearch.vim provide simple improved incremental searching.
+
+### 2. Comfortable
+You can use it comfortably like default search(`/`, `?`).
+It support all mode (normal, visual, operator-pending mode), dot-repeat `.`,
+`{offset}` flags, and so on.
+
+### 3. Useful
+incsearch.vim aims to be simple, but at the same time, it offers useful feature.
+
+#### Incremental regular expression editing
+You can see all matched pattern by given regular expression at all once while
+incremental searching.
+
 Usage
 -----
 
