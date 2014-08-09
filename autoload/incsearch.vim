@@ -171,12 +171,13 @@ endfunction
 
 function! s:inc.on_char(cmdline)
     try
+        call winrestview(s:w)
         " get `pattern` and ignore flags
         let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
-        " pseud-move cursor position: this is restored afterward
+        " pseud-move cursor position: this is restored afterward if called by
+        " <expr> mappings
         if pattern !=# ''
             let pattern = incsearch#convert(pattern)
-            call winrestview(s:w)
             for _ in range(s:cli.vcount1)
                 call search(pattern, a:cmdline.flag)
             endfor
