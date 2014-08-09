@@ -129,6 +129,7 @@ function! s:inc.on_leave(cmdline)
     call s:hi.disable_all()
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
+    redraw
     echo s:search.get_prompt() . s:search.getline()
 endfunction
 
