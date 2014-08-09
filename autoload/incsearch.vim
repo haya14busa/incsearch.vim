@@ -54,6 +54,10 @@ augroup plugin-incsearch-highlight
 augroup END
 
 let s:default_highlight = {
+\   'visual' : {
+\       'group'    : 'IncSearchVisual',
+\       'priority' : '10'
+\   },
 \   'match' : {
 \       'group'    : 'IncSearchMatch',
 \       'priority' : '49'
@@ -218,16 +222,33 @@ function! s:get_pattern(search_key)
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
     let s:cli.flag = a:search_key ==# '/' ? ''
-    \                 : a:search_key ==# '?' ? 'b'
-    \                 : a:search_key ==# ''  ? 'n'
-    \                 : ''
+    \              : a:search_key ==# '?' ? 'b'
+    \              : a:search_key ==# ''  ? 'n'
+    \              : ''
+
     return s:cli.get()
 endfunction
 
 function! s:search(search_key)
-    let pattern = s:get_pattern(a:search_key)
-    " Handle operator-pending mode
     let m = mode(1)
+
+    " Get pattern {{{
+    if (m =~# "[vV\<C-v>]") " Handle visual mode highlight
+        let visual_hl = s:highlight_capture('Visual')
+        try
+
+            call s:turn_off(visual_hl)
+            call s:pseud_visual_highlight(visual_hl, m)
+            let pattern = s:get_pattern(a:search_key)
+        finally
+            call s:turn_on(visual_hl)
+        endtry
+    else
+        let pattern = s:get_pattern(a:search_key)
+    endif
+    "}}}
+
+    " Handle operator-pending mode
     let op = (m == 'no')          ? v:operator
     \      : (m =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
@@ -279,7 +300,89 @@ function! incsearch#convert(pattern)
     endif
 endfunction
 
+function!s:highlight_capture(hlname) "{{{
+    " Based On: https://github.com/t9md/vim-ezbar
+    "           https://github.com/osyo-manga/vital-over
+    let hlname = a:hlname
+    if !hlexists(hlname)
+        return
+    endif
+    while 1
+        let save_verbose = &verbose
+        let &verbose = 0
+        try
+            redir => HL_SAVE
+            execute 'silent! highlight ' . hlname
+            redir END
+        finally
+            let &verbose = save_verbose
+        endtry
+        if !empty(matchstr(HL_SAVE, 'xxx cleared$'))
+            return ''
+        endif
+        " follow highlight link
+        let ml = matchlist(HL_SAVE, 'links to \zs.*')
+        if !empty(ml)
+            let hlname = ml[0]
+            continue
+        endif
+        break
+    endwhile
+    let HL_SAVE = substitute(matchstr(HL_SAVE, 'xxx \zs.*'),
+                           \ '[ \t\n]\+', ' ', 'g')
+    " return [hlname, HL_SAVE]
+    return { 'name': hlname, 'highlight': HL_SAVE }
+endfunction "}}}
+
+function! s:turn_off(highlight)
+    execute 'highlight' a:highlight.name 'NONE'
+endfunction
+
+function! s:turn_on(highlight)
+    execute 'highlight' a:highlight.name a:highlight.highlight
+endfunction
+
+function! s:pseud_visual_highlight(visual_hl, mode)
+    let pattern = s:get_visual_pattern_by_range(a:mode)
+    let hgm = s:hgm()
+    let v = hgm.visual
+    execute 'hi IncSearchVisual' a:visual_hl.highlight
+    call s:hi.add(v.group, v.group, pattern, v.priority)
+    call s:update_hl()
+endfunction
+
+function! s:get_visual_pattern_by_range(mode)
+    let v_start = [line("v"),col("v")] " visual_start_position
+    let v_end   = [line("."),col(".")] " visual_end_position
+    if s:is_pos_less_equal(v_end, v_start)
+        " swap position
+        let [v_end, v_start] = [v_start, v_end]
+    endif
+    if a:mode ==# 'v'
+        return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
+        \              v_start[0], v_start[1], v_end[0], v_end[1])
+    elseif a:mode ==# 'V'
+        return printf('\v%%%dl\_.*%%%dl', v_start[0], v_end[0])
+    elseif a:mode ==# "\<C-v>"
+        let [min_c, max_c] = sort([v_start[1], v_end[1]])
+        return '\v'.join(map(range(v_start[0], v_end[0]), '
+        \               printf("%%%dl%%%dc.*%%%dc",
+        \                      v:val, min_c, min([max_c, len(getline(v:val))]))
+        \      '), "|")
+    else " Error: unexpected mode
+        " TODO: error handling
+        return ''
+    endif
+endfunction
+
+" return (x <= y)
+function! s:is_pos_less_equal(x, y)
+    return (a:x[0] == a:y[0]) ? a:x[1] <= a:y[1] : a:x[0] < a:y[0]
+endfunction
+
 "}}}
+
+
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
