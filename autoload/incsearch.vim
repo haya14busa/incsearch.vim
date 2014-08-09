@@ -112,6 +112,18 @@ function! s:cli.keymapping()
 \           "noremap" : 1,
 \           "lock" : 1,
 \       },
+\       "\<Tab>"   : {
+\           "key" : "<Over>(incsearch-next)",
+\           "noremap" : 1,
+\       },
+\       "\<S-Tab>"   : {
+\           "key" : "<Over>(incsearch-prev)",
+\           "noremap" : 1,
+\       },
+\       "\<C-l>"   : {
+\           "key" : "<Over>(buffer-complete)",
+\           "noremap" : 1,
+\       },
 \   }, g:incsearch_cli_key_mappings)
 endfunction
 
