@@ -151,17 +151,6 @@ function! s:inc.on_leave(cmdline)
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
-    " Filter unexpected chars {{{
-    " XXX: I don't know why, but if you use vital-over in <expr> mapping, some
-    "      unexpected chars will be automatically inserted.
-    let charnr = char2nr(s:cli.char())
-    if charnr == 128 || charnr == 253 ||
-    \   (exists('s:old_charnr') && s:old_charnr == 253 && charnr == 96)
-        call a:cmdline.setchar('')
-    endif
-    let s:old_charnr = charnr
-    " }}}
-
     if a:cmdline.is_input("<Over>(incsearch-next)")
         let s:cli.vcount1 += 1
         call a:cmdline.setchar('')
