@@ -236,8 +236,10 @@ endfunction
 
 function! incsearch#search(search_key)
     let pattern = incsearch#get(a:search_key)
+    " Handle operator-pending mode
+    let op = mode(1) == 'no' ? v:operator : ''
     if (s:search.exit_code() == 0)
-        return "\<ESC>" . s:search.vcount1 . a:search_key . pattern . "\<CR>"
+        return "\<ESC>" . op . s:search.vcount1 . a:search_key . pattern . "\<CR>"
     else " Cancel
         return "\<ESC>"
     endif
