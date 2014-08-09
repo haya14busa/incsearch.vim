@@ -43,9 +43,26 @@ noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward()
 noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay()
 
 " CommandLine Mapping {{{
-command! -nargs=* IncSearchNoreMap call incsearch#cnoremap([<f-args>])
-command! -nargs=* IncSearchMap     call incsearch#cmap([<f-args>])
-command! -nargs=1 IncSearchUnMap   call incsearch#cunmap(<f-args>)
+let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
+
+function! s:key_mapping(lhs, rhs, noremap)
+    let g:incsearch_cli_key_mappings[a:lhs] = {
+\       "key" : a:rhs,
+\       "noremap" : a:noremap,
+\   }
+endfunction
+
+function! s:as_keymapping(key)
+    execute 'let result = "' . substitute(a:key, '\(<.\{-}>\)', '\\\1', 'g') . '"'
+    return result
+endfunction
+
+command! -nargs=* IncSearchNoreMap
+\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [1])
+
+command! -nargs=* IncSearchMap
+\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [0])
+
 "}}}
 
 " Restore 'cpoptions' {{{

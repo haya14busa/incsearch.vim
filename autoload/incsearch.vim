@@ -105,13 +105,13 @@ endif
 
 
 function! s:cli.keymapping()
-    return {
+    return extend({
 \       "\<CR>"   : {
 \           "key" : "<Over>(exit)",
 \           "noremap" : 1,
 \           "lock" : 1,
 \       },
-\   }
+\   }, g:incsearch_cli_key_mappings)
 endfunction
 
 let s:inc = {
@@ -185,27 +185,6 @@ function! s:inc.on_char(cmdline)
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
     endtry
 endfunction
-
-" KeyMapping Interface: {{{
-function! incsearch#cmap(args)
-    let lhs = s:as_keymapping(a:args[0])
-    let rhs = s:as_keymapping(a:args[1])
-    call s:cli.cmap(lhs, rhs)
-endfunction
-function! incsearch#cnoremap(args)
-    let lhs = s:as_keymapping(a:args[0])
-    let rhs = s:as_keymapping(a:args[1])
-    call s:cli.cnoremap(lhs, rhs)
-endfunction
-function! incsearch#cunmap(lhs)
-    let lhs = s:as_keymapping(a:lhs)
-    call s:cli.cunmap(lhs)
-endfunction
-function! s:as_keymapping(key)
-    execute 'let result = "' . substitute(a:key, '\(<.\{-}>\)', '\\\1', 'g') . '"'
-    return result
-endfunction
-"}}}
 
 call s:cli.connect(s:inc)
 "}}}
