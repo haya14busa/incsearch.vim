@@ -80,7 +80,9 @@ Basic Usage~
 <
     <Plug>(incsearch-forward)  : Incremental searching to forward
     <Plug>(incsearch-backward) : Incremental searching to backward
-    <Plug>(incsearch-stay)     : doesn't move the cursor.
+    <Plug>(incsearch-stay)     : It doesn't move the cursor unless explicitly
+                                 using cursor move command while incremental
+                                 searching.
 
 ------------------------------------------------------------------------------
 Command line interface~
