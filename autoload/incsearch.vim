@@ -42,7 +42,8 @@ let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
 
 function! s:init_hl()
-    hi link IncSearchMatch Search
+    hi link IncSearchMatch IncSearch
+    hi link IncSearchMatchReverse Search
     hi link IncSearchCursor Cursor
     hi link IncSearchOnCursor IncSearch
     hi IncSearchUnderline term=underline cterm=underline gui=underline
@@ -60,6 +61,10 @@ let s:default_highlight = {
 \   },
 \   'match' : {
 \       'group'    : 'IncSearchMatch',
+\       'priority' : '49'
+\   },
+\   'match_reverse' : {
+\       'group'    : 'IncSearchMatchReverse',
 \       'priority' : '49'
 \   },
 \   'on_cursor' : {
@@ -182,10 +187,22 @@ function! s:inc.on_char(cmdline)
         endif
         let hgm = s:hgm()
         let m = hgm.match
+        let r = hgm.match_reverse
         let o = hgm.on_cursor
         let c = hgm.cursor
         let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        call s:hi.add(m.group , m.group , pattern           , m.priority)
+        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
+        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
+
+        if s:cli.flag == '' " forward
+            call s:hi.add(m.group , m.group , forward_pattern   , m.priority)
+            call s:hi.add(r.group , r.group , backward_pattern  , r.priority)
+        elseif s:cli.flag == 'b' " backward
+            call s:hi.add(m.group , m.group , backward_pattern   , m.priority)
+            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+        elseif s:cli.flag == 'n' " stay
+            call s:hi.add(m.group , m.group , pattern           , m.priority)
+        endif
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
         call s:update_hl()
@@ -266,7 +283,7 @@ endfunction
 
 " Helper: {{{
 function! incsearch#parse_pattern(expr, search_key)
-    " search_key : '/'
+    " search_key : '/' or '?'
     " expr       : /{pattern\/pattern}/{offset}
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
@@ -381,8 +398,19 @@ function! s:is_pos_less_equal(x, y)
     return (a:x[0] == a:y[0]) ? a:x[1] <= a:y[1] : a:x[0] < a:y[0]
 endfunction
 
-"}}}
+function! s:forward_pattern(pattern, line, col)
+    let forward_line = printf('%%>%dl', a:line)
+    let current_line = printf('%%%dl%%>%dc', a:line, a:col)
+    return '\v(' . forward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
+endfunction
 
+function! s:backward_pattern(pattern, line, col)
+    let backward_line = printf('%%<%dl', a:line)
+    let current_line = printf('%%%dl%%<%dc', a:line, a:col)
+    return '\v(' . backward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
+endfunction
+
+"}}}
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
