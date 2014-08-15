@@ -204,7 +204,10 @@ function! s:inc.on_char_pre(cmdline)
         let s:cli.vcount1 += cnt
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-scroll-b)")
-        if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
+        if a:cmdline.flag ==# 'n'
+            let s:cli.flag = ''
+            let s:cli.vcount1 -= 1
+        endif
         let pattern = s:inc.get_pattern()
         let from = [line('w0'), 1]
         let to = getpos('.')[1:2]
