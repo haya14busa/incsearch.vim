@@ -80,7 +80,9 @@ Basic Usage~
 <
     <Plug>(incsearch-forward)  : Incremental searching to forward
     <Plug>(incsearch-backward) : Incremental searching to backward
-    <Plug>(incsearch-stay)     : doesn't move the cursor.
+    <Plug>(incsearch-stay)     : It doesn't move the cursor unless explicitly
+                                 using cursor move command while incremental
+                                 searching.
 
 ------------------------------------------------------------------------------
 Command line interface~
@@ -97,8 +99,20 @@ Command line interface~
 							*<Over>(incsearch-prev)*
 	Emacs-like incsearch: move the cursor while incremental searching
 
-	<Over>(incsearch-next)   to the next match. default: <Tab>
-	<Over>(incsearch-prev)   to the prev match. default: <S-Tab>
+	<Over>(incsearch-next) : to the next match. default: <Tab>
+	<Over>(incsearch-prev) : to the prev match. default: <S-Tab>
+
+						*<Over>(incsearch-scroll-f)*
+						*<Over>(incsearch-scroll-b)*
+
+	Scroll-like feature while incremental searching.
+
+	<Over>(incsearch-scroll-f) : scroll to the next page match.
+				    default: <C-j>
+	<Over>(incsearch-scroll-b) : scroll to the previous page match.
+				    default: <C-k>
+
+	Example:
 >
 		augroup incsearch-keymap
 		    autocmd!
@@ -107,6 +121,8 @@ Command line interface~
 		function! s:incsearch_keymap()
 		    IncSearchNoreMap <Right> <Over>(incsearch-next)
 		    IncSearchNoreMap <Left>  <Over>(incsearch-prev)
+		    IncSearchNoreMap <Down>  <Over>(incsearch-scroll-f)
+		    IncSearchNoreMap <Up>    <Over>(incsearch-scroll-b)
 		endfunction
 <
 						*g:incsearch#emacs_like_keymap*
@@ -146,16 +162,27 @@ Buffer completion			*incsearch-<Over>(buffer-complete)*
 Highlight ~
 							*incsearch-highlight*
 
+						*g:incsearch#separate_highlight*
+	Highlight matched pattern separately with forward matches and
+	backward matches.
+>
+	    let g:incsearch#separate_highlight = 1
+<
+	default: 0
+
 Highlight Group ~
 						    *incsearch-highlight-group*
 
-    | highlight group    | description                                     |
-    | -------------------| ---------------------------------------------   |
-    | *IncSearchMatch*     | For all matched pattern. default: `Search`        |
-    | *IncSearchOnCursor*  | For the matched pattern on the cursor.          |
-    |                    | default: `IncSearch`                              |
-    | *IncSearchCursor*    | For cursor position. default: `Cursor`            |
-    | *IncSearchUnderline* | It's not used by default. For the customization |
+| highlight group       | description                                     |
+| -------------------   | ---------------------------------------------   |
+| *IncSearchMatch*        | For all matched pattern. default: `Search`        |
+| *IncSearchMatchReverse* | For all matched pattern in reverse direction.   |
+|                       | default: `IncSearch`                              |
+| *IncSearchOnCursor*     | For the matched pattern on the cursor. if       |
+|                       | |g:incsearch#separate_highlight| is on.           |
+|                       | default: `IncSearch`                              |
+| *IncSearchCursor*       | For cursor position. default: `Cursor`            |
+| *IncSearchUnderline*    | It's not used by default. For the customization |
 
 Customize highlight ~
 

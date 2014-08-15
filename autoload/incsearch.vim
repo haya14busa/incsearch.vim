@@ -34,6 +34,7 @@ let s:FALSE = 0
 " Option:
 let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FALSE)
 let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
+let g:incsearch#separate_highlight = get(g:, 'incsearch#separate_highlight', s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -42,7 +43,8 @@ let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
 
 function! s:init_hl()
-    hi link IncSearchMatch Search
+    hi link IncSearchMatch IncSearch
+    hi link IncSearchMatchReverse Search
     hi link IncSearchCursor Cursor
     hi link IncSearchOnCursor IncSearch
     hi IncSearchUnderline term=underline cterm=underline gui=underline
@@ -60,6 +62,10 @@ let s:default_highlight = {
 \   },
 \   'match' : {
 \       'group'    : 'IncSearchMatch',
+\       'priority' : '49'
+\   },
+\   'match_reverse' : {
+\       'group'    : 'IncSearchMatchReverse',
 \       'priority' : '49'
 \   },
 \   'on_cursor' : {
@@ -127,6 +133,14 @@ function! s:cli.keymapping()
 \           "key" : "<Over>(incsearch-prev)",
 \           "noremap" : 1,
 \       },
+\       "\<C-j>"   : {
+\           "key" : "<Over>(incsearch-scroll-f)",
+\           "noremap" : 1,
+\       },
+\       "\<C-k>"   : {
+\           "key" : "<Over>(incsearch-scroll-b)",
+\           "noremap" : 1,
+\       },
 \       "\<C-l>"   : {
 \           "key" : "<Over>(buffer-complete)",
 \           "noremap" : 1,
@@ -151,41 +165,118 @@ function! s:inc.on_leave(cmdline)
     call s:hi.disable_all()
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
-    echo | redraw
-    if s:cli.getline() !=# ''
+    if s:cli.getline() ==# ''
+        echo ''
+    else
         echo s:cli.get_prompt() . s:cli.getline()
     endif
 endfunction
 
+function! s:inc.get_pattern()
+    " get `pattern` and ignore {offset}
+    let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    return pattern
+endfunction
+
 function! s:inc.on_char_pre(cmdline)
     if a:cmdline.is_input("<Over>(incsearch-next)")
-        let s:cli.vcount1 += 1
+        if a:cmdline.flag ==# 'n' " exit stay mode
+            let s:cli.flag = ''
+        else
+            let s:cli.vcount1 += 1
+        endif
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
-        let s:cli.vcount1 = max([1, s:cli.vcount1 - 1])
+        if a:cmdline.flag ==# 'n' " exit stay mode
+            let s:cli.flag = ''
+        endif
+        let s:cli.vcount1 -= 1
+        if s:cli.vcount1 < 1
+            let pattern = s:inc.get_pattern()
+            let s:cli.vcount1 += s:count_pattern(pattern)
+        endif
         call a:cmdline.setchar('')
+    elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
+    \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
+        if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
+        let pattern = s:inc.get_pattern()
+        let from = getpos('.')[1:2]
+        let to = [line('w$'), s:get_max_col('w$')]
+        let cnt = s:count_pattern(pattern, from, to)
+        let s:cli.vcount1 += cnt
+        call a:cmdline.setchar('')
+    elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+    \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
+    \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag ==# 'b')
+        if a:cmdline.flag ==# 'n'
+            let s:cli.flag = ''
+            let s:cli.vcount1 -= 1
+        endif
+        let pattern = s:inc.get_pattern()
+        let from = [line('w0'), 1]
+        let to = getpos('.')[1:2]
+        let cnt = s:count_pattern(pattern, from, to)
+        let s:cli.vcount1 -= cnt
+        if s:cli.vcount1 < 1
+            let s:cli.vcount1 += s:count_pattern(pattern)
+        endif
+        call a:cmdline.setchar('')
+    endif
+
+    " Handle nowrapscan:
+    "   if you `:set wrapscan`, you can't move to the reverse direction
+    if &wrapscan == 0 && (
+    \    a:cmdline.is_input("<Over>(incsearch-next)")
+    \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+    \ )
+        let pattern = s:inc.get_pattern()
+        let start = [s:w.lnum, s:w.col]
+        let end = (s:cli.flag ==# '') ? [line('$'), s:get_max_col('$')] : [1, 1]
+        let [from, to] = sort([start, end])
+        let max_cnt = s:count_pattern(pattern, from, to)
+        let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
     endif
 endfunction
 
 function! s:inc.on_char(cmdline)
     try
         call winrestview(s:w)
-        " get `pattern` and ignore {offset}
-        let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+        let pattern = s:inc.get_pattern()
+
+        if pattern ==# ''
+            call s:hi.disable_all()
+            return
+        endif
+
+        let pattern = incsearch#convert_with_case(pattern)
+
         " pseud-move cursor position: this is restored afterward if called by
         " <expr> mappings
-        if pattern !=# ''
-            let pattern = incsearch#convert_with_case(pattern)
-            for _ in range(s:cli.vcount1)
-                call search(pattern, a:cmdline.flag)
-            endfor
-        endif
+        for _ in range(s:cli.vcount1)
+            call search(pattern, a:cmdline.flag)
+        endfor
         let hgm = s:hgm()
         let m = hgm.match
+        let r = hgm.match_reverse
         let o = hgm.on_cursor
         let c = hgm.cursor
         let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        call s:hi.add(m.group , m.group , pattern           , m.priority)
+        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
+        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
+
+        " Highlight
+        if g:incsearch#separate_highlight == s:FALSE || s:cli.flag == 'n'
+            call s:hi.add(m.group , m.group , pattern          , m.priority)
+        elseif s:cli.flag == '' " forward
+            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
+            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
+        elseif s:cli.flag == 'b' " backward
+            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
+            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+        endif
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
         call s:update_hl()
@@ -212,14 +303,27 @@ function! incsearch#backward()
     return s:search('?')
 endfunction
 
+" similar to incsearch#forward() but do not move the cursor unless explicitly
+" move the cursor while searching
 function! incsearch#stay()
-    let pattern = s:get_pattern('')
-    call histadd('/', pattern)
-    let @/ = pattern
-    return "\<ESC>"
+    let m = mode(1)
+    let pattern = s:get_pattern('', m)
+    if s:cli.flag ==# 'n' " stay
+        call histadd('/', pattern)
+        let @/ = pattern
+        return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
+    else " exit stay mode
+        return s:generate_command(m, pattern, '/') " assume '/'
+    endif
 endfunction
 
-function! s:get_pattern(search_key)
+function! s:search(search_key)
+    let m = mode(1)
+    let pattern = s:get_pattern(a:search_key, m)
+    return s:generate_command(m, pattern, a:search_key)
+endfunction
+
+function! s:get_pattern(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
     let s:cli.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
@@ -229,36 +333,31 @@ function! s:get_pattern(search_key)
     \              : a:search_key ==# ''  ? 'n'
     \              : ''
 
-    return s:cli.get()
-endfunction
-
-function! s:search(search_key)
-    let m = mode(1)
-
-    " Get pattern {{{
-    if (m =~# "[vV\<C-v>]") " Handle visual mode highlight
+    " Handle visual mode highlight
+    if (a:mode =~# "[vV\<C-v>]")
         let visual_hl = s:highlight_capture('Visual')
         try
             call s:turn_off(visual_hl)
-            call s:pseud_visual_highlight(visual_hl, m)
-            let pattern = s:get_pattern(a:search_key)
+            call s:pseud_visual_highlight(visual_hl, a:mode)
+            let pattern = s:cli.get()
         finally
             call s:turn_on(visual_hl)
         endtry
     else
-        let pattern = s:get_pattern(a:search_key)
+        let pattern = s:cli.get()
     endif
-    "}}}
+    return pattern
+endfunction
 
-    " Handle operator-pending mode
-    let op = (m == 'no')          ? v:operator
-    \      : (m =~# "[vV\<C-v>]") ? 'gv'
+function! s:generate_command(mode, pattern, search_key)
+    let op = (a:mode == 'no')          ? v:operator
+    \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
     if (s:cli.exit_code() == 0)
         call s:cli.callevent('on_execute_pre')
-        return "\<ESC>" . op . s:cli.vcount1 . a:search_key . pattern . "\<CR>"
+        return "\<ESC>" . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
     else " Cancel
-        return "\<ESC>"
+        return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
     endif
 endfunction
 
@@ -266,7 +365,7 @@ endfunction
 
 " Helper: {{{
 function! incsearch#parse_pattern(expr, search_key)
-    " search_key : '/'
+    " search_key : '/' or '?'
     " expr       : /{pattern\/pattern}/{offset}
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
@@ -302,7 +401,7 @@ function! incsearch#convert_with_case(pattern)
     endif
 endfunction
 
-function!s:highlight_capture(hlname) "{{{
+function! s:highlight_capture(hlname) "{{{
     " Based On: https://github.com/t9md/vim-ezbar
     "           https://github.com/osyo-manga/vital-over
     let hlname = a:hlname
@@ -381,8 +480,47 @@ function! s:is_pos_less_equal(x, y)
     return (a:x[0] == a:y[0]) ? a:x[1] <= a:y[1] : a:x[0] < a:y[0]
 endfunction
 
-"}}}
+function! s:forward_pattern(pattern, line, col)
+    let forward_line = printf('%%>%dl', a:line)
+    let current_line = printf('%%%dl%%>%dc', a:line, a:col)
+    return '\v(' . forward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
+endfunction
 
+function! s:backward_pattern(pattern, line, col)
+    let backward_line = printf('%%<%dl', a:line)
+    let current_line = printf('%%%dl%%<%dc', a:line, a:col)
+    return '\v(' . backward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
+endfunction
+
+" Return the number of matched patterns in the current buffer or the specified
+" region with `from` and `to` positions
+" parameter: pattern, from, to
+function! s:count_pattern(pattern, ...)
+    let w = winsaveview()
+    let from = get(a:, 1, [1, 1])
+    let to   = get(a:, 2, [line('$'), s:get_max_col('$')])
+    call cursor(from)
+    let cnt = 0
+    try
+        " first: accept a match at the cursor position
+        let pos = searchpos(a:pattern, 'cW')
+        while (pos != [0, 0] && s:is_pos_less_equal(pos, to))
+            let cnt += 1
+            let pos = searchpos(a:pattern, 'W')
+        endwhile
+    finally
+        call winrestview(w)
+    endtry
+    return cnt
+endfunction
+
+" Return max column number of given line expression
+" expr: similar to line(), col()
+function! s:get_max_col(expr)
+    return strlen(getline(a:expr)) + 1
+endfunction
+
+"}}}
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
