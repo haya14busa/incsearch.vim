@@ -236,9 +236,18 @@ KNOWN ISSUES						*incsearch-issues*
 CHANGELOG						*incsearch-changelog*
 
 0.9.0	2014-08-09
-
 	- Init.
 	  1. incremental highlight for all matched pattern
 	  2. cursor move while incremental searching like emacs
+
+0.9.1	2014-08-15
+	1. Fix visual highlight
+	2. Improve cursor moving
+	    - Now, you can move the cursor to the reverse direction
+	    - Scroll-like feature |<Over>(incsearch-scroll-f)| &
+	      |<Over>(incsearch-scroll-b)|
+	    - Handle |wrapscan| option
+	    - Enable cursor moving while |<Plug>(incsearch-stay)|
+	3. Implement |g:incsearch#separate_highlight| option
 
 vim:tw=78:ts=8:ft=help:norl:noet:fen:fdl=0:fdm=marker:
