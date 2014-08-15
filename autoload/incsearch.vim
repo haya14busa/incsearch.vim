@@ -195,7 +195,9 @@ function! s:inc.on_char_pre(cmdline)
             let s:cli.vcount1 += s:count_pattern(pattern)
         endif
         call a:cmdline.setchar('')
-    elseif a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
+    \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:inc.get_pattern()
         let from = getpos('.')[1:2]
@@ -203,7 +205,9 @@ function! s:inc.on_char_pre(cmdline)
         let cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 += cnt
         call a:cmdline.setchar('')
-    elseif a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+    elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+    \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
+    \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n'
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
