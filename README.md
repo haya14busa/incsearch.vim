@@ -90,6 +90,15 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 | `<Over>(incsearch-next)` | to next match. default: `<Tab>`   |
 | `<Over>(incsearch-prev)` | to prev match. default: `<S-Tab>` |
 
+### Scroll-like feature while incremental searching
+
+![](https://cloud.githubusercontent.com/assets/3797062/3931538/36979326-245a-11e4-9565-bd3d91e699d5.gif)
+
+| Mapping                      | description                                         |
+| ------------------------     | ---------------------------------                   |
+| `<Over>(incsearch-scroll-f)` | scroll to the next page match. default: `<C-j>`     |
+| `<Over>(incsearch-scroll-b)` | scroll to the previous page match. default: `<C-k>` |
+
 
 ### BufferCompletion
 
@@ -104,12 +113,13 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 
 #### highlight group
 
-| highlight group      | description                                                 |
-| -------------------  | ----------------------------------------------------------- |
-| `IncSearchMatch`     | For all matched pattern. default: `Search`                  |
-| `IncSearchOnCursor`  | For the matched pattern on the cursor. default: `IncSearch` |
-| `IncSearchCursor`    | For cursor position. default: `Cursor`                      |
-| `IncSearchUnderline` | It's not used by default. Just for the customization        |
+| highlight group         | description                                                         |
+| -------------------     | -----------------------------------------------------------         |
+| `IncSearchMatch`        | For all matched pattern. default: `Search`                          |
+| `IncSearchMatchReverse` | For all matched pattern in reverse direction.  default: `IncSearch` |
+| `IncSearchOnCursor`     | For the matched pattern on the cursor. default: `IncSearch`         |
+| `IncSearchCursor`       | For cursor position. default: `Cursor`                              |
+| `IncSearchUnderline`    | It's not used by default. Just for the customization                |
 
 #### custom highlight
 
