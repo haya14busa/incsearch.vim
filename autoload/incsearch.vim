@@ -221,14 +221,19 @@ function! s:inc.on_char(cmdline)
     try
         call winrestview(s:w)
         let pattern = s:inc.get_pattern()
+
+        if pattern ==# ''
+            call s:hi.disable_all()
+            return
+        endif
+
+        let pattern = incsearch#convert_with_case(pattern)
+
         " pseud-move cursor position: this is restored afterward if called by
         " <expr> mappings
-        if pattern !=# ''
-            let pattern = incsearch#convert_with_case(pattern)
-            for _ in range(s:cli.vcount1)
-                call search(pattern, a:cmdline.flag)
-            endfor
-        endif
+        for _ in range(s:cli.vcount1)
+            call search(pattern, a:cmdline.flag)
+        endfor
         let hgm = s:hgm()
         let m = hgm.match
         let r = hgm.match_reverse
