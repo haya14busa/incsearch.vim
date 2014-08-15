@@ -309,8 +309,10 @@ function! incsearch#stay()
     let m = mode(1)
     let pattern = s:get_pattern('', m)
     if s:cli.flag ==# 'n' " stay
-        call histadd('/', pattern)
-        let @/ = pattern
+        if pattern !=# ''
+            call histadd('/', pattern)
+            let @/ = pattern
+        endif
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
     else " exit stay mode
         return s:generate_command(m, pattern, '/') " assume '/'
