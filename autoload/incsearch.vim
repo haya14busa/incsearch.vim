@@ -170,12 +170,12 @@ endfunction
 function! s:inc.on_char(cmdline)
     try
         call winrestview(s:w)
-        " get `pattern` and ignore flags
-        let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+        " get `pattern` and ignore {offset}
+        let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
         " pseud-move cursor position: this is restored afterward if called by
         " <expr> mappings
         if pattern !=# ''
-            let pattern = incsearch#convert(pattern)
+            let pattern = incsearch#convert_with_case(pattern)
             for _ in range(s:cli.vcount1)
                 call search(pattern, a:cmdline.flag)
             endfor
@@ -267,14 +267,14 @@ endfunction
 " Helper: {{{
 function! incsearch#parse_pattern(expr, search_key)
     " search_key : '/'
-    " expr       : /{pattern\/pattern}/{flags}
-    " return     : [{pattern\/pattern}, {flags}]
+    " expr       : /{pattern\/pattern}/{offset}
+    " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
     let slash = '(\' . a:search_key . '&[^\\"|[:alnum:][:blank:]])'
-    let flags = '(.*)'
+    let offset = '(.*)'
 
-    let parse_pattern = very_magic . pattern . '%(' . slash . flags . ')?$'
+    let parse_pattern = very_magic . pattern . '%(' . slash . offset . ')?$'
     let result = matchlist(a:expr, parse_pattern)[1:3]
     if type(result) == type(0) || empty(result)
         return []
@@ -283,7 +283,7 @@ function! incsearch#parse_pattern(expr, search_key)
     return result
 endfunction
 
-function! incsearch#convert(pattern)
+function! incsearch#convert_with_case(pattern)
     if &ignorecase == s:FALSE
         return '\C' . a:pattern " noignorecase
     endif
