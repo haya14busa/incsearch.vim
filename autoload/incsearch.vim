@@ -34,6 +34,7 @@ let s:FALSE = 0
 " Option:
 let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FALSE)
 let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
+let g:incsearch#separate_highlight = get(g:, 'incsearch#separate_highlight', s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -42,8 +43,8 @@ let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
 
 function! s:init_hl()
-    hi link IncSearchMatch IncSearch
-    hi link IncSearchMatchReverse Search
+    hi link IncSearchMatch Search
+    hi link IncSearchMatchReverse IncSearch
     hi link IncSearchCursor Cursor
     hi link IncSearchOnCursor IncSearch
     hi IncSearchUnderline term=underline cterm=underline gui=underline
@@ -228,14 +229,15 @@ function! s:inc.on_char(cmdline)
         let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
         let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
 
-        if s:cli.flag == '' " forward
-            call s:hi.add(m.group , m.group , forward_pattern   , m.priority)
-            call s:hi.add(r.group , r.group , backward_pattern  , r.priority)
+        " Highlight
+        if g:incsearch#separate_highlight == s:FALSE || s:cli.flag == 'n'
+            call s:hi.add(m.group , m.group , pattern          , m.priority)
+        elseif s:cli.flag == '' " forward
+            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
+            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
         elseif s:cli.flag == 'b' " backward
-            call s:hi.add(m.group , m.group , backward_pattern   , m.priority)
+            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
             call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
-        elseif s:cli.flag == 'n' " stay
-            call s:hi.add(m.group , m.group , pattern           , m.priority)
         endif
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
@@ -446,7 +448,7 @@ endfunction
 
 " Return the number of matched patterns in the current buffer or the specified
 " region with `from` and `to` positions
-" parameter: pattern, from, to 
+" parameter: pattern, from, to
 function! s:count_pattern(pattern, ...)
     let w = winsaveview()
     let from = get(a:, 1, [1, 1])
