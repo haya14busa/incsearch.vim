@@ -179,9 +179,16 @@ endfunction
 
 function! s:inc.on_char_pre(cmdline)
     if a:cmdline.is_input("<Over>(incsearch-next)")
-        let s:cli.vcount1 += 1
+        if a:cmdline.flag ==# 'n' " exit stay mode
+            let s:cli.flag = ''
+        else
+            let s:cli.vcount1 += 1
+        endif
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
+        if a:cmdline.flag ==# 'n' " exit stay mode
+            let s:cli.flag = ''
+        endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
             let pattern = s:inc.get_pattern()
@@ -189,6 +196,7 @@ function! s:inc.on_char_pre(cmdline)
         endif
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+        if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:inc.get_pattern()
         let from = getpos('.')[1:2]
         let to = [line('w$'), s:get_max_col('w$')]
@@ -196,6 +204,7 @@ function! s:inc.on_char_pre(cmdline)
         let s:cli.vcount1 += cnt
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+        if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:inc.get_pattern()
         let from = [line('w0'), 1]
         let to = getpos('.')[1:2]
@@ -265,14 +274,27 @@ function! incsearch#backward()
     return s:search('?')
 endfunction
 
+" similar to incsearch#forward() but do not move the cursor unless explicitly
+" move the cursor while searching
 function! incsearch#stay()
-    let pattern = s:get_pattern('')
-    call histadd('/', pattern)
-    let @/ = pattern
-    return "\<ESC>"
+    let m = mode(1)
+    let pattern = s:get_pattern('', m)
+    if s:cli.flag ==# 'n' " stay
+        call histadd('/', pattern)
+        let @/ = pattern
+        return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
+    else " exit stay mode
+        return s:generate_command(m, pattern, '/') " assume '/'
+    endif
 endfunction
 
-function! s:get_pattern(search_key)
+function! s:search(search_key)
+    let m = mode(1)
+    let pattern = s:get_pattern(a:search_key, m)
+    return s:generate_command(m, pattern, a:search_key)
+endfunction
+
+function! s:get_pattern(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
     let s:cli.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
@@ -282,36 +304,31 @@ function! s:get_pattern(search_key)
     \              : a:search_key ==# ''  ? 'n'
     \              : ''
 
-    return s:cli.get()
-endfunction
-
-function! s:search(search_key)
-    let m = mode(1)
-
-    " Get pattern {{{
-    if (m =~# "[vV\<C-v>]") " Handle visual mode highlight
+    " Handle visual mode highlight
+    if (a:mode =~# "[vV\<C-v>]")
         let visual_hl = s:highlight_capture('Visual')
         try
             call s:turn_off(visual_hl)
-            call s:pseud_visual_highlight(visual_hl, m)
-            let pattern = s:get_pattern(a:search_key)
+            call s:pseud_visual_highlight(visual_hl, a:mode)
+            let pattern = s:cli.get()
         finally
             call s:turn_on(visual_hl)
         endtry
     else
-        let pattern = s:get_pattern(a:search_key)
+        let pattern = s:cli.get()
     endif
-    "}}}
+    return pattern
+endfunction
 
-    " Handle operator-pending mode
-    let op = (m == 'no')          ? v:operator
-    \      : (m =~# "[vV\<C-v>]") ? 'gv'
+function! s:generate_command(mode, pattern, search_key)
+    let op = (a:mode == 'no')          ? v:operator
+    \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
     if (s:cli.exit_code() == 0)
         call s:cli.callevent('on_execute_pre')
-        return "\<ESC>" . op . s:cli.vcount1 . a:search_key . pattern . "\<CR>"
+        return "\<ESC>" . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
     else " Cancel
-        return "\<ESC>"
+        return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
     endif
 endfunction
 
