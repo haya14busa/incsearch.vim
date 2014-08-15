@@ -165,8 +165,9 @@ function! s:inc.on_leave(cmdline)
     call s:hi.disable_all()
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
-    echo | redraw
-    if s:cli.getline() !=# ''
+    if s:cli.getline() ==# ''
+        echo ''
+    else
         echo s:cli.get_prompt() . s:cli.getline()
     endif
 endfunction
