@@ -167,7 +167,11 @@ function! s:inc.on_char_pre(cmdline)
         let s:cli.vcount1 += 1
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
-        let s:cli.vcount1 = max([1, s:cli.vcount1 - 1])
+        let s:cli.vcount1 -= 1
+        if s:cli.vcount1 < 1
+            let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+            let s:cli.vcount1 = s:count_pattern(pattern)
+        endif
         call a:cmdline.setchar('')
     endif
 endfunction
@@ -408,6 +412,25 @@ function! s:backward_pattern(pattern, line, col)
     let backward_line = printf('%%<%dl', a:line)
     let current_line = printf('%%%dl%%<%dc', a:line, a:col)
     return '\v(' . backward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
+endfunction
+
+" Return the number of matched patterns in the current buffer
+function! s:count_pattern(pattern)
+    let w = winsaveview()
+    " Move to top line
+    call cursor(1, 1)
+    let cnt = 0
+    try
+        " first: accept a match at the cursor position
+        let pos = searchpos(a:pattern, 'cW')
+        while pos != [0, 0]
+            let cnt += 1
+            let pos = searchpos(a:pattern, 'W')
+        endwhile
+    finally
+        call winrestview(w)
+    endtry
+    return cnt
 endfunction
 
 "}}}
