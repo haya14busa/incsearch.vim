@@ -16,7 +16,7 @@ incsearch.vim provide simple improved incremental searching.
 
 ### 2. Comfortable
 You can use it comfortably like default search(`/`, `?`).
-It support all mode (normal, visual, operator-pending mode), dot-repeat `.`,
+It supports all mode (normal, visual, operator-pending mode), dot-repeat `.`,
 `{offset}` flags, and so on.
 
 ### 3. Useful
@@ -41,7 +41,7 @@ map g/ <Plug>(incsearch-stay)
 `<Plug>(incsearch-stay)` doesn't move the cursor.
 
 ### Command Line Interface Keymappings
-incsearch.vim use custom command line interface, so it provide custom
+incsearch.vim use custom command line interface, so it provides custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
 in your vimrc, please call it by `VimEnter`.
 
@@ -129,7 +129,7 @@ Change cursor color to red
 highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
 ```
 
-or use the `g:incsearch#highlight` option like this.
+Or use the `g:incsearch#highlight` option like this.
 
 ```vim
 let g:incsearch#highlight = {

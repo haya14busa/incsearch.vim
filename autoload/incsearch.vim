@@ -117,6 +117,8 @@ if g:incsearch#emacs_like_keymap
     call s:cli.connect(s:modules.get('KeyMapping').make_emacs())
 endif
 
+" Option
+let s:cli.is_restrict_win = s:FALSE
 
 function! s:cli.keymapping()
     return extend({
@@ -149,7 +151,7 @@ function! s:cli.keymapping()
 endfunction
 
 let s:inc = {
-\   "name" : "incsearch",
+\   'name' : 'incsearch'
 \}
 
 function! s:inc.on_enter(cmdline)
@@ -157,13 +159,14 @@ function! s:inc.on_enter(cmdline)
     let s:w = winsaveview()
     let hgm = s:hgm()
     let c = hgm.cursor
-    call s:hi.add(c.group, c.group, '\%#', c.priority)
+    call s:hi.add(c.group, c.group, '\M\%#', c.priority)
     call s:update_hl()
 endfunction
 
 function! s:inc.on_leave(cmdline)
     call s:hi.disable_all()
     call s:hi.delete_all()
+    let s:cli.is_restrict_win = s:FALSE
     " redraw: hide pseud-cursor
     if s:cli.getline() ==# ''
         echo ''
@@ -182,13 +185,17 @@ function! s:inc.on_char_pre(cmdline)
     if a:cmdline.is_input("<Over>(incsearch-next)")
         if a:cmdline.flag ==# 'n' " exit stay mode
             let s:cli.flag = ''
+            let s:cli.is_restrict_win = s:FALSE
+        elseif s:cli.is_restrict_win == s:TRUE
+            let s:cli.is_restrict_win = s:FALSE
         else
             let s:cli.vcount1 += 1
         endif
         call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
-        if a:cmdline.flag ==# 'n' " exit stay mode
+        if (a:cmdline.flag ==# 'n' || s:cli.is_restrict_win == s:TRUE)
             let s:cli.flag = ''
+            let s:cli.is_restrict_win = s:FALSE
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
@@ -199,7 +206,10 @@ function! s:inc.on_char_pre(cmdline)
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
-        if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
+        if (a:cmdline.flag ==# 'n' || s:cli.is_restrict_win == s:TRUE)
+            let s:cli.flag = ''
+            let s:cli.is_restrict_win = s:FALSE
+        endif
         let pattern = s:inc.get_pattern()
         let from = getpos('.')[1:2]
         let to = [line('w$'), s:get_max_col('w$')]
@@ -209,9 +219,10 @@ function! s:inc.on_char_pre(cmdline)
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag ==# 'b')
-        if a:cmdline.flag ==# 'n'
+        if (a:cmdline.flag ==# 'n' || s:cli.is_restrict_win == s:TRUE)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
+            let s:cli.is_restrict_win = s:FALSE
         endif
         let pattern = s:inc.get_pattern()
         let from = [line('w0'), 1]
@@ -226,12 +237,7 @@ function! s:inc.on_char_pre(cmdline)
 
     " Handle nowrapscan:
     "   if you `:set wrapscan`, you can't move to the reverse direction
-    if &wrapscan == 0 && (
-    \    a:cmdline.is_input("<Over>(incsearch-next)")
-    \ || a:cmdline.is_input("<Over>(incsearch-prev)")
-    \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
-    \ )
+    if &wrapscan == 0 && s:is_input_moving_mappings(a:cmdline)
         let pattern = s:inc.get_pattern()
         let start = [s:w.lnum, s:w.col]
         let end = (s:cli.flag ==# '') ? [line('$'), s:get_max_col('$')] : [1, 1]
@@ -239,6 +245,15 @@ function! s:inc.on_char_pre(cmdline)
         let max_cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
     endif
+endfunction
+
+function! s:is_input_moving_mappings(cmdline)
+    return (
+    \    a:cmdline.is_input("<Over>(incsearch-next)")
+    \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+    \ )
 endfunction
 
 function! s:inc.on_char(cmdline)
@@ -252,12 +267,20 @@ function! s:inc.on_char(cmdline)
         endif
 
         let pattern = incsearch#convert_with_case(pattern)
+        let top_line = line('w0')
+        let bottom_line = line('w$')
 
         " pseud-move cursor position: this is restored afterward if called by
         " <expr> mappings
         for _ in range(s:cli.vcount1)
-            call search(pattern, a:cmdline.flag)
+            let pos = searchpos(pattern, a:cmdline.flag)
         endfor
+
+        if s:cli.is_restrict_win
+        \   && (s:cli.flag ==# 'b' ? pos[0] < top_line : bottom_line < pos[0])
+            call winrestview(s:w)
+        endif
+
         let hgm = s:hgm()
         let m = hgm.match
         let r = hgm.match_reverse
@@ -317,6 +340,16 @@ function! incsearch#stay()
     else " exit stay mode
         return s:generate_command(m, pattern, '/') " assume '/'
     endif
+endfunction
+
+function! incsearch#stay_window_forward()
+    let s:cli.is_restrict_win = s:TRUE
+    return s:search('/')
+endfunction
+
+function! incsearch#stay_window_backward()
+    let s:cli.is_restrict_win = s:TRUE
+    return s:search('?')
 endfunction
 
 function! s:search(search_key)
