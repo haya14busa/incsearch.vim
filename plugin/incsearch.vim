@@ -42,10 +42,6 @@ noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward()
 noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward()
 noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay()
 
-noremap <silent><expr> <Plug>(incsearch-stay-win-f) incsearch#stay_window_forward()
-noremap <silent><expr> <Plug>(incsearch-stay-win-b) incsearch#stay_window_backward()
-
-
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
 
