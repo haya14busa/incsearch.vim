@@ -258,24 +258,28 @@ function! s:inc.on_char(cmdline)
         for _ in range(s:cli.vcount1)
             call search(pattern, a:cmdline.flag)
         endfor
+
+        " Highlight
         let hgm = s:hgm()
         let m = hgm.match
         let r = hgm.match_reverse
         let o = hgm.on_cursor
         let c = hgm.cursor
         let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
-        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
-
-        " Highlight
-        if g:incsearch#separate_highlight == s:FALSE || s:cli.flag == 'n'
-            call s:hi.add(m.group , m.group , pattern          , m.priority)
-        elseif s:cli.flag == '' " forward
-            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
-            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
-        elseif s:cli.flag == 'b' " backward
-            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
-            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+        let should_separate_highlight = 
+        \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
+        if ! should_separate_highlight
+            call s:hi.add(m.group, m.group, pattern, m.priority)
+        else
+            let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
+            let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
+            if s:cli.flag == '' " forward
+                call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
+                call s:hi.add(r.group , r.group , backward_pattern , r.priority)
+            elseif s:cli.flag == 'b' " backward
+                call s:hi.add(m.group , m.group , backward_pattern , m.priority)
+                call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+            endif
         endif
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
