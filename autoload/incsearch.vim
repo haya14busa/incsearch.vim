@@ -225,7 +225,7 @@ function! s:inc.on_char_pre(cmdline)
     endif
 
     " Handle nowrapscan:
-    "   if you `:set wrapscan`, you can't move to the reverse direction
+    "   if you `:set nowrapscan`, you can't move to the reverse direction
     if &wrapscan == 0 && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
