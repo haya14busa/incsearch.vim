@@ -448,8 +448,12 @@ function! s:turn_on(highlight)
     execute 'highlight' a:highlight.name a:highlight.highlight
 endfunction
 
-function! s:pseud_visual_highlight(visual_hl, mode)
-    let pattern = s:get_visual_pattern_by_range(a:mode)
+function! s:pseud_visual_highlight(visual_hl, mode, ...)
+    " Note: the default pos value assume visual selection is not cleared.
+    " It uses curswant to emulate visual-block
+    let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
+    let v_end_pos   = get(a:, 2, [line("."),getcurpos()[4]])
+    let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
     execute 'hi IncSearchVisual' a:visual_hl.highlight
@@ -457,13 +461,8 @@ function! s:pseud_visual_highlight(visual_hl, mode)
     call s:update_hl()
 endfunction
 
-function! s:get_visual_pattern_by_range(mode)
-    let v_start = [line("v"),col("v")] " visual_start_position
-    let v_end   = [line("."),col(".")] " visual_end_position
-    if s:is_pos_less_equal(v_end, v_start)
-        " swap position
-        let [v_end, v_start] = [v_start, v_end]
-    endif
+function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
+    let [v_start, v_end] = sort([a:v_start_pos, a:v_end_pos])
     if a:mode ==# 'v'
         return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
         \              v_start[0], v_start[1], v_end[0], v_end[1])
