@@ -165,6 +165,7 @@ function! s:inc.on_leave(cmdline)
     call s:hi.disable_all()
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
+    redraw " need to redraw for handling non-<expr> mappings
     if s:cli.getline() ==# ''
         echo ''
     else
