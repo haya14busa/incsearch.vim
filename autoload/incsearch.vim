@@ -311,15 +311,16 @@ endfunction
 " move the cursor while searching
 function! incsearch#stay()
     let m = mode(1)
-    let pattern = s:get_pattern('', m)
+    let input = s:get_pattern('', m)
     if s:cli.flag ==# 'n' " stay
-        if pattern !=# ''
-            call histadd('/', pattern)
+        if input !=# ''
+            let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+            call histadd('/', input)
             let @/ = pattern
         endif
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
     else " exit stay mode while searching
-        return s:generate_command(m, pattern, '/') " assume '/'
+        return s:generate_command(m, input, '/') " assume '/'
     endif
 endfunction
 
