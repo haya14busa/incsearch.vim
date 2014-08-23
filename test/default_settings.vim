@@ -27,7 +27,27 @@ function! s:suite.command_exist()
     augroup END
 endfunction
 
+function! s:suite.highlight()
+    call s:assert.equals(hlexists('IncSearchMatch')        , 1)
+    call s:assert.equals(hlexists('IncSearchMatchReverse') , 1)
+    call s:assert.equals(hlexists('IncSearchCursor')       , 1)
+    call s:assert.equals(hlexists('IncSearchOnCursor')     , 1)
+    call s:assert.equals(hlexists('IncSearchUnderline')    , 1)
+endfunction
+
+function! s:suite.test_autoload_function()
+    try
+        " load autoload functions
+        runtime autoload/*.vim
+    catch
+    endtry
+    call s:assert.exists('*incsearch#forward')
+    call s:assert.exists('*incsearch#backward')
+    call s:assert.exists('*incsearch#stay')
+    call s:assert.exists('*incsearch#parse_pattern')
+    call s:assert.exists('*incsearch#convert_with_case')
+endfunction
+
 function! s:suite.is_duplicate_helptags()
     helptags ./doc
 endfunction
-
