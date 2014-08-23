@@ -266,7 +266,7 @@ function! s:inc.on_char(cmdline)
         let o = hgm.on_cursor
         let c = hgm.cursor
         let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        let should_separate_highlight = 
+        let should_separate_highlight =
         \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
         if ! should_separate_highlight
             call s:hi.add(m.group, m.group, pattern, m.priority)
@@ -318,7 +318,7 @@ function! incsearch#stay()
             let @/ = pattern
         endif
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
-    else " exit stay mode
+    else " exit stay mode while searching
         return s:generate_command(m, pattern, '/') " assume '/'
     endif
 endfunction
@@ -373,6 +373,7 @@ endfunction
 function! incsearch#parse_pattern(expr, search_key)
     " search_key : '/' or '?'
     " expr       : /{pattern\/pattern}/{offset}
+    " expr       : /{pattern}/;/{newpattern} :h //;
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
@@ -451,6 +452,7 @@ endfunction
 function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
+    " FIXME: highlight doesn't work if the range is over screen height
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
     let v_end_pos   = get(a:, 2, [line("."),getcurpos()[4]])
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
