@@ -299,18 +299,36 @@ call s:cli.connect(s:inc)
 "}}}
 
 " Main: {{{
+" @expr: called by <expr> mappings
 
 function! incsearch#forward()
+    call s:search_for_non_expr('/')
+endfunction
+
+" @expr
+function! incsearch#forward_expr()
     return s:search('/')
 endfunction
 
 function! incsearch#backward()
+    return s:search_for_non_expr('?')
+endfunction
+
+" @expr
+function! incsearch#backward_expr()
     return s:search('?')
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
 function! incsearch#stay()
+    let cmd = incsearch#stay_expr()
+    " TODO:
+    call feedkeys(cmd, 'n')
+endfunction
+
+" @expr
+function! incsearch#stay_expr()
     let m = mode(1)
     let input = s:get_pattern('', m)
     if s:cli.flag ==# 'n' " stay
@@ -366,6 +384,52 @@ function! s:generate_command(mode, pattern, search_key)
         return "\<ESC>" . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
     else " Cancel
         return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
+    endif
+endfunction
+
+" @normal: assume normal mode basically
+function! s:search_for_non_expr(search_key)
+    let m = mode(1)
+    " side effect: move cursor
+    let input = s:get_pattern(a:search_key, m)
+    let is_cancel = s:cli.exit_code()
+    if is_cancel
+        return
+    endif
+
+    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let should_execute = !empty(offset) || input ==# ''
+    if should_execute
+        " Execute with feedkeys() to work with
+        "  1. {offset}
+        "  2. empty input (use last search pattern)
+        "  FIXME: Pattern not found error will not occur
+        "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
+        call winrestview(s:w)
+        let cmd = s:generate_command(m, input, a:search_key)
+        call feedkeys(cmd, 'n')
+    else
+        " Add history if necessary
+        call histadd(a:search_key, input)
+        let @/ = pattern
+
+        " Emulate E486 {{{
+        let target_view = winsaveview()
+        call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
+        let pos = searchpos(pattern, 'n')
+        call winrestview(target_view)
+        if pos ==# [0,0]
+            call s:Error('E486: Pattern not found: ' . pattern)
+        endif
+        "}}}
+
+        if m !=# 'no' " guard for operator-mapping
+            " Handle :set hlsearch
+            call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+        endif
+
+        " TODO: 'search hit BOTTOM, continuing at TOP'
+        " TODO: 'search hit TOP, continuing at BOTTOM'
     endif
 endfunction
 
@@ -529,6 +593,33 @@ endfunction
 " expr: similar to line(), col()
 function! s:get_max_col(expr)
     return strlen(getline(a:expr)) + 1
+endfunction
+
+function! s:silent_feedkeys(expr, name, ...)
+    " Ref:
+    " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6
+    let mode = get(a:, 1, "m")
+    let name = "incsearch-" . a:name
+    let map = printf("<Plug>(%s)", name)
+    if mode == "n"
+        let command = "nnoremap"
+    else
+        let command = "nmap"
+    endif
+    execute command "<silent>" map printf("%s:nunmap %s<CR>", a:expr, map)
+    if mode(1) !=# 'ce'
+        " FIXME: mode(1) !=# 'ce' exists only for the test
+        "        :h feedkeys() doesn't work while runnning a test script
+        "        https://github.com/kana/vim-vspec/issues/27
+        call feedkeys(printf("\<Plug>(%s)", name))
+    endif
+endfunction
+
+function! s:Error(msg)
+    redraw | echo ''
+    echohl ErrorMsg
+    echo a:msg
+    echohl None
 endfunction
 
 "}}}
