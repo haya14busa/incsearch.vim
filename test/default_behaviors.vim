@@ -28,10 +28,12 @@ endfunction
 function! s:get_pos_with_default(command, default_command, pattern)
     let w = winsaveview()
     silent! exec 'normal! ' . a:default_command . a:pattern . "\<CR>"
-    let x = getcurpos()
+    " let x = getcurpos()
+    let x = winsaveview()
     call winrestview(w)
     silent! exec 'normal ' . a:command . a:pattern . "\<CR>"
-    let y = getcurpos()
+    " let y = getcurpos()
+    let y = winsaveview()
     return [x, y]
 endfunction
 
@@ -102,12 +104,15 @@ function! s:suite.stay()
                 \  'pattern4 pattern5 pattern6'])
     set nowrapscan
     normal! gg0
-    let c = getcurpos()
+    " let c = getcurpos()
+    let c = winsaveview()
     call s:assert.not_eq_with_default('g/','/','pat')
-    call s:assert.equals(getcurpos(), c)
+    " call s:assert.equals(getcurpos(), c)
+    call s:assert.equals(winsaveview(), c)
     set wrapscan
     call s:assert.not_eq_with_default('g/','/','pat')
-    call s:assert.equals(getcurpos(), c)
+    " call s:assert.equals(getcurpos(), c)
+    call s:assert.equals(winsaveview(), c)
 
     " History
     exec "normal g/hoge\<CR>"
