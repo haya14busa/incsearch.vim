@@ -235,10 +235,12 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
-0.9.0	2014-08-09
-	- Init.
-	  1. Incremental highlight for all matched pattern
-	  2. Cursor move while incremental searching like emacs
+0.9.2	2014-08-25
+	1. Add test
+	2. Minor fix: history emulation with |<Plug>(incsearch-stay)|
+	3. Improve pseud-visual highlight: consider curswant for |visual-block|
+	4. Minor performance improvement: do not always generate direction
+	   specific patterns
 
 0.9.1	2014-08-15
 	1. Fix visual highlight
@@ -249,5 +251,11 @@ CHANGELOG						*incsearch-changelog*
 	    - Handle |wrapscan| option
 	    - Enable cursor moving while |<Plug>(incsearch-stay)|
 	3. Implement |g:incsearch#separate_highlight| option
+
+0.9.0	2014-08-09
+	- Init.
+	  1. Incremental highlight for all matched pattern
+	  2. Cursor move while incremental searching like emacs
+
 
 vim:tw=78:ts=8:ft=help:norl:noet:fen:fdl=0:fdm=marker:
