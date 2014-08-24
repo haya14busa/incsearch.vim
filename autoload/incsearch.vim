@@ -450,6 +450,7 @@ function! s:turn_on(highlight)
     execute 'highlight' a:highlight.name a:highlight.highlight
 endfunction
 
+" TODO: test
 function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
@@ -464,6 +465,7 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     call s:update_hl()
 endfunction
 
+" TODO: test
 function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
     let [v_start, v_end] = sort([a:v_start_pos, a:v_end_pos])
     if a:mode ==# 'v'

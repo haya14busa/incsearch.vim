@@ -1,0 +1,7 @@
+language: viml
+install:
+    - git clone https://github.com/thinca/vim-themis
+before_script:
+    - vim --version
+script:
+    - vim-themis/bin/themis --reporter spec
