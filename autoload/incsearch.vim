@@ -225,7 +225,7 @@ function! s:inc.on_char_pre(cmdline)
     endif
 
     " Handle nowrapscan:
-    "   if you `:set wrapscan`, you can't move to the reverse direction
+    "   if you `:set nowrapscan`, you can't move to the reverse direction
     if &wrapscan == 0 && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
@@ -258,24 +258,28 @@ function! s:inc.on_char(cmdline)
         for _ in range(s:cli.vcount1)
             call search(pattern, a:cmdline.flag)
         endfor
+
+        " Highlight
         let hgm = s:hgm()
         let m = hgm.match
         let r = hgm.match_reverse
         let o = hgm.on_cursor
         let c = hgm.cursor
         let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
-        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
-
-        " Highlight
-        if g:incsearch#separate_highlight == s:FALSE || s:cli.flag == 'n'
-            call s:hi.add(m.group , m.group , pattern          , m.priority)
-        elseif s:cli.flag == '' " forward
-            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
-            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
-        elseif s:cli.flag == 'b' " backward
-            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
-            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+        let should_separate_highlight =
+        \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
+        if ! should_separate_highlight
+            call s:hi.add(m.group, m.group, pattern, m.priority)
+        else
+            let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
+            let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
+            if s:cli.flag == '' " forward
+                call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
+                call s:hi.add(r.group , r.group , backward_pattern , r.priority)
+            elseif s:cli.flag == 'b' " backward
+                call s:hi.add(m.group , m.group , backward_pattern , m.priority)
+                call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+            endif
         endif
         call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
         call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
@@ -307,15 +311,16 @@ endfunction
 " move the cursor while searching
 function! incsearch#stay()
     let m = mode(1)
-    let pattern = s:get_pattern('', m)
+    let input = s:get_pattern('', m)
     if s:cli.flag ==# 'n' " stay
-        if pattern !=# ''
-            call histadd('/', pattern)
+        if input !=# ''
+            let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+            call histadd('/', input)
             let @/ = pattern
         endif
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
-    else " exit stay mode
-        return s:generate_command(m, pattern, '/') " assume '/'
+    else " exit stay mode while searching
+        return s:generate_command(m, input, '/') " assume '/'
     endif
 endfunction
 
@@ -369,6 +374,7 @@ endfunction
 function! incsearch#parse_pattern(expr, search_key)
     " search_key : '/' or '?'
     " expr       : /{pattern\/pattern}/{offset}
+    " expr       : /{pattern}/;/{newpattern} :h //;
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
@@ -444,8 +450,14 @@ function! s:turn_on(highlight)
     execute 'highlight' a:highlight.name a:highlight.highlight
 endfunction
 
-function! s:pseud_visual_highlight(visual_hl, mode)
-    let pattern = s:get_visual_pattern_by_range(a:mode)
+" TODO: test
+function! s:pseud_visual_highlight(visual_hl, mode, ...)
+    " Note: the default pos value assume visual selection is not cleared.
+    " It uses curswant to emulate visual-block
+    " FIXME: highlight doesn't work if the range is over screen height
+    let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
+    let v_end_pos   = get(a:, 2, [line("."),getcurpos()[4]])
+    let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
     execute 'hi IncSearchVisual' a:visual_hl.highlight
@@ -453,13 +465,9 @@ function! s:pseud_visual_highlight(visual_hl, mode)
     call s:update_hl()
 endfunction
 
-function! s:get_visual_pattern_by_range(mode)
-    let v_start = [line("v"),col("v")] " visual_start_position
-    let v_end   = [line("."),col(".")] " visual_end_position
-    if s:is_pos_less_equal(v_end, v_start)
-        " swap position
-        let [v_end, v_start] = [v_start, v_end]
-    endif
+" TODO: test
+function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
+    let [v_start, v_end] = sort([a:v_start_pos, a:v_end_pos])
     if a:mode ==# 'v'
         return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
         \              v_start[0], v_start[1], v_end[0], v_end[1])
