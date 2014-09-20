@@ -14,9 +14,12 @@ function! s:suite.config()
 endfunction
 
 function! s:suite.mappings()
-    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'nvo'), 'incsearch#forward()')
-    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'nvo'), 'incsearch#backward()')
-    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'nvo'), 'incsearch#stay()')
+    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'n'), ':<C-U>call incsearch#forward()<CR>')
+    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'n'), ':<C-U>call incsearch#backward()<CR>')
+    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'n'), ':<C-U>call incsearch#stay()<CR>')
+    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'vo'), 'incsearch#forward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'vo'), 'incsearch#backward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'vo'), 'incsearch#stay_expr()')
 endfunction
 
 function! s:suite.command_exist()
