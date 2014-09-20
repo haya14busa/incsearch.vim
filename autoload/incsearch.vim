@@ -322,22 +322,31 @@ endfunction
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
 function! incsearch#stay()
-    let cmd = incsearch#stay_expr()
+    let m = mode(1)
+    let cmd = incsearch#stay_expr(s:TRUE) " arg: Please histadd for me!(do_force_histadd)
+    call s:silent_highlight_on(m)
     call winrestview(s:w)
-    call feedkeys(cmd, 'n')
+    exec 'normal!' cmd
 endfunction
 
 " @expr
-function! incsearch#stay_expr()
+function! incsearch#stay_expr(...)
+    " arg: do_force_histadd
+    " return: command which is excutable with expr-mappings or `exec 'normal!'`
+    let do_force_histadd = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
     let m = mode(1)
+
     let input = s:get_pattern('', m)
+
+    " execute histadd manually
+    if (s:cli.flag ==# 'no' || do_force_histadd) && input !=# ''
+        let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+        call histadd('/', input)
+        let @/ = pattern
+    endif
+
     if s:cli.flag ==# 'n' " stay TODO: better flag name
-        if input !=# ''
-            let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
-            call histadd('/', input)
-            let @/ = pattern
-        endif
-        return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
+        return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>" " just exit
     else " exit stay mode while searching
         return s:generate_command(m, input, '/') " assume '/'
     endif
@@ -423,10 +432,7 @@ function! s:search_for_non_expr(search_key)
         endif
         "}}}
 
-        if m !=# 'no' " guard for operator-mapping
-            " Handle :set hlsearch
-            call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
-        endif
+        call s:silent_highlight_on(m)
 
         " TODO: 'search hit BOTTOM, continuing at TOP'
         " TODO: 'search hit TOP, continuing at BOTTOM'
@@ -612,6 +618,13 @@ function! s:silent_feedkeys(expr, name, ...)
         "        :h feedkeys() doesn't work while runnning a test script
         "        https://github.com/kana/vim-vspec/issues/27
         call feedkeys(printf("\<Plug>(%s)", name))
+    endif
+endfunction
+
+function! s:silent_highlight_on(...) " arg: mode
+    " Handle :set hlsearch
+    if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
+        call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
     endif
 endfunction
 
