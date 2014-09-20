@@ -323,7 +323,7 @@ endfunction
 " move the cursor while searching
 function! incsearch#stay()
     let cmd = incsearch#stay_expr()
-    " TODO:
+    call winrestview(s:w)
     call feedkeys(cmd, 'n')
 endfunction
 
