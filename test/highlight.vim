@@ -18,6 +18,9 @@ endfunction
 function! s:suite.hlsearch()
     call AddLines(['pattern1 pattern2 pattern3',
                 \  'pattern4 pattern5 pattern6'])
+    if !exists('v:hlsearch')
+        call s:assert.skip("Skip because vim version are too low to test it")
+    endif
     " FIXME:
     for keyseq in ['/', '?', 'g/']
         nohlsearch
