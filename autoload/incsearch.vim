@@ -331,7 +331,7 @@ endfunction
 function! incsearch#stay_expr()
     let m = mode(1)
     let input = s:get_pattern('', m)
-    if s:cli.flag ==# 'n' " stay
+    if s:cli.flag ==# 'n' " stay TODO: better flag name
         if input !=# ''
             let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
             call histadd('/', input)
