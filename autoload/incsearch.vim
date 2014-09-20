@@ -323,29 +323,49 @@ endfunction
 " move the cursor while searching
 function! incsearch#stay()
     let m = mode(1)
-    let cmd = incsearch#stay_expr(s:TRUE) " arg: Please histadd for me!(do_force_histadd)
-    call s:silent_highlight_on(m)
+    let cmd = incsearch#stay_expr(s:TRUE) " arg: Please histadd for me!
     call winrestview(s:w)
-    exec 'normal!' cmd
+
+    " Avoid using feedkeys() as much as possible because
+    " feedkeys() cannot be tested and sometimes cause unexpected behavior
+    " FIXME: redundant
+    let [_, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    if !empty(offset)
+        call feedkeys(cmd, 'n')
+    else
+        " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
+        " `feedkeys()` in that case
+        call s:silent_highlight_on(m)
+        exec 'normal!' cmd
+    endif
 endfunction
 
 " @expr
 function! incsearch#stay_expr(...)
-    " arg: do_force_histadd
+    " arg: called_by_non_expr
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
-    let do_force_histadd = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
+    let called_by_non_expr = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
     let m = mode(1)
 
     let input = s:get_pattern('', m)
 
     " execute histadd manually
-    if (s:cli.flag ==# 'no' || do_force_histadd) && input !=# ''
-        let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
-        call histadd('/', input)
-        let @/ = pattern
+    if (s:cli.flag ==# 'n' || called_by_non_expr) && input !=# ''
+        let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+        if (!called_by_non_expr || empty(offset)) " see incsearch#stay()
+            call histadd('/', input)
+            let @/ = pattern
+        endif
     endif
 
     if s:cli.flag ==# 'n' " stay TODO: better flag name
+        " FIXME: do not move cursor but need to handle {offset} for n & N ...! {{{
+        " if !empty(offset)
+        "     let cmd = s:generate_command(m, input, '/')
+        "     call feedkeys(cmd, 'n')
+        "     call winrestview(s:w)
+        " endif
+        " }}}
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>" " just exit
     else " exit stay mode while searching
         return s:generate_command(m, input, '/') " assume '/'
@@ -414,8 +434,11 @@ function! s:search_for_non_expr(search_key)
         "  2. empty input (use last search pattern)
         "  FIXME: Pattern not found error will not occur
         "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
-        call winrestview(s:w)
+        "  FIXME: if the offset is `/e`, `/b+` , etc... and currrent cursor
+        "  position matches the input pattern, the incremental highlight of
+        "  cursor position is wrong... but it's hard to fix
         let cmd = s:generate_command(m, input, a:search_key)
+        call winrestview(s:w)
         call feedkeys(cmd, 'n')
     else
         " Add history if necessary
