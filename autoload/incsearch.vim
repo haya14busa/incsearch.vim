@@ -448,6 +448,7 @@ function! s:search_for_non_expr(search_key)
         " Emulate E486 {{{
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
+        normal! m`
         let pos = searchpos(pattern, 'n')
         call winrestview(target_view)
         if pos ==# [0,0]
