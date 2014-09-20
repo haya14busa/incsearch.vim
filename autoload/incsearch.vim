@@ -293,6 +293,12 @@ function! s:inc.on_char(cmdline)
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
     endtry
+
+    " pseudo-normal-zz after scroll
+    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
+        call winrestview({'topline': line('.') - winheight(0) / 2})
+    endif
 endfunction
 
 call s:cli.connect(s:inc)
