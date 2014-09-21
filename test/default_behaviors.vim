@@ -133,6 +133,8 @@ function! s:suite.stay()
 endfunction
 
 function! s:suite.offset()
+    call s:assert.skip("Skip because it use feedkeys(), so cannot test it")
+
     call AddLines(['pattern1 pattern2 pattern3',
                 \  'pattern4 pattern5 pattern6'])
     normal! gg0

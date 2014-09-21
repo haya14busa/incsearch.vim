@@ -38,9 +38,16 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward()
-noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward()
-noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay()
+" <expr> for dot repeat (`.`) in operator pending mode and
+" easy and better handling for visual mode
+noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
+noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
+noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
+" overwrite normal mode mappings to avoid flash
+nnoremap <silent> <Plug>(incsearch-forward)  :<C-u>call incsearch#forward()<CR>
+nnoremap <silent> <Plug>(incsearch-backward) :<C-u>call incsearch#backward()<CR>
+nnoremap <silent> <Plug>(incsearch-stay)     :<C-u>call incsearch#stay()<CR>
+" TODO: support non-expr mappings for vnoremap?
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
