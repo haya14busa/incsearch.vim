@@ -409,7 +409,12 @@ function! s:generate_command(mode, pattern, search_key)
     \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
     if (s:cli.exit_code() == 0)
-        call s:cli.callevent('on_execute_pre')
+        call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+        " NOTE:
+        "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
+        "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
+        "   but, if you do not move the cursor while incremental searching,
+        "   there are no need to use <Esc>.
         return "\<ESC>" . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
     else " Cancel
         return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
