@@ -231,7 +231,7 @@ function! s:inc.on_char_pre(cmdline)
 
     " Handle nowrapscan:
     "   if you `:set nowrapscan`, you can't move to the reverse direction
-    if &wrapscan == 0 && (
+    if &wrapscan == s:FALSE && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -466,6 +466,7 @@ function! s:search_for_non_expr(search_key)
         normal! m`
         let pos = searchpos(pattern, 'n' . s:cli.flag)
         " handle `n` and `N` preparation
+        " TODO: add option for consistent direction of `n` and `N`
         exec "normal!" a:search_key . "\<CR>"
         call winrestview(target_view)
         if pos ==# [0,0]
