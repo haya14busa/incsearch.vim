@@ -202,8 +202,10 @@ function! s:inc.on_char_pre(cmdline)
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:inc.get_pattern()
-        let from = getpos('.')[1:2]
-        let to = [line('w$'), s:get_max_col('w$')]
+        let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
+        let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+        \          ? s:get_max_col(pos_expr) : 1
+        let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
         let cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 += cnt
         call a:cmdline.setchar('')
@@ -215,8 +217,10 @@ function! s:inc.on_char_pre(cmdline)
             let s:cli.vcount1 -= 1
         endif
         let pattern = s:inc.get_pattern()
-        let from = [line('w0'), 1]
-        let to = getpos('.')[1:2]
+        let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
+        let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+        \          ? s:get_max_col(pos_expr) : 1
+        let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
         let cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 -= cnt
         if s:cli.vcount1 < 1
@@ -615,8 +619,10 @@ endfunction
 " parameter: pattern, from, to
 function! s:count_pattern(pattern, ...)
     let w = winsaveview()
-    let from = get(a:, 1, [1, 1])
-    let to   = get(a:, 2, [line('$'), s:get_max_col('$')])
+    let [from, to] = reverse(sort([
+    \   get(a:, 1, [1, 1]),
+    \   get(a:, 2, [line('$'), s:get_max_col('$')])
+    \ ], 's:is_pos_less_equal'))
     call cursor(from)
     let cnt = 0
     try
