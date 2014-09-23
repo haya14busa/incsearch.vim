@@ -460,7 +460,7 @@ function! s:search_for_non_expr(search_key)
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
         normal! m`
-        let pos = searchpos(pattern, 'n')
+        let pos = searchpos(pattern, 'n' . s:cli.flag)
         " handle `n` and `N` preparation
         exec "normal!" a:search_key . "\<CR>"
         call winrestview(target_view)
