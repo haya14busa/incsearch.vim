@@ -341,7 +341,7 @@ function! incsearch#stay()
     else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
-        call s:silent_highlight_on(m)
+        call s:silent_after_search(m)
         exec 'normal!' cmd
     endif
 endfunction
@@ -456,18 +456,20 @@ function! s:search_for_non_expr(search_key)
         call histadd(a:search_key, input)
         let @/ = pattern
 
-        " Emulate E486 {{{
+        " Emulate E486 and handling `n` and `N` preparation {{{
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
         normal! m`
         let pos = searchpos(pattern, 'n')
+        " handle `n` and `N` preparation
+        exec "normal!" a:search_key . "\<CR>"
         call winrestview(target_view)
         if pos ==# [0,0]
             call s:Error('E486: Pattern not found: ' . pattern)
         endif
         "}}}
 
-        call s:silent_highlight_on(m)
+        call s:silent_after_search(m)
 
         " TODO: 'search hit BOTTOM, continuing at TOP'
         " TODO: 'search hit TOP, continuing at BOTTOM'
@@ -656,10 +658,13 @@ function! s:silent_feedkeys(expr, name, ...)
     endif
 endfunction
 
-function! s:silent_highlight_on(...) " arg: mode
+function! s:silent_after_search(...) " arg: mode
     " Handle :set hlsearch
     if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+        call s:silent_feedkeys(
+        \   ":let v:searchforward=" . v:searchforward . "\<CR>",
+        \   'searchforward', 'n')
     endif
 endfunction
 
