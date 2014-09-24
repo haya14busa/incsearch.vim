@@ -361,21 +361,22 @@ function! incsearch#stay_expr(...)
     let input = s:get_pattern('', m)
 
     " execute histadd manually
-    if (s:cli.flag ==# 'n' || called_by_non_expr) && input !=# ''
+    if s:cli.flag ==# 'n' && input !=# ''
         let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
-        if (!called_by_non_expr || empty(offset)) " see incsearch#stay()
+        if (!called_by_non_expr || empty(offset)) " see incsearch#stay() and below NOTE:
             call histadd('/', input)
             let @/ = pattern
         endif
     endif
 
     if s:cli.flag ==# 'n' " stay TODO: better flag name
-        " FIXME: do not move cursor but need to handle {offset} for n & N ...! {{{
-        " if !empty(offset)
-        "     let cmd = s:generate_command(m, input, '/')
-        "     call feedkeys(cmd, 'n')
-        "     call winrestview(s:w)
-        " endif
+        " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
+        if !empty(offset)
+            let cmd = s:generate_command(m, input, '/')
+            call feedkeys(cmd, 'n')
+            " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
+            call s:silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
+        endif
         " }}}
         return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>" " just exit
     else " exit stay mode while searching
