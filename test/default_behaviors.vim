@@ -133,8 +133,6 @@ function! s:suite.stay()
 endfunction
 
 function! s:suite.offset()
-    call s:assert.skip("Skip because it use feedkeys(), so cannot test it")
-
     call AddLines(['pattern1 pattern2 pattern3',
                 \  'pattern4 pattern5 pattern6'])
     normal! gg0
@@ -143,6 +141,6 @@ function! s:suite.offset()
     call s:assert.eq_with_default('?','?','pat?e5+1')
     call s:assert.equals(s:get_pos_char(), '6')
     exec "normal g/pattern\\d/e\<CR>"
-    call s:assert.equals('pattern\d', @/)
-    call s:assert.equals('pattern\d/e', histget('/', -1))
+    call s:assert.equals(@/, 'pattern\d')
+    call s:assert.equals(histget('/', -1), 'pattern\d/e')
 endfunction
