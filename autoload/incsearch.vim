@@ -472,7 +472,8 @@ function! s:search_for_non_expr(search_key)
         "   1. `n` and `N` preparation with s:silent_after_search()
         "   2. 'search hit BOTTOM, continuing at TOP'
         "   3. 'search hit TOP, continuing at BOTTOM'
-        exec "normal!" a:search_key . "\<CR>"
+        "   silent!: Do not show E486, because it also echo v:throwpoint
+        silent! exec "normal!" a:search_key . "\<CR>"
 
         call winrestview(target_view)
         if pos ==# [0,0]
