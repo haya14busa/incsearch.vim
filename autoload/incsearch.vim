@@ -462,23 +462,28 @@ function! s:search_for_non_expr(search_key)
         call histadd(a:search_key, input)
         let @/ = pattern
 
-        " Emulate E486 and handling `n` and `N` preparation {{{
+        " Emulate errors, and handling `n` and `N` preparation {{{
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
+        " Set jump list
         normal! m`
-        let pos = searchpos(pattern, 'n' . s:cli.flag)
 
-        " handle
+        let old_errmsg = v:errmsg
+        let v:errmsg = ''
+        " NOTE: handle
         "   1. `n` and `N` preparation with s:silent_after_search()
         "   2. 'search hit BOTTOM, continuing at TOP'
         "   3. 'search hit TOP, continuing at BOTTOM'
-        "   silent!: Do not show E486, because it also echo v:throwpoint
+        "   4. Emulate error message
+        "   silent!: Do not show error message, because it also echo v:throwpoint
         silent! exec "normal!" a:search_key . "\<CR>"
 
-        call winrestview(target_view)
-        if pos ==# [0,0]
-            call s:Error('E486: Pattern not found: ' . pattern)
+        if v:errmsg != ''
+            call s:Error(v:errmsg)
+        else
+            let v:errmsg = old_errmsg
         endif
+        call winrestview(target_view)
         "}}}
 
         call s:silent_after_search(m)
