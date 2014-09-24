@@ -31,6 +31,10 @@ CONTENTS				*incsearch-contents*
 	Introduction			|incsearch-introduction|
 	Install				|incsearch-install|
 	Usage				|incsearch-usage|
+	    Basic usage			|incsearch-basic-usage|
+	    Command line interface	|incsearch-commandline-interface|
+	    Highlight			|incsearch-highlight|
+	    AUTOCMD			|incsearch-autocmd|
 	Known Issues			|incsearch-known-issues|
 	ChangeLog			|incsearch-changelog|
 
@@ -68,7 +72,9 @@ INSTALL						    *incsearch-install*
 ==============================================================================
 USAGE							*incsearch-usage*
 
-Basic Usage~
+------------------------------------------------------------------------------
+Basic usage~
+							*incsearch-basic-usage*
 						*<Plug>(incsearch-forward)*
 						*<Plug>(incsearch-backward)*
 						*<Plug>(incsearch-stay)*
