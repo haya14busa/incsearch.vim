@@ -11,6 +11,7 @@ function! s:suite.config()
     call s:assert.equals(g:incsearch#emacs_like_keymap, 0)
     call s:assert.equals(g:incsearch#highlight, {})
     call s:assert.equals(g:incsearch#separate_highlight, 0)
+    call s:assert.equals(g:incsearch#consistent_n_direction, 0)
 endfunction
 
 function! s:suite.mappings()
