@@ -31,6 +31,11 @@ CONTENTS				*incsearch-contents*
 	Introduction			|incsearch-introduction|
 	Install				|incsearch-install|
 	Usage				|incsearch-usage|
+	    Basic usage			|incsearch-basic-usage|
+	    Additional usage		|incsearch-additional-usage|
+	    Command line interface	|incsearch-commandline-interface|
+	    Highlight			|incsearch-highlight|
+	    AUTOCMD			|incsearch-autocmd|
 	Known Issues			|incsearch-known-issues|
 	ChangeLog			|incsearch-changelog|
 
@@ -68,7 +73,9 @@ INSTALL						    *incsearch-install*
 ==============================================================================
 USAGE							*incsearch-usage*
 
-Basic Usage~
+------------------------------------------------------------------------------
+Basic usage~
+							*incsearch-basic-usage*
 						*<Plug>(incsearch-forward)*
 						*<Plug>(incsearch-backward)*
 						*<Plug>(incsearch-stay)*
@@ -83,6 +90,19 @@ Basic Usage~
     <Plug>(incsearch-stay)     : It doesn't move the cursor unless explicitly
                                  using cursor move command while incremental
                                  searching.
+
+------------------------------------------------------------------------------
+Additional usage~
+						    *incsearch-additional-usage*
+
+					    *g:incsearch#consistent_n_direction*
+	If you set this option to 1, |n| and |N| directions are always forward
+	and backward respectively even after performing
+	|<Plug>(incsearch-backward)| which is improved motion of |?|.
+>
+	    let g:incsearch#consistent_n_direction = 1
+<
+	default: 0
 
 ------------------------------------------------------------------------------
 Command line interface~

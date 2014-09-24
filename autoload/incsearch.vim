@@ -32,9 +32,10 @@ let s:TRUE = !0
 let s:FALSE = 0
 
 " Option:
-let g:incsearch#emacs_like_keymap = get(g:, 'incsearch#emacs_like_keymap', s:FALSE)
-let g:incsearch#highlight = get(g:, 'incsearch#highlight', {})
-let g:incsearch#separate_highlight = get(g:, 'incsearch#separate_highlight', s:FALSE)
+let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap'      , s:FALSE)
+let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
+let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
+let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -671,9 +672,9 @@ function! s:silent_after_search(...) " arg: mode
     " Handle :set hlsearch
     if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
-        " TODO: add option for consistent direction of `n` and `N`
+        let d = g:incsearch#consistent_n_direction ? 1 : v:searchforward
         call s:silent_feedkeys(
-        \   ":let v:searchforward=" . v:searchforward . "\<CR>",
+        \   ":let v:searchforward=" . d . "\<CR>",
         \   'searchforward', 'n')
     endif
 endfunction
