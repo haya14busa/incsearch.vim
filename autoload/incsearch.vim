@@ -302,7 +302,7 @@ function! s:inc.on_char(cmdline)
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
-        call winrestview({'topline': max([0, line('.') - winheight(0) / 2])})
+        call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
 endfunction
 
