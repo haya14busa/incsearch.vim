@@ -202,8 +202,10 @@ function! s:inc.on_char_pre(cmdline)
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:inc.get_pattern()
-        let from = getpos('.')[1:2]
-        let to = [line('w$'), s:get_max_col('w$')]
+        let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
+        let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+        \          ? s:get_max_col(pos_expr) : 1
+        let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
         let cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 += cnt
         call a:cmdline.setchar('')
@@ -215,8 +217,10 @@ function! s:inc.on_char_pre(cmdline)
             let s:cli.vcount1 -= 1
         endif
         let pattern = s:inc.get_pattern()
-        let from = [line('w0'), 1]
-        let to = getpos('.')[1:2]
+        let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
+        let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+        \          ? s:get_max_col(pos_expr) : 1
+        let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
         let cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 -= cnt
         if s:cli.vcount1 < 1
@@ -227,7 +231,7 @@ function! s:inc.on_char_pre(cmdline)
 
     " Handle nowrapscan:
     "   if you `:set nowrapscan`, you can't move to the reverse direction
-    if &wrapscan == 0 && (
+    if &wrapscan == s:FALSE && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -293,6 +297,12 @@ function! s:inc.on_char(cmdline)
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
     endtry
+
+    " pseudo-normal-zz after scroll
+    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
+        call winrestview({'topline': max([0, line('.') - winheight(0) / 2])})
+    endif
 endfunction
 
 call s:cli.connect(s:inc)
@@ -335,7 +345,7 @@ function! incsearch#stay()
     else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
-        call s:silent_highlight_on(m)
+        call s:silent_after_search(m)
         exec 'normal!' cmd
     endif
 endfunction
@@ -450,21 +460,25 @@ function! s:search_for_non_expr(search_key)
         call histadd(a:search_key, input)
         let @/ = pattern
 
-        " Emulate E486 {{{
+        " Emulate E486 and handling `n` and `N` preparation {{{
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
         normal! m`
-        let pos = searchpos(pattern, 'n')
+        let pos = searchpos(pattern, 'n' . s:cli.flag)
+
+        " handle
+        "   1. `n` and `N` preparation with s:silent_after_search()
+        "   2. 'search hit BOTTOM, continuing at TOP'
+        "   3. 'search hit TOP, continuing at BOTTOM'
+        exec "normal!" a:search_key . "\<CR>"
+
         call winrestview(target_view)
         if pos ==# [0,0]
             call s:Error('E486: Pattern not found: ' . pattern)
         endif
         "}}}
 
-        call s:silent_highlight_on(m)
-
-        " TODO: 'search hit BOTTOM, continuing at TOP'
-        " TODO: 'search hit TOP, continuing at BOTTOM'
+        call s:silent_after_search(m)
     endif
 endfunction
 
@@ -607,8 +621,10 @@ endfunction
 " parameter: pattern, from, to
 function! s:count_pattern(pattern, ...)
     let w = winsaveview()
-    let from = get(a:, 1, [1, 1])
-    let to   = get(a:, 2, [line('$'), s:get_max_col('$')])
+    let [from, to] = reverse(sort([
+    \   get(a:, 1, [1, 1]),
+    \   get(a:, 2, [line('$'), s:get_max_col('$')])
+    \ ], 's:is_pos_less_equal'))
     call cursor(from)
     let cnt = 0
     try
@@ -650,10 +666,15 @@ function! s:silent_feedkeys(expr, name, ...)
     endif
 endfunction
 
-function! s:silent_highlight_on(...) " arg: mode
+function! s:silent_after_search(...) " arg: mode
+    " :h function-search-undo
     " Handle :set hlsearch
     if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+        " TODO: add option for consistent direction of `n` and `N`
+        call s:silent_feedkeys(
+        \   ":let v:searchforward=" . v:searchforward . "\<CR>",
+        \   'searchforward', 'n')
     endif
 endfunction
 
