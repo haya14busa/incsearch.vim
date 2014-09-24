@@ -669,10 +669,10 @@ function! s:silent_feedkeys(expr, name, ...)
     endif
 endfunction
 
-function! s:silent_after_search(...) " arg: mode
+function! s:silent_after_search(...) " arg: mode(1)
     " :h function-search-undo
     " Handle :set hlsearch
-    if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
+    if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
         let d = g:incsearch#consistent_n_direction ? 1 : v:searchforward
         call s:silent_feedkeys(
