@@ -465,9 +465,13 @@ function! s:search_for_non_expr(search_key)
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
         normal! m`
         let pos = searchpos(pattern, 'n' . s:cli.flag)
-        " handle `n` and `N` preparation
-        " TODO: add option for consistent direction of `n` and `N`
+
+        " handle
+        "   1. `n` and `N` preparation with s:silent_after_search()
+        "   2. 'search hit BOTTOM, continuing at TOP'
+        "   3. 'search hit TOP, continuing at BOTTOM'
         exec "normal!" a:search_key . "\<CR>"
+
         call winrestview(target_view)
         if pos ==# [0,0]
             call s:Error('E486: Pattern not found: ' . pattern)
@@ -475,9 +479,6 @@ function! s:search_for_non_expr(search_key)
         "}}}
 
         call s:silent_after_search(m)
-
-        " TODO: 'search hit BOTTOM, continuing at TOP'
-        " TODO: 'search hit TOP, continuing at BOTTOM'
     endif
 endfunction
 
@@ -666,9 +667,11 @@ function! s:silent_feedkeys(expr, name, ...)
 endfunction
 
 function! s:silent_after_search(...) " arg: mode
+    " :h function-search-undo
     " Handle :set hlsearch
     if get(a:, 1, mode()) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+        " TODO: add option for consistent direction of `n` and `N`
         call s:silent_feedkeys(
         \   ":let v:searchforward=" . v:searchforward . "\<CR>",
         \   'searchforward', 'n')
