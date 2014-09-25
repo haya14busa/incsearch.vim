@@ -621,7 +621,7 @@ endfunction
 
 " TODO: test
 function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
-    let [v_start, v_end] = sort([a:v_start_pos, a:v_end_pos])
+    let [v_start, v_end] = reverse(sort([a:v_start_pos, a:v_end_pos], 's:is_pos_less_equal'))
     if a:mode ==# 'v'
         return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
         \              v_start[0], v_start[1], v_end[0], v_end[1])
