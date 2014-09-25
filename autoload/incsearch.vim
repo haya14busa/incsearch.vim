@@ -31,6 +31,7 @@ set cpo&vim
 let s:TRUE = !0
 let s:FALSE = 0
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
+let s:INT = { 'MAX': 2147483647 }
 
 " Option:
 let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap'      , s:FALSE)
@@ -606,7 +607,10 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
     " See: https://github.com/vim-jp/issues/issues/604
     " getcurpos() could be negative value, so use winsaveview() instead
-    let v_end_pos   = get(a:, 2, [line("."), winsaveview().curswant ])
+    let end_curswant_pos =
+    \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1) + 1
+    let v_end_pos = get(a:, 2,
+    \   [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ])
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
