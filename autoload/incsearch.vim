@@ -608,7 +608,7 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " See: https://github.com/vim-jp/issues/issues/604
     " getcurpos() could be negative value, so use winsaveview() instead
     let end_curswant_pos =
-    \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1) + 1
+    \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1)
     let v_end_pos = get(a:, 2,
     \   [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ])
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
@@ -623,17 +623,32 @@ endfunction
 function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
     let [v_start, v_end] = s:sort_pos([a:v_start_pos, a:v_end_pos])
     if a:mode ==# 'v'
-        return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
-        \              v_start[0], v_start[1], v_end[0], v_end[1])
+        if v_start[0] == v_end[0]
+            return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
+            \              v_start[0],
+            \              min([v_start[1], s:get_max_col(v_start[0])]),
+            \              v_end[0],
+            \              min([v_end[1], s:get_max_col(v_end[0])]))
+        else
+            return printf('\v%%%dl%%%dc\_.{-}%%%dl|%%%dl\_.*%%%dl%%%dc',
+            \              v_start[0],
+            \              min([v_start[1], s:get_max_col(v_start[0])]),
+            \              v_end[0],
+            \              v_end[0],
+            \              v_end[0],
+            \              min([v_end[1], s:get_max_col(v_end[0])]))
+        endif
     elseif a:mode ==# 'V'
         return printf('\v%%%dl\_.*%%%dl', v_start[0], v_end[0])
     elseif a:mode ==# "\<C-v>"
         let [min_c, max_c] = sort([v_start[1], v_end[1]], 'n')
+        let max_c += 1 " increment needed
+        let max_c = max_c < 0 ? s:INT.MAX : max_c
         return '\v'.join(map(range(v_start[0], v_end[0]), '
         \               printf("%%%dl%%%dc.*%%%dc",
         \                      v:val,
-        \                      min([min_c, len(getline(v:val))]),
-        \                      min([max_c, len(getline(v:val))]))
+        \                      min_c,
+        \                      min([max_c, s:get_max_col(v:val)]))
         \      '), "|")
     else " Error: unexpected mode
         " TODO: error handling
