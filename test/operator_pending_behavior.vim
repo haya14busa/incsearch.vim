@@ -33,3 +33,5 @@ function! s:suite.force_exclusive()
 endfunction
 
 " TODO:
+" :h operator
+" especially for `c`
