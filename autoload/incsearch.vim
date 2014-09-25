@@ -397,7 +397,7 @@ function! incsearch#stay_expr(...)
             call s:silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
         endif
         " }}}
-        return (m =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>" " just exit
+        return (m =~# "[vV\<C-v>]") ? "\<ESC>gv" : "\<ESC>" " just exit
     else " exit stay mode while searching
         return s:generate_command(m, input, '/') " assume '/'
     endif
