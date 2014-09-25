@@ -658,7 +658,7 @@ function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
     elseif a:mode ==# 'V'
         return printf('\v%%%dl\_.*%%%dl', v_start[0], v_end[0])
     elseif a:mode ==# "\<C-v>"
-        let [min_c, max_c] = sort([v_start[1], v_end[1]], 'n')
+        let [min_c, max_c] = s:sort_num([v_start[1], v_end[1]])
         let max_c += 1 " increment needed
         let max_c = max_c < 0 ? s:INT.MAX : max_c
         return '\v'.join(map(range(v_start[0], v_end[0]), '
@@ -681,6 +681,20 @@ endfunction
 " return (x > y)
 function! s:is_pos_more_equal(x, y)
     return ! s:is_pos_less_equal(a:x, a:y)
+endfunction
+
+function! s:sort_num(xs)
+    " 7.4.341
+    " http://ftp.vim.org/vim/patches/7.4/7.4.341
+    if v:version > 704 || v:version == 704 && has('patch341')
+        return sort(a:xs, 'n')
+    else
+        return sort(a:xs, 's:_sort_num_func')
+    endif
+endfunction
+
+function! s:_sort_num_func(x, y)
+    return a:x - a:y
 endfunction
 
 function! s:sort_pos(pos_list)
