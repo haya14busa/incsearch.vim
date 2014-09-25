@@ -42,7 +42,11 @@ function! s:suite.error_forward_backward()
         call s:assert.equals(v:errmsg, 'E55: Unmatched \)')
         exec "normal" keyseq . "びむぅぅぅぅ\\zA\<CR>"
         " NOTE: Skip E867: (NFA) Unknown operator '\za' error
-        call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
+        if exists('&regexpengine') && &regexpengine != 1
+            call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
+        else " old engine
+            call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
+        endif
     endfor
 endfunction
 
@@ -65,10 +69,17 @@ function! s:suite.error_stay()
     call s:assert.equals(v:errmsg, 'E55: Unmatched \)')
     exec "normal" "g/びむぅぅぅぅ\\zA\<CR>"
     " NOTE: Skip E867: (NFA) Unknown operator '\za' error
-    call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
+    if exists('&regexpengine') && &regexpengine != 1
+        call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
+    else " old engine
+        call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
+    endif
 endfunction
 
 function! s:suite.two_error_E383_and_E367()
+    if ! exists('&regexpengine')
+        call s:assert.skip("Skip because vim version are too low to test it")
+    endif
     " NOTE: incsearch doesn't support more than three errors unfortunately
     let g:incsearch#do_not_save_error_message_history = 0
     let v:errmsg = ''
