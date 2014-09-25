@@ -246,7 +246,7 @@ function! s:inc.on_char_pre(cmdline)
         let pattern = s:inc.get_pattern()
         let start = [s:w.lnum, s:w.col]
         let end = (s:cli.flag ==# '') ? [line('$'), s:get_max_col('$')] : [1, 1]
-        let [from, to] = sort([start, end])
+        let [from, to] = s:sort_pos([start, end])
         let max_cnt = s:count_pattern(pattern, from, to)
         let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
     endif
@@ -621,17 +621,19 @@ endfunction
 
 " TODO: test
 function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
-    let [v_start, v_end] = reverse(sort([a:v_start_pos, a:v_end_pos], 's:is_pos_less_equal'))
+    let [v_start, v_end] = s:sort_pos([a:v_start_pos, a:v_end_pos])
     if a:mode ==# 'v'
         return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
         \              v_start[0], v_start[1], v_end[0], v_end[1])
     elseif a:mode ==# 'V'
         return printf('\v%%%dl\_.*%%%dl', v_start[0], v_end[0])
     elseif a:mode ==# "\<C-v>"
-        let [min_c, max_c] = sort([v_start[1], v_end[1]])
+        let [min_c, max_c] = sort([v_start[1], v_end[1]], 'n')
         return '\v'.join(map(range(v_start[0], v_end[0]), '
         \               printf("%%%dl%%%dc.*%%%dc",
-        \                      v:val, min_c, min([max_c, len(getline(v:val))]))
+        \                      v:val,
+        \                      min([min_c, len(getline(v:val))]),
+        \                      min([max_c, len(getline(v:val))]))
         \      '), "|")
     else " Error: unexpected mode
         " TODO: error handling
@@ -642,6 +644,16 @@ endfunction
 " return (x <= y)
 function! s:is_pos_less_equal(x, y)
     return (a:x[0] == a:y[0]) ? a:x[1] <= a:y[1] : a:x[0] < a:y[0]
+endfunction
+
+" return (x > y)
+function! s:is_pos_more_equal(x, y)
+    return ! s:is_pos_less_equal(a:x, a:y)
+endfunction
+
+function! s:sort_pos(pos_list)
+    " pos_list: [ [x1, y1], [x2, y2] ]
+    return sort(a:pos_list, 's:is_pos_more_equal')
 endfunction
 
 function! s:forward_pattern(pattern, line, col)
@@ -661,10 +673,10 @@ endfunction
 " parameter: pattern, from, to
 function! s:count_pattern(pattern, ...)
     let w = winsaveview()
-    let [from, to] = reverse(sort([
+    let [from, to] = s:sort_pos([
     \   get(a:, 1, [1, 1]),
     \   get(a:, 2, [line('$'), s:get_max_col('$')])
-    \ ], 's:is_pos_less_equal'))
+    \ ])
     call cursor(from)
     let cnt = 0
     try
