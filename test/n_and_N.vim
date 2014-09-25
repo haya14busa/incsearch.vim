@@ -93,6 +93,19 @@ function! s:suite.consistent_n_and_N_direction()
     call s:assert.equals(s:get_pos_char(), '3')
     normal! n
     call s:assert.equals(s:get_pos_char(), '4')
+
+    normal! ggdG
+    call s:add_line('1pattern1 2pattern2 3pattern3 4pattern4')
+    normal! gg$
+    let v:searchforward = s:DIRECTION.forward
+    call s:assert.equals(s:get_pos_char(), '4')
+    exec "normal" "?\\dpattern\\d?e\<CR>"
+    call s:assert.equals(s:get_pos_char(), '3')
+    call s:assert.equals(v:searchforward, s:DIRECTION.forward)
+    normal! N
+    call s:assert.equals(s:get_pos_char(), '2')
+    normal! n
+    call s:assert.equals(s:get_pos_char(), '3')
     let g:incsearch#consistent_n_direction = 0
 endfunction
 
