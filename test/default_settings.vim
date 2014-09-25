@@ -12,6 +12,7 @@ function! s:suite.config()
     call s:assert.equals(g:incsearch#highlight, {})
     call s:assert.equals(g:incsearch#separate_highlight, 0)
     call s:assert.equals(g:incsearch#consistent_n_direction, 0)
+    call s:assert.equals(g:incsearch#do_not_save_error_message_history, 0)
 endfunction
 
 function! s:suite.mappings()

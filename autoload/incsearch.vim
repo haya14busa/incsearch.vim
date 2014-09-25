@@ -37,6 +37,7 @@ let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap' 
 let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
 let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
+" This changes emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
 
@@ -490,7 +491,7 @@ function! s:search_for_non_expr(search_key)
         "   up the message-history unnecessary, so it use :h echo
         " - Echo warning message after winrestview() to avoid flickering
         " - See :h shortmess
-        if &shortmess !~# 's'
+        if &shortmess !~# 's' && g:incsearch#do_not_save_error_message_history
             let from = [s:w.lnum, s:w.col]
             let to = [target_view.lnum, target_view.col]
             let old_warningmsg = v:warningmsg
