@@ -605,7 +605,7 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " FIXME: highlight doesn't work if the range is over screen height
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
     " This fix cornar case: handle case which curswant value is negative
-    let end_curswant_pos = getcurpos()[4]
+    let end_curswant_pos = exists('*getcurpos') ? getcurpos()[4] : -1
     let end_col = end_curswant_pos < 0 ? col('.') : end_curswant_pos
     let v_end_pos   = get(a:, 2, [line("."), end_col ])
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
