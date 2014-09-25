@@ -487,19 +487,22 @@ function! s:search_for_non_expr(search_key)
         "   warning messages remain in the :h message-history, but it'll mess
         "   up the message-history unnecessary, so it use :h echo
         " - Echo warning message after winrestview() to avoid flickering
-        let from = [s:w.lnum, s:w.col]
-        let to = [target_view.lnum, target_view.col]
-        let old_warningmsg = v:warningmsg
-        let v:warningmsg =
-        \   ( d == s:DIRECTION.forward && !s:is_pos_less_equal(from, to)
-        \   ? 'search hit BOTTOM, continuing at TOP'
-        \   : d == s:DIRECTION.backward && s:is_pos_less_equal(from, to)
-        \   ? 'search hit TOP, continuing at BOTTOM'
-        \   : '' )
-        if v:warningmsg !=# ''
-            call s:Warning(v:warningmsg)
-        else
-            let v:warningmsg = old_warningmsg
+        " - See :h shortmess
+        if &shortmess !~# 's'
+            let from = [s:w.lnum, s:w.col]
+            let to = [target_view.lnum, target_view.col]
+            let old_warningmsg = v:warningmsg
+            let v:warningmsg =
+            \   ( d == s:DIRECTION.forward && !s:is_pos_less_equal(from, to)
+            \   ? 'search hit BOTTOM, continuing at TOP'
+            \   : d == s:DIRECTION.backward && s:is_pos_less_equal(from, to)
+            \   ? 'search hit TOP, continuing at BOTTOM'
+            \   : '' )
+            if v:warningmsg !=# ''
+                call s:Warning(v:warningmsg)
+            else
+                let v:warningmsg = old_warningmsg
+            endif
         endif
         "}}}
 
