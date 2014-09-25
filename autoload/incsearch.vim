@@ -374,7 +374,7 @@ function! incsearch#stay_expr(...)
     let called_by_non_expr = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
     let m = mode(1)
 
-    let input = s:get_pattern('', m)
+    let input = s:get_input('', m)
 
     let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
 
@@ -405,11 +405,11 @@ endfunction
 
 function! s:search(search_key)
     let m = mode(1)
-    let pattern = s:get_pattern(a:search_key, m)
-    return s:generate_command(m, pattern, a:search_key)
+    let input = s:get_input(a:search_key, m)
+    return s:generate_command(m, input, a:search_key)
 endfunction
 
-function! s:get_pattern(search_key, mode)
+function! s:get_input(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
     let s:cli.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
@@ -425,14 +425,14 @@ function! s:get_pattern(search_key, mode)
         try
             call s:turn_off(visual_hl)
             call s:pseud_visual_highlight(visual_hl, a:mode)
-            let pattern = s:cli.get()
+            let input = s:cli.get()
         finally
             call s:turn_on(visual_hl)
         endtry
     else
-        let pattern = s:cli.get()
+        let input = s:cli.get()
     endif
-    return pattern
+    return input
 endfunction
 
 function! s:generate_command(mode, pattern, search_key)
@@ -456,7 +456,7 @@ endfunction
 function! s:search_for_non_expr(search_key)
     let m = mode(1)
     " side effect: move cursor
-    let input = s:get_pattern(a:search_key, m)
+    let input = s:get_input(a:search_key, m)
     let is_cancel = s:cli.exit_code()
     if is_cancel
         return
