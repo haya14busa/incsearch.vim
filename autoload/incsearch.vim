@@ -347,6 +347,9 @@ function! incsearch#stay()
     else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
+        " NOTE: Should I emulate warning? But 'search hit BOTTOM, continuing
+        " at TOP' is not appropriage warning message if the cursor doesn't
+        " move?
         call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
         call winrestview(s:w)
@@ -470,12 +473,34 @@ function! s:search_for_non_expr(search_key)
 
         " Emulate errors, and handling `n` and `N` preparation {{{
         let target_view = winsaveview()
-        call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
+        call winrestview(s:w) " Get back start position temporarily for emulation
         " Set jump list
         normal! m`
         let d = (a:search_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
         call s:emulate_search_error(d)
         call winrestview(target_view)
+        "}}}
+
+        " Emulate warning {{{
+        " NOTE:
+        " - It should use :h echomsg considering emulation of default
+        "   warning messages remain in the :h message-history, but it'll mess
+        "   up the message-history unnecessary, so it use :h echo
+        " - Echo warning message after winrestview() to avoid flickering
+        let from = [s:w.lnum, s:w.col]
+        let to = [target_view.lnum, target_view.col]
+        let old_warningmsg = v:warningmsg
+        let v:warningmsg =
+        \   ( d == s:DIRECTION.forward && !s:is_pos_less_equal(from, to)
+        \   ? 'search hit BOTTOM, continuing at TOP'
+        \   : d == s:DIRECTION.backward && s:is_pos_less_equal(from, to)
+        \   ? 'search hit TOP, continuing at BOTTOM'
+        \   : '' )
+        if v:warningmsg !=# ''
+            call s:Warning(v:warningmsg)
+        else
+            let v:warningmsg = old_warningmsg
+        endif
         "}}}
 
         call s:silent_after_search(m)
@@ -686,12 +711,11 @@ function! s:emulate_search_error(direction)
     let keyseq = (a:direction == s:DIRECTION.forward ? '/' : '?')
     let old_errmsg = v:errmsg
     let v:errmsg = ''
-    " NOTE: handle
-    "   1. `n` and `N` preparation with s:silent_after_search()
-    "   2. 'search hit BOTTOM, continuing at TOP'
-    "   3. 'search hit TOP, continuing at BOTTOM'
-    "   4. Emulate error message
-    "   silent!: Do not show error message, because it also echo v:throwpoint
+    " NOTE:
+    "   - XXX: Handle `n` and `N` preparation with s:silent_after_search()
+    "   - silent!: Do not show error and warning message, because it also
+    "     echo v:throwpoint for error and save messages in message-history
+    "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
     silent! exec "normal!" keyseq . "\<CR>"
     if v:errmsg != ''
         call s:Error(v:errmsg)
@@ -700,9 +724,18 @@ function! s:emulate_search_error(direction)
     endif
 endfunction
 
+" Should I use :h echoerr ? But it save the messages in message-history
 function! s:Error(msg)
+    call s:_echohl(a:msg, 'ErrorMsg')
+endfunction
+
+function! s:Warning(msg)
+    call s:_echohl(a:msg, 'WarningMsg')
+endfunction
+
+function! s:_echohl(msg, hlgroup)
     redraw | echo ''
-    echohl ErrorMsg
+    exec 'echohl' a:hlgroup
     echo a:msg
     echohl None
 endfunction
