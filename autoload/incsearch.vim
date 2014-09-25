@@ -476,6 +476,9 @@ function! s:search_for_non_expr(search_key)
         let cmd = s:generate_command(m, input, a:search_key)
         call winrestview(s:w)
         call feedkeys(cmd, 'n')
+        if g:incsearch#consistent_n_direction
+            call s:_silent_searchforward(s:DIRECTION.forward)
+        endif
     else
         " Add history if necessary
         call histadd(a:search_key, input)
@@ -740,14 +743,24 @@ function! s:silent_after_search(...) " arg: mode(1)
     " :h function-search-undo
     " Handle :set hlsearch
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
-        call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
-        " NOTE: You have to 'exec normal! `/` or `?`' before calling this
-        " function to update v:searchforward
-        let d = g:incsearch#consistent_n_direction ? 1 : v:searchforward
-        call s:silent_feedkeys(
-        \   ":let v:searchforward=" . d . "\<CR>",
-        \   'searchforward', 'n')
+        call s:_silent_hlsearch()
+        call s:_silent_searchforward()
     endif
+endfunction
+
+function! s:_silent_hlsearch()
+    call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+endfunction
+
+function! s:_silent_searchforward(...)
+    " NOTE: You have to 'exec normal! `/` or `?`' before calling this
+    " function to update v:searchforward
+    let direction = get(a:, 1,
+    \   (g:incsearch#consistent_n_direction == s:TRUE)
+    \   ? s:DIRECTION.forward : v:searchforward)
+    call s:silent_feedkeys(
+    \   ":let v:searchforward=" . direction . "\<CR>",
+    \   'searchforward', 'n')
 endfunction
 
 function! s:emulate_search_error(direction)
