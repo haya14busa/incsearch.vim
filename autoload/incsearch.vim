@@ -363,9 +363,10 @@ function! incsearch#stay_expr(...)
 
     let input = s:get_pattern('', m)
 
+    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
-        let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
         if (!called_by_non_expr || empty(offset)) " see incsearch#stay() and below NOTE:
             call histadd('/', input)
             let @/ = pattern
@@ -374,7 +375,9 @@ function! incsearch#stay_expr(...)
 
     if s:cli.flag ==# 'n' " stay TODO: better flag name
         " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
-        if !empty(offset)
+        " FIXME: cannot set {offset} if in operator-pending mode because this
+        " have to use feedkeys()
+        if !empty(offset) && mode(1) !=# 'no'
             let cmd = s:generate_command(m, input, '/')
             call feedkeys(cmd, 'n')
             " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
