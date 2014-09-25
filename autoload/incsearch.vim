@@ -604,7 +604,10 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " It uses curswant to emulate visual-block
     " FIXME: highlight doesn't work if the range is over screen height
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
-    let v_end_pos   = get(a:, 2, [line("."),getcurpos()[4]])
+    " This fix cornar case: handle case which curswant value is negative
+    let end_curswant_pos = getcurpos()[4]
+    let end_col = end_curswant_pos < 0 ? col('.') : end_curswant_pos
+    let v_end_pos   = get(a:, 2, [line("."), end_col ])
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
