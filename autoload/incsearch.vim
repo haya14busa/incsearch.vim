@@ -356,7 +356,7 @@ function! incsearch#stay()
         call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
         call winrestview(s:w)
-        silent! exec 'normal!' cmd
+        silent! exec 'keepjumps' 'normal!' cmd
     endif
 endfunction
 
@@ -722,7 +722,7 @@ function! s:emulate_search_error(direction)
     "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
     let w = winsaveview()
     " Get first error
-    silent! exec "normal!" keyseq . "\<CR>"
+    silent! exec 'keepjumps' 'normal!' keyseq . "\<CR>"
     call winrestview(w)
     if g:incsearch#do_not_save_error_message_history
         if v:errmsg != ''
@@ -735,7 +735,7 @@ function! s:emulate_search_error(direction)
         let last_error = v:errmsg
         try
             " Show warning
-            exec "normal!" keyseq . "\<CR>"
+            exec 'keepjumps' 'normal!' keyseq . "\<CR>"
         catch /^Vim\%((\a\+)\)\=:E/
             let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
             call s:Error(first_error, 'echom')
