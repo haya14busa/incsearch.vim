@@ -19,6 +19,7 @@ function! s:get_pos_char()
 endfunction
 
 function! s:suite.repetition_forward()
+    normal! ggdG
     call s:add_line('1pattern 2pattern 3pattern 4pattern')
     normal! gg0
     call s:assert.equals(s:get_pos_char(), '1')
@@ -78,3 +79,54 @@ function! s:suite.count_backward()
     call s:assert.equals(getline('.'), 'pattern5 1')
 endfunction
 
+function! s:suite.repetition_forward_change()
+    call s:add_line('1pattern 2pattern 3pattern 4pattern')
+    normal! gg0
+    call s:assert.equals(s:get_pos_char(), '1')
+    exec "normal" "c/\\dpattern\<CR>vim\<Esc>"
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '2')
+    normal! .
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '3')
+    normal! .
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '4')
+endfunction
+
+function! s:suite.repetition_backward_change()
+    normal! ggdG
+    call s:add_line('1pattern 2pattern 3pattern 4pattern')
+    normal! gg$
+    call s:assert.equals(s:get_pos_char(), 'n')
+    exec "normal" "c?\\dpattern\<CR>vim\<Esc>"
+    call s:assert.equals(s:get_pos_char(), 'm')
+    call s:assert.equals(getline('.'), '1pattern 2pattern 3pattern vimn')
+    normal! .
+    call s:assert.equals(getline('.'), '1pattern 2pattern vimmn')
+    normal! .
+    call s:assert.equals(getline('.'), '1pattern vimmmn')
+endfunction
+
+function! s:suite.repetition_stay_change()
+    call s:add_line('1pattern 2pattern 3pattern 4pattern')
+    normal! gg0
+    call s:assert.equals(s:get_pos_char(), '1')
+    exec "normal" "cg/\\dpattern\<CR>ggg\<Esc>"
+    call s:assert.equals(s:get_pos_char(), '1')
+    exec "normal" "cg/\\dpattern\<Tab>\<CR>vim\<Esc>"
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '2')
+    normal! .
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '3')
+    normal! .
+    call s:assert.equals(s:get_pos_char(), 'm')
+    normal! l
+    call s:assert.equals(s:get_pos_char(), '4')
+endfunction
