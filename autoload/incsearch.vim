@@ -356,6 +356,9 @@ function! incsearch#stay()
         call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
         call winrestview(s:w)
+        if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
+            normal! m`
+        endif
         silent! exec 'keepjumps' 'normal!' cmd
     endif
 endfunction
