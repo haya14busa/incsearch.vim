@@ -37,6 +37,8 @@ let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap' 
 let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
 let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
+let g:incsearch#do_not_save_error_message_history =
+\   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -708,8 +710,6 @@ function! s:silent_after_search(...) " arg: mode(1)
     endif
 endfunction
 
-" NOTE:
-"   has side effect: move the cursor, and update v:searchforward
 function! s:emulate_search_error(direction)
     let keyseq = (a:direction == s:DIRECTION.forward ? '/' : '?')
     let old_errmsg = v:errmsg
@@ -719,27 +719,49 @@ function! s:emulate_search_error(direction)
     "   - silent!: Do not show error and warning message, because it also
     "     echo v:throwpoint for error and save messages in message-history
     "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
+    let w = winsaveview()
+    " Get first error
     silent! exec "normal!" keyseq . "\<CR>"
-    if v:errmsg != ''
-        call s:Error(v:errmsg)
+    call winrestview(w)
+    if g:incsearch#do_not_save_error_message_history
+        if v:errmsg != ''
+            call s:Error(v:errmsg)
+        else
+            let v:errmsg = old_errmsg
+        endif
     else
-        let v:errmsg = old_errmsg
+        " NOTE: show more than two errors e.g. `/\za`
+        let last_error = v:errmsg
+        try
+            " Show warning
+            exec "normal!" keyseq . "\<CR>"
+        catch /^Vim\%((\a\+)\)\=:E/
+            let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
+            call s:Error(first_error, 'echom')
+            if last_error != '' && last_error !=# first_error
+                call s:Error(last_error, 'echom')
+            endif
+        endtry
+        if v:errmsg == ''
+            let v:errmsg = old_errmsg
+        endif
     endif
 endfunction
 
 " Should I use :h echoerr ? But it save the messages in message-history
-function! s:Error(msg)
-    call s:_echohl(a:msg, 'ErrorMsg')
+function! s:Error(msg, ...)
+    return call(function('s:_echohl'), [a:msg, 'ErrorMsg'] + a:000)
 endfunction
 
-function! s:Warning(msg)
-    call s:_echohl(a:msg, 'WarningMsg')
+function! s:Warning(msg, ...)
+    return call(function('s:_echohl'), [a:msg, 'WarningMsg'] + a:000)
 endfunction
 
-function! s:_echohl(msg, hlgroup)
+function! s:_echohl(msg, hlgroup, ...)
+    let echocmd = get(a:, 1, 'echo')
     redraw | echo ''
     exec 'echohl' a:hlgroup
-    echo a:msg
+    exec echocmd string(a:msg)
     echohl None
 endfunction
 
