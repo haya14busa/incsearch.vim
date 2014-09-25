@@ -42,7 +42,7 @@ CONTENTS				*incsearch-contents*
 ==============================================================================
 INTRODUCTION					    *incsearch-introduction*
 
-	*incsearch.vim* provide inclemental highlighting for __ALL__ pattern
+	*incsearch.vim* provide incremental highlighting for __ALL__ pattern
 	matches unlike default |'incsearch'|.
 	You can use incsearch.vim as improved |/| & |?|.
 
@@ -101,6 +101,17 @@ Additional usage~
 	|<Plug>(incsearch-backward)| which is improved motion of |?|.
 >
 	    let g:incsearch#consistent_n_direction = 1
+<
+	default: 0
+
+				*g:incsearch#do_not_save_error_message_history*
+	If you set this option to 1, error and warning messages with search
+	command don't save into |message-history|.
+	|message-history| doesn't be messed up with some unneeded error and
+	warning messages like |E486| ,`search hit BOTTOM, continuing at TOP`
+	warning, and so on. Welcome clean |message-history|!
+>
+	    let g:incsearch#do_not_save_error_message_history = 1
 <
 	default: 0
 
