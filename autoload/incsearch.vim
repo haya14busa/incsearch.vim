@@ -30,6 +30,7 @@ set cpo&vim
 
 let s:TRUE = !0
 let s:FALSE = 0
+let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
 " Option:
 let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap'      , s:FALSE)
@@ -346,8 +347,10 @@ function! incsearch#stay()
     else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
+        call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
-        exec 'normal!' cmd
+        call winrestview(s:w)
+        silent! exec 'normal!' cmd
     endif
 endfunction
 
@@ -467,22 +470,8 @@ function! s:search_for_non_expr(search_key)
         call winrestview(s:w) " Get back start position temporarily for 'nowrapscan'
         " Set jump list
         normal! m`
-
-        let old_errmsg = v:errmsg
-        let v:errmsg = ''
-        " NOTE: handle
-        "   1. `n` and `N` preparation with s:silent_after_search()
-        "   2. 'search hit BOTTOM, continuing at TOP'
-        "   3. 'search hit TOP, continuing at BOTTOM'
-        "   4. Emulate error message
-        "   silent!: Do not show error message, because it also echo v:throwpoint
-        silent! exec "normal!" a:search_key . "\<CR>"
-
-        if v:errmsg != ''
-            call s:Error(v:errmsg)
-        else
-            let v:errmsg = old_errmsg
-        endif
+        let d = (a:search_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
+        call s:emulate_search_error(d)
         call winrestview(target_view)
         "}}}
 
@@ -679,10 +668,32 @@ function! s:silent_after_search(...) " arg: mode(1)
     " Handle :set hlsearch
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
+        " NOTE: You have to 'exec normal! `/` or `?`' before calling this
+        " function to update v:searchforward
         let d = g:incsearch#consistent_n_direction ? 1 : v:searchforward
         call s:silent_feedkeys(
         \   ":let v:searchforward=" . d . "\<CR>",
         \   'searchforward', 'n')
+    endif
+endfunction
+
+" NOTE:
+"   has side effect: move the cursor, and update v:searchforward
+function! s:emulate_search_error(direction)
+    let keyseq = (a:direction == s:DIRECTION.forward ? '/' : '?')
+    let old_errmsg = v:errmsg
+    let v:errmsg = ''
+    " NOTE: handle
+    "   1. `n` and `N` preparation with s:silent_after_search()
+    "   2. 'search hit BOTTOM, continuing at TOP'
+    "   3. 'search hit TOP, continuing at BOTTOM'
+    "   4. Emulate error message
+    "   silent!: Do not show error message, because it also echo v:throwpoint
+    silent! exec "normal!" keyseq . "\<CR>"
+    if v:errmsg != ''
+        call s:Error(v:errmsg)
+    else
+        let v:errmsg = old_errmsg
     endif
 endfunction
 
