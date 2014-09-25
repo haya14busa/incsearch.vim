@@ -320,8 +320,11 @@ call s:cli.connect(s:inc)
 " Main: {{{
 " @expr: called by <expr> mappings
 
-function! incsearch#forward()
-    call s:search_for_non_expr('/')
+function! incsearch#forward(mode, ...)
+    if s:is_visual(a:mode)
+        normal! gv
+    endif
+    call s:search_for_non_expr('/', get(a:, 1, v:count1))
 endfunction
 
 " @expr
@@ -329,8 +332,11 @@ function! incsearch#forward_expr()
     return s:search('/')
 endfunction
 
-function! incsearch#backward()
-    return s:search_for_non_expr('?')
+function! incsearch#backward(mode, ...)
+    if s:is_visual(a:mode)
+        normal! gv
+    endif
+    call s:search_for_non_expr('?', get(a:, 1, v:count1))
 endfunction
 
 " @expr
@@ -340,9 +346,12 @@ endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
-function! incsearch#stay()
+function! incsearch#stay(mode, ...)
+    if s:is_visual(a:mode)
+        normal! gv
+    endif
     let m = mode(1)
-    let cmd = incsearch#stay_expr(s:TRUE) " arg: Please histadd for me!
+    let cmd = incsearch#stay_expr(s:TRUE, get(a:, 1, v:count1)) " arg: Please histadd for me!
     call winrestview(s:w)
 
     " Avoid using feedkeys() as much as possible because
@@ -372,6 +381,7 @@ function! incsearch#stay_expr(...)
     " arg: called_by_non_expr
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
     let called_by_non_expr = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
+    let s:cli.vcount1 = get(a:, 2, v:count1)
     let m = mode(1)
 
     let input = s:get_input('', m)
@@ -403,15 +413,15 @@ function! incsearch#stay_expr(...)
     endif
 endfunction
 
-function! s:search(search_key)
+function! s:search(search_key, ...)
     let m = mode(1)
+    let s:cli.vcount1 = get(a:, 1, v:count1)
     let input = s:get_input(a:search_key, m)
     return s:generate_command(m, input, a:search_key)
 endfunction
 
 function! s:get_input(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
-    let s:cli.vcount1 = v:count1
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
     let s:cli.flag = a:search_key ==# '/' ? ''
@@ -452,9 +462,10 @@ function! s:generate_command(mode, pattern, search_key)
     endif
 endfunction
 
-" @normal: assume normal mode basically
-function! s:search_for_non_expr(search_key)
+" @normal, @visual: assume not operator-pending mode
+function! s:search_for_non_expr(search_key, ...)
     let m = mode(1)
+    let s:cli.vcount1 = get(a:, 1, v:count1)
     " side effect: move cursor
     let input = s:get_input(a:search_key, m)
     let is_cancel = s:cli.exit_code()
@@ -816,6 +827,10 @@ function! s:_echohl(msg, hlgroup, ...)
     exec 'echohl' a:hlgroup
     exec echocmd string(a:msg)
     echohl None
+endfunction
+
+function! s:is_visual(mode)
+    return a:mode =~# "[vV\<C-v>]"
 endfunction
 
 "}}}

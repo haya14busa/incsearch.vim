@@ -38,16 +38,24 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-" <expr> for dot repeat (`.`) in operator pending mode and
-" easy and better handling for visual mode
-noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
-noremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
-noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
-" overwrite normal mode mappings to avoid flash
-nnoremap <silent> <Plug>(incsearch-forward)  :<C-u>call incsearch#forward()<CR>
-nnoremap <silent> <Plug>(incsearch-backward) :<C-u>call incsearch#backward()<CR>
-nnoremap <silent> <Plug>(incsearch-stay)     :<C-u>call incsearch#stay()<CR>
-" TODO: support non-expr mappings for vnoremap?
+" <expr> is just for passing mode(1) value, so basically called with
+" non-<expr> state
+noremap <silent><expr> <Plug>(incsearch-forward)  <SID>mode_wrap('forward')
+noremap <silent><expr> <Plug>(incsearch-backward) <SID>mode_wrap('backward')
+noremap <silent><expr> <Plug>(incsearch-stay)     <SID>mode_wrap('stay')
+
+" <expr> for dot repeat (`.`) in operator pending mode
+onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
+onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
+onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
+
+" for normal and visual mode
+function! s:mode_wrap(cmd)
+    let m = mode(1)
+    let esc = m ==# 'no' ? '' : "\<ESC>"
+    return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
+    \             a:cmd, strtrans(m), v:count1)
+endfunction
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
