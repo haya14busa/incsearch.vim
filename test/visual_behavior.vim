@@ -27,6 +27,7 @@ function! s:suite.forward()
     \ , '3pattern 4pattern'
     \ ])
     normal! gg0
+    call setreg(v:register, '')
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "v/2pattern\<CR>y"
     call s:assert.equals(getreg(), "1pattern 2")
@@ -37,7 +38,7 @@ function! s:suite.forward()
     exec "normal" "\<C-v>/4pattern\<CR>y"
     call s:assert.equals(getreg(), "1pattern 2\n3pattern 4")
     normal! gg0
-    exec "normal" "v/2pattern/e\<CR>y"
+    exec "normal" "v/2pattern/e\<CR>" | normal! y
     call s:assert.equals(getreg(), "1pattern 2pattern")
 endfunction
 
@@ -48,10 +49,11 @@ function! s:suite.backward()
     \ , '3pattern 4pattern'
     \ ])
     normal! Gdd$
-    exec "normal" "v?3pattern?e\<CR>y"
+    call setreg(v:register, '')
+    exec "normal" "v?3pattern?e\<CR>" | normal! y
     call s:assert.equals(getreg(), 'n 4pattern')
     normal! G$
-    exec "normal" "V?3pattern?e\<CR>y"
+    exec "normal" "V?3pattern?e\<CR>" | normal! y
     call s:assert.equals(getreg(), "3pattern 4pattern\n")
     normal! G$
     exec "normal" "\<C-v>?2pattern\<CR>y"
@@ -80,6 +82,6 @@ function! s:suite.stay()
     exec "normal" "Vg/2pattern\<CR>" | normal! y
     call s:assert.equals(getreg(), "1pattern 2pattern\n")
     normal! gg0
-    exec "normal" "\<C-v>g/3pattern/e\<Tab>\<CR>y"
+    exec "normal" "\<C-v>g/3pattern/e\<Tab>\<CR>" | normal! y
     call s:assert.equals(getreg(), "1pattern\n3pattern")
 endfunction

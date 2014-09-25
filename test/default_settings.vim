@@ -16,12 +16,12 @@ function! s:suite.config()
 endfunction
 
 function! s:suite.mappings()
-    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'n'), ':<C-U>call incsearch#forward()<CR>')
-    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'n'), ':<C-U>call incsearch#backward()<CR>')
-    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'n'), ':<C-U>call incsearch#stay()<CR>')
-    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'vo'), 'incsearch#forward_expr()')
-    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'vo'), 'incsearch#backward_expr()')
-    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'vo'), 'incsearch#stay_expr()')
+    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d_mode_wrap('forward')")
+    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d_mode_wrap('backward')")
+    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d_mode_wrap('stay')")
+    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'o'), 'incsearch#forward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'o'), 'incsearch#backward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), 'incsearch#stay_expr()')
 endfunction
 
 function! s:suite.command_exist()
