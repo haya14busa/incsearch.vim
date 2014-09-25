@@ -298,7 +298,10 @@ function! s:inc.on_char(cmdline)
     catch /E53:/ " E53: Unmatched %(
     catch /E54:/
     catch /E55:/
+    catch /E554:/
+    catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
     catch /E867:/ " E867: (NFA) Unknown operator
+    catch /E870:/ " E870: (NFA regexp) Error reading repetition limits
         call s:hi.disable_all()
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
