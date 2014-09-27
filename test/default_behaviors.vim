@@ -45,6 +45,10 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:suite.before()
+    normal! ggdGgg
+endfunction
+
 " Main:
 
 function! s:suite.forward()
