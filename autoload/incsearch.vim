@@ -318,7 +318,7 @@ function! s:on_char(cmdline)
                 normal! gv
                 call winrestview(w)
                 let visual_hl = s:highlight_capture('Visual')
-                call s:pseud_visual_highlight(visual_hl, mode(1))
+                call s:emulate_visual_highlight(visual_hl, mode(1))
             endif
         endif
     endif
@@ -484,7 +484,7 @@ function! s:get_input(search_key, mode)
         let visual_hl = s:highlight_capture('Visual')
         try
             call s:turn_off(visual_hl)
-            call s:pseud_visual_highlight(visual_hl, a:mode)
+            call s:emulate_visual_highlight(visual_hl, a:mode)
             let input = s:cli.get()
         finally
             call s:turn_on(visual_hl)
@@ -671,7 +671,7 @@ function! s:turn_on(highlight)
 endfunction
 
 " TODO: test
-function! s:pseud_visual_highlight(visual_hl, mode, ...)
+function! s:emulate_visual_highlight(visual_hl, mode, ...)
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
