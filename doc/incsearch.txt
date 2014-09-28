@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.0
+Version : 0.9.3
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -31,13 +31,18 @@ CONTENTS				*incsearch-contents*
 	Introduction			|incsearch-introduction|
 	Install				|incsearch-install|
 	Usage				|incsearch-usage|
+	    Basic usage			|incsearch-basic-usage|
+	    Additional usage		|incsearch-additional-usage|
+	    Command line interface	|incsearch-commandline-interface|
+	    Highlight			|incsearch-highlight|
+	    AUTOCMD			|incsearch-autocmd|
 	Known Issues			|incsearch-known-issues|
 	ChangeLog			|incsearch-changelog|
 
 ==============================================================================
 INTRODUCTION					    *incsearch-introduction*
 
-	*incsearch.vim* provide inclemental highlighting for __ALL__ pattern
+	*incsearch.vim* provide incremental highlighting for __ALL__ pattern
 	matches unlike default |'incsearch'|.
 	You can use incsearch.vim as improved |/| & |?|.
 
@@ -68,7 +73,9 @@ INSTALL						    *incsearch-install*
 ==============================================================================
 USAGE							*incsearch-usage*
 
-Basic Usage~
+------------------------------------------------------------------------------
+Basic usage~
+							*incsearch-basic-usage*
 						*<Plug>(incsearch-forward)*
 						*<Plug>(incsearch-backward)*
 						*<Plug>(incsearch-stay)*
@@ -83,6 +90,30 @@ Basic Usage~
     <Plug>(incsearch-stay)     : It doesn't move the cursor unless explicitly
                                  using cursor move command while incremental
                                  searching.
+
+------------------------------------------------------------------------------
+Additional usage~
+						    *incsearch-additional-usage*
+
+					    *g:incsearch#consistent_n_direction*
+	If you set this option to 1, |n| and |N| directions are always forward
+	and backward respectively even after performing
+	|<Plug>(incsearch-backward)| which is improved motion of |?|.
+>
+	    let g:incsearch#consistent_n_direction = 1
+<
+	default: 0
+
+				*g:incsearch#do_not_save_error_message_history*
+	If you set this option to 1, error and warning messages with search
+	command don't save into |message-history|.
+	|message-history| doesn't be messed up with some unneeded error and
+	warning messages like |E486| ,`search hit BOTTOM, continuing at TOP`
+	warning, and so on. Welcome clean |message-history|!
+>
+	    let g:incsearch#do_not_save_error_message_history = 1
+<
+	default: 0
 
 ------------------------------------------------------------------------------
 Command line interface~
@@ -225,6 +256,10 @@ IncSearchCharPre	triggered before every character insertion
 IncSearchChar		triggered after every character insertion
 IncSearchCancel		triggered when you exit without running the line
 
+NOTE:
+	incsearch.vim uses |:map-<expr>| for visual and operator-pending
+	mappings, so the same restriction apply to your defined autocmd.
+
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*
 
@@ -234,6 +269,21 @@ KNOWN ISSUES						*incsearch-issues*
 
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
+
+0.9.3	2014-09-28
+	1. Do not use |:map-<expr>| for normal and visual mode mappings.
+	    - Still use <expr> for operator-pending mappings to support |.|
+	      (dot) repeat without depending on other repeat extention like
+	      vim-repeat
+	    - This change avoid flickering after search and support |:normal|
+	      for |incsearch-autocmd|
+	2. Implement |g:incsearch#consistent_n_direction|
+	3. Implement |g:incsearch#do_not_save_error_message_history|
+	4. Improve stability. More comprehensive testing!
+	5. Improve scroll feature while searching.
+	    - see: |<Over>(incsearch-scroll-f)| for scroll feature
+	6. Fix to use given |registers| with |quote| (")
+	7. Improve and fix some problems
 
 0.9.2	2014-08-25
 	1. Add test

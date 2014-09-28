@@ -45,6 +45,10 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:suite.before()
+    normal! ggdGgg
+endfunction
+
 " Main:
 
 function! s:suite.forward()
@@ -141,6 +145,6 @@ function! s:suite.offset()
     call s:assert.eq_with_default('?','?','pat?e5+1')
     call s:assert.equals(s:get_pos_char(), '6')
     exec "normal g/pattern\\d/e\<CR>"
-    call s:assert.equals('pattern\d', @/)
-    call s:assert.equals('pattern\d/e', histget('/', -1))
+    call s:assert.equals(@/, 'pattern\d')
+    call s:assert.equals(histget('/', -1), 'pattern\d/e')
 endfunction

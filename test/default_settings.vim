@@ -11,12 +11,17 @@ function! s:suite.config()
     call s:assert.equals(g:incsearch#emacs_like_keymap, 0)
     call s:assert.equals(g:incsearch#highlight, {})
     call s:assert.equals(g:incsearch#separate_highlight, 0)
+    call s:assert.equals(g:incsearch#consistent_n_direction, 0)
+    call s:assert.equals(g:incsearch#do_not_save_error_message_history, 0)
 endfunction
 
 function! s:suite.mappings()
-    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'nvo'), 'incsearch#forward()')
-    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'nvo'), 'incsearch#backward()')
-    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'nvo'), 'incsearch#stay()')
+    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d_mode_wrap('forward')")
+    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d_mode_wrap('backward')")
+    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d_mode_wrap('stay')")
+    call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'o'), 'incsearch#forward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'o'), 'incsearch#backward_expr()')
+    call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), 'incsearch#stay_expr()')
 endfunction
 
 function! s:suite.command_exist()

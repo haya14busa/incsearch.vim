@@ -41,6 +41,15 @@ map g/ <Plug>(incsearch-stay)
 
 `<Plug>(incsearch-stay)` doesn't move the cursor.
 
+### Additional usages
+
+#### Consistent n and N direction
+`n` and `N` directions are always forward and backward respectively even after performing `<Plug>(incsearch-backward)`.
+
+```vim
+let g:incsearch#consistent_n_direction = 1
+```
+
 ### Command Line Interface Keymappings
 incsearch.vim use custom command line interface, so it provides custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
