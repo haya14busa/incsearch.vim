@@ -317,7 +317,7 @@ function! s:on_char(cmdline)
                 let w = winsaveview()
                 normal! gv
                 call winrestview(w)
-                let visual_hl = s:highlight_capture('Visual')
+                let visual_hl = s:get_visual_highlight()
                 call s:emulate_visual_highlight(visual_hl, mode(1))
             endif
         endif
@@ -481,7 +481,7 @@ function! s:get_input(search_key, mode)
 
     " Handle visual mode highlight
     if (a:mode =~# "[vV\<C-v>]")
-        let visual_hl = s:highlight_capture('Visual')
+        let visual_hl = s:get_visual_highlight()
         try
             call s:turn_off(visual_hl)
             call s:emulate_visual_highlight(visual_hl, a:mode)
@@ -668,6 +668,13 @@ endfunction
 
 function! s:turn_on(highlight)
     execute 'highlight' a:highlight.name a:highlight.highlight
+endfunction
+
+function! s:get_visual_highlight()
+    if ! exists('s:_visual_hl')
+        let s:_visual_hl = s:highlight_capture('Visual')
+    endif
+    return s:_visual_hl
 endfunction
 
 " TODO: test
