@@ -185,7 +185,31 @@ function! s:inc.get_pattern()
     return pattern
 endfunction
 
-function! s:inc.on_char_pre(cmdline)
+" Avoid search-related error while incremental searching
+function! s:on_searching(func, ...)
+    try
+        return call(a:func, a:000)
+    catch /E33:/  " E33: No previous substitute regular expression
+    catch /E53:/  " E53: Unmatched %(
+    catch /E54:/
+    catch /E55:/
+    catch /E66:/  " E66: \z( not allowed here
+    catch /E67:/  " E67: \z1 et al. not allowed here
+    catch /E69:/  " E69: Missing ] after \%[
+    catch /E554:/
+    catch /E678:/ " E678: Invalid character after \%[dxouU]
+    catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
+    catch /E866:/ " E866: (NFA regexp) Misplaced @
+    catch /E867:/ " E867: (NFA) Unknown operator
+    catch /E870:/ " E870: (NFA regexp) Error reading repetition limits
+    catch /E871:/ " E871: (NFA regexp) Can't have a multi follow a multi !
+        call s:hi.disable_all()
+    catch
+        echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
+    endtry
+endfunction
+
+function! s:on_char_pre(cmdline)
     if a:cmdline.is_input("<Over>(incsearch-next)")
         if a:cmdline.flag ==# 'n' " exit stay mode
             let s:cli.flag = ''
@@ -252,66 +276,62 @@ function! s:inc.on_char_pre(cmdline)
     endif
 endfunction
 
-function! s:inc.on_char(cmdline)
-    try
-        call winrestview(s:w)
-        let pattern = s:inc.get_pattern()
+function! s:on_char(cmdline)
+    call winrestview(s:w)
+    let pattern = s:inc.get_pattern()
 
-        if pattern ==# ''
-            call s:hi.disable_all()
-            return
-        endif
-
-        let pattern = incsearch#convert_with_case(pattern)
-
-        " pseud-move cursor position: this is restored afterward if called by
-        " <expr> mappings
-        for _ in range(s:cli.vcount1)
-            call search(pattern, a:cmdline.flag)
-        endfor
-
-        " Highlight
-        let hgm = s:hgm()
-        let m = hgm.match
-        let r = hgm.match_reverse
-        let o = hgm.on_cursor
-        let c = hgm.cursor
-        let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-        let should_separate_highlight =
-        \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
-        if ! should_separate_highlight
-            call s:hi.add(m.group, m.group, pattern, m.priority)
-        else
-            let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
-            let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
-            if s:cli.flag == '' " forward
-                call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
-                call s:hi.add(r.group , r.group , backward_pattern , r.priority)
-            elseif s:cli.flag == 'b' " backward
-                call s:hi.add(m.group , m.group , backward_pattern , m.priority)
-                call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
-            endif
-        endif
-        call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
-        call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
-        call s:update_hl()
-    catch /E53:/ " E53: Unmatched %(
-    catch /E54:/
-    catch /E55:/
-    catch /E554:/
-    catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
-    catch /E867:/ " E867: (NFA) Unknown operator
-    catch /E870:/ " E870: (NFA regexp) Error reading repetition limits
+    if pattern ==# ''
         call s:hi.disable_all()
-    catch
-        echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
-    endtry
+        return
+    endif
+
+    let pattern = incsearch#convert_with_case(pattern)
+
+    " pseud-move cursor position: this is restored afterward if called by
+    " <expr> mappings
+    for _ in range(s:cli.vcount1)
+        call search(pattern, a:cmdline.flag)
+    endfor
+
+    " Highlight
+    let hgm = s:hgm()
+    let m = hgm.match
+    let r = hgm.match_reverse
+    let o = hgm.on_cursor
+    let c = hgm.cursor
+    let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
+    let should_separate_highlight =
+    \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
+    if ! should_separate_highlight
+        call s:hi.add(m.group, m.group, pattern, m.priority)
+    else
+        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
+        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
+        if s:cli.flag == '' " forward
+            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
+            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
+        elseif s:cli.flag == 'b' " backward
+            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
+            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
+        endif
+    endif
+    call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
+    call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
+    call s:update_hl()
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
         call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
+endfunction
+
+function! s:inc.on_char_pre(cmdline)
+    call s:on_searching(function('s:on_char_pre'), a:cmdline)
+endfunction
+
+function! s:inc.on_char(cmdline)
+    call s:on_searching(function('s:on_char'), a:cmdline)
 endfunction
 
 call s:cli.connect(s:inc)
