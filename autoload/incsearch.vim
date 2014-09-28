@@ -317,8 +317,7 @@ function! s:on_char(cmdline)
                 let w = winsaveview()
                 normal! gv
                 call winrestview(w)
-                let visual_hl = s:get_visual_highlight()
-                call s:emulate_visual_highlight(visual_hl, mode(1))
+                call s:emulate_visual_highlight()
             endif
         endif
     endif
@@ -484,7 +483,7 @@ function! s:get_input(search_key, mode)
         let visual_hl = s:get_visual_highlight()
         try
             call s:turn_off(visual_hl)
-            call s:emulate_visual_highlight(visual_hl, a:mode)
+            call s:emulate_visual_highlight(a:mode, visual_hl)
             let input = s:cli.get()
         finally
             call s:turn_on(visual_hl)
@@ -678,22 +677,25 @@ function! s:get_visual_highlight()
 endfunction
 
 " TODO: test
-function! s:emulate_visual_highlight(visual_hl, mode, ...)
+" args: mode, visual_hl, v_start_pos, v_end_pos
+function! s:emulate_visual_highlight(...)
+    let mode = get(a:, 1, s:is_visual(mode(1)) ? mode(1) : visualmode())
+    let visual_hl = get(a:, 2, s:get_visual_highlight())
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
-    let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
+    let v_start_pos = get(a:, 3, [line("v"),col("v")]) " cannot get curswant
     " See: https://github.com/vim-jp/issues/issues/604
     " getcurpos() could be negative value, so use winsaveview() instead
     let end_curswant_pos =
     \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1)
-    let v_end_pos = get(a:, 2,
+    let v_end_pos = get(a:, 4,
     \   [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ])
-    let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
+    let pattern = s:get_visual_pattern(mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
     " NOTE: Why use dict['key'] instead of dict.key
     " to handle Vim(execute):E121: Undefined variable: highlight
-    execute 'hi IncSearchVisual' a:visual_hl['highlight']
+    execute 'hi IncSearchVisual' visual_hl['highlight']
     call s:hi.add(v.group, v.group, pattern, v.priority)
     call s:update_hl()
 endfunction
