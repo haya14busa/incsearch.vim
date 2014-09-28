@@ -677,6 +677,10 @@ function! s:get_visual_highlight()
 endfunction
 
 " TODO: test
+" NOTE:
+"   Default highlight for visual selection has always higher priority than
+"   defined highlight, so you have to turn off default visual highlight and
+"   emulate it. All this function do is pseudo highlight visual selected area
 " args: mode, visual_hl, v_start_pos, v_end_pos
 function! s:emulate_visual_highlight(...)
     let mode = get(a:, 1, s:is_visual(mode(1)) ? mode(1) : visualmode())
