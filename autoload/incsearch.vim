@@ -289,9 +289,28 @@ function! s:on_char(cmdline)
 
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
-    for _ in range(s:cli.vcount1)
-        call search(pattern, a:cmdline.flag)
-    endfor
+    if a:cmdline.flag !=# 'n' " skip if stay mode
+        if mode(1) == 'no' " FIXME: make it true if called by <expr>
+            for _ in range(s:cli.vcount1)
+                " NOTE: This cannot handle {offset} for cursor position
+                call search(pattern, a:cmdline.flag)
+            endfor
+        else
+            " More precise cursor position while searching
+            let is_visual_mode = s:is_visual(mode(1))
+            let cmd = s:build_search_cmd('n', s:cli.getline(), s:cli.get_prompt())
+            silent! exec 'keepjumps' 'normal!' cmd
+            if is_visual_mode
+                let w = winsaveview()
+                " FIXME: silent! of E523: with <expr> mappings, but make
+                " sure <expr> mappings doesn't reach this block
+                silent! normal! gv
+                call winrestview(w)
+                let visual_hl = s:highlight_capture('Visual')
+                call s:pseud_visual_highlight(visual_hl, mode(1))
+            endif
+        endif
+    endif
 
     " Highlight
     let hgm = s:hgm()
@@ -466,20 +485,24 @@ function! s:get_input(search_key, mode)
 endfunction
 
 function! s:generate_command(mode, pattern, search_key)
-    let op = (a:mode == 'no')          ? v:operator
-    \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
-    \      : ''
     if (s:cli.exit_code() == 0)
         call s:cli.callevent('on_execute_pre') " XXX: side-effect!
-        " NOTE:
-        "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
-        "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
-        "   but, if you do not move the cursor while incremental searching,
-        "   there are no need to use <Esc>.
-        return "\<ESC>" . '"' . v:register . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
+        return s:build_search_cmd(a:mode, a:pattern, a:search_key)
     else " Cancel
         return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
     endif
+endfunction
+
+function! s:build_search_cmd(mode, pattern, search_key)
+    let op = (a:mode == 'no')          ? v:operator
+    \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
+    \      : ''
+    " NOTE:
+    "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
+    "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
+    "   but, if you do not move the cursor while incremental searching,
+    "   there are no need to use <Esc>.
+    return "\<ESC>" . '"' . v:register . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
 endfunction
 
 " @normal, @visual: assume not operator-pending mode
@@ -651,7 +674,9 @@ function! s:pseud_visual_highlight(visual_hl, mode, ...)
     let pattern = s:get_visual_pattern(a:mode, v_start_pos, v_end_pos)
     let hgm = s:hgm()
     let v = hgm.visual
-    execute 'hi IncSearchVisual' a:visual_hl.highlight
+    " NOTE: Why use dict['key'] instead of dict.key
+    " to handle Vim(execute):E121: Undefined variable: highlight
+    execute 'hi IncSearchVisual' a:visual_hl['highlight']
     call s:hi.add(v.group, v.group, pattern, v.priority)
     call s:update_hl()
 endfunction
