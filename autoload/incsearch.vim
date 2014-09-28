@@ -168,6 +168,7 @@ function! s:inc.on_enter(cmdline)
 endfunction
 
 function! s:inc.on_leave(cmdline)
+    call s:reset()
     call s:hi.disable_all()
     call s:hi.delete_all()
     " redraw: hide pseud-cursor
@@ -178,6 +179,12 @@ function! s:inc.on_leave(cmdline)
         echo s:cli.get_prompt() . s:cli.getline()
     endif
 endfunction
+
+function! s:reset()
+    " Current commandline is called by <expr> mapping
+    let s:cli.is_expr = s:FALSE
+endfunction
+call s:reset()
 
 function! s:inc.get_pattern()
     " get `pattern` and ignore {offset}
@@ -290,7 +297,7 @@ function! s:on_char(cmdline)
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
     if a:cmdline.flag !=# 'n' " skip if stay mode
-        if mode(1) == 'no' " FIXME: make it true if called by <expr>
+        if s:cli.is_expr || mode(1) == 'no' " FIXME: make it true if called by <expr>
             for _ in range(s:cli.vcount1)
                 " NOTE: This cannot handle {offset} for cursor position
                 call search(pattern, a:cmdline.flag)
@@ -454,6 +461,7 @@ endfunction
 
 function! s:search(search_key, ...)
     let m = mode(1)
+    let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
     let input = s:get_input(a:search_key, m)
     return s:generate_command(m, input, a:search_key)
