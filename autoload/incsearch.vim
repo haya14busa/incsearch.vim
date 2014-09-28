@@ -742,9 +742,8 @@ function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
         \                      min_c,
         \                      min([max_c, s:get_max_col(v:val)]))
         \      '), "|")
-    else " Error: unexpected mode
-        " TODO: error handling
-        return ''
+    else
+        throw 'incsearch.vim: unexpected mode ' . a:mode
     endif
 endfunction
 
