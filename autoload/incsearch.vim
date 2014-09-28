@@ -674,7 +674,6 @@ endfunction
 function! s:pseud_visual_highlight(visual_hl, mode, ...)
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
-    " FIXME: highlight doesn't work if the range is over screen height
     let v_start_pos = get(a:, 1, [line("v"),col("v")]) " cannot get curswant
     " See: https://github.com/vim-jp/issues/issues/604
     " getcurpos() could be negative value, so use winsaveview() instead
@@ -694,7 +693,14 @@ endfunction
 
 " TODO: test
 function! s:get_visual_pattern(mode, v_start_pos, v_end_pos)
-    let [v_start, v_end] = s:sort_pos([a:v_start_pos, a:v_end_pos])
+    " NOTE: highlight doesn't work if the range is over screen height, so
+    "   limit pattern to visible window.
+    let [_, v_start, v_end, _] = s:sort_pos([
+    \   a:v_start_pos,
+    \   a:v_end_pos,
+    \   [line('w0'), 1],
+    \   [line('w$'), s:get_max_col(line('w$'))]
+    \  ])
     if a:mode ==# 'v'
         if v_start[0] == v_end[0]
             return printf('\v%%%dl%%%dc\_.*%%%dl%%%dc',
