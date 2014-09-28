@@ -297,21 +297,25 @@ function! s:on_char(cmdline)
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
     if a:cmdline.flag !=# 'n' " skip if stay mode
-        if s:cli.is_expr || mode(1) == 'no' " FIXME: make it true if called by <expr>
+        if s:cli.is_expr
             for _ in range(s:cli.vcount1)
                 " NOTE: This cannot handle {offset} for cursor position
                 call search(pattern, a:cmdline.flag)
             endfor
         else
             " More precise cursor position while searching
+            " Caveat:
+            "   This block contains `normal`, please make sure <expr> mappings
+            "   doesn't reach this block
             let is_visual_mode = s:is_visual(mode(1))
             let cmd = s:build_search_cmd('n', s:cli.getline(), s:cli.get_prompt())
+            " silent!:
+            "   Shut up errors! because this is just for the cursor emulation
+            "   while searching
             silent! exec 'keepjumps' 'normal!' cmd
             if is_visual_mode
                 let w = winsaveview()
-                " FIXME: silent! of E523: with <expr> mappings, but make
-                " sure <expr> mappings doesn't reach this block
-                silent! normal! gv
+                normal! gv
                 call winrestview(w)
                 let visual_hl = s:highlight_capture('Visual')
                 call s:pseud_visual_highlight(visual_hl, mode(1))
@@ -397,7 +401,7 @@ function! incsearch#stay(mode, ...)
         normal! gv
     endif
     let m = mode(1)
-    let cmd = incsearch#stay_expr(s:TRUE, get(a:, 1, v:count1)) " arg: Please histadd for me!
+    let cmd = incsearch#stay_expr(get(a:, 1, v:count1)) " arg: Please histadd for me!
     call winrestview(s:w)
 
     " Avoid using feedkeys() as much as possible because
@@ -422,12 +426,10 @@ function! incsearch#stay(mode, ...)
     endif
 endfunction
 
-" @expr
+" @expr but sometimes called by non-<expr>
 function! incsearch#stay_expr(...)
-    " arg: called_by_non_expr
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
-    let called_by_non_expr = get(a:, 1, s:FALSE) " XXX: exists only for non-expr mappings
-    let s:cli.vcount1 = get(a:, 2, v:count1)
+    let s:cli.vcount1 = get(a:, 1, v:count1)
     let m = mode(1)
 
     let input = s:get_input('', m)
@@ -436,7 +438,8 @@ function! incsearch#stay_expr(...)
 
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
-        if (!called_by_non_expr || empty(offset)) " see incsearch#stay() and below NOTE:
+         " NOTE: this is for non-expr mapping see incsearch#stay() and below NOTE:
+        if (s:cli.is_expr || empty(offset))
             call histadd('/', input)
             let @/ = pattern
         endif
