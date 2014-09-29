@@ -257,7 +257,14 @@ function! s:on_char(cmdline)
             "   This block contains `normal`, please make sure <expr> mappings
             "   doesn't reach this block
             let is_visual_mode = s:U.is_visual(mode(1))
-            let cmd = s:build_search_cmd('n', s:cli.getline(), s:cli.get_prompt())
+            " Do not open fold incrementally
+            let foldopen_save = &foldopen
+            let &foldopen=''
+            try
+                let cmd = s:build_search_cmd('n', s:cli.getline(), s:cli.get_prompt())
+            finally
+                let &foldopen = foldopen_save
+            endtry
             " silent!:
             "   Shut up errors! because this is just for the cursor emulation
             "   while searching
@@ -456,12 +463,14 @@ function! s:build_search_cmd(mode, pattern, search_key)
     let op = (a:mode == 'no')          ? v:operator
     \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
+    let zv = (&foldopen =~# '\vsearch|all' ? 'zv' : '')
     " NOTE:
     "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
     "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
     "   but, if you do not move the cursor while incremental searching,
     "   there are no need to use <Esc>.
-    return "\<ESC>" . '"' . v:register . op . s:cli.vcount1 . a:search_key . a:pattern . "\<CR>"
+    return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
+    \   v:register, op, s:cli.vcount1, a:search_key, a:pattern, zv)
 endfunction
 
 " @normal, @visual: assume not operator-pending mode
@@ -533,6 +542,11 @@ function! s:search_for_non_expr(search_key, ...)
         "}}}
 
         call s:silent_after_search(m)
+
+        " Open fold
+        if &foldopen =~# '\vsearch|all'
+            normal! zv
+        endif
     endif
 endfunction
 
