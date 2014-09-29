@@ -172,9 +172,9 @@ function! incsearch#highlight#emulate_visual_highlight(...)
     let pattern = incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
     let hgm = incsearch#highlight#hgm()
     let v = hgm.visual
-    " NOTE: Why use dict['key'] instead of dict.key
-    " to handle Vim(execute):E121: Undefined variable: highlight
-    execute 'hi IncSearchVisual' visual_hl['highlight']
+    " NOTE: Update highlight
+    execute 'hi' 'clear' v.group
+    execute 'hi' v.group visual_hl['highlight']
     call s:hi.add(v.group, v.group, pattern, v.priority)
     call incsearch#highlight#update()
 endfunction
