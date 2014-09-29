@@ -1,3 +1,5 @@
+scriptencoding utf-8
+
 let s:suite = themis#suite('error_warning_emulation')
 let s:assert = themis#helper('assert')
 
@@ -31,19 +33,22 @@ function! s:suite.error_forward_backward()
         call s:assert.equals(s:get_pos_char(), '1')
         normal! j
         call s:assert.equals(s:get_pos_char(), '2')
-        exec "normal" keyseq . "びむぅぅぅぅ\<CR>"
-        call s:assert.equals(v:errmsg, 'E486: Pattern not found: びむぅぅぅぅ')
+        " silent! exec "normal" keyseq . "びむぅぅぅぅ\<CR>"
+        " call s:assert.equals(v:errmsg, 'E486: Pattern not found: びむぅぅぅぅ')
+        silent! exec "normal" keyseq . "bbb\<CR>"
+        call s:assert.equals(v:errmsg, 'E486: Pattern not found: bbb')
         " feedkeys()
         silent! exec "normal" keyseq . "aaa" . keyseq . "e\<CR>"
         call s:assert.equals(v:errmsg, 'E486: Pattern not found: aaa')
-        exec "normal" keyseq . "びむぅぅぅぅ\\(\<CR>"
+        " silent! exec "normal" keyseq . "びむぅぅぅぅ\\(\<CR>"
+        silent! exec "normal" keyseq . "pattern\\(\<CR>"
         call s:assert.equals(v:errmsg, 'E54: Unmatched \(')
-        exec "normal" keyseq . "びむぅぅぅぅ\\)\<CR>"
+        silent! exec "normal" keyseq . "pattern\\)\<CR>"
         call s:assert.equals(v:errmsg, 'E55: Unmatched \)')
-        exec "normal" keyseq . "びむぅぅぅぅ\\zA\<CR>"
+        silent! exec "normal" keyseq . "bbb\\zA\<CR>"
         " NOTE: Skip E867: (NFA) Unknown operator '\za' error
         if exists('&regexpengine') && &regexpengine != 1
-            call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
+            call s:assert.equals(v:errmsg, 'E383: Invalid search string: bbb\zA')
         else " old engine
             call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
         endif
