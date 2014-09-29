@@ -263,7 +263,32 @@ function! s:on_char(cmdline)
             " silent!:
             "   Shut up errors! because this is just for the cursor emulation
             "   while searching
+            let w = winsaveview()
             silent! exec 'keepjumps' 'normal!' cmd
+            " let x = {'lnum': -1, 'col': -1}
+            let xview = winsaveview()
+            let x = [xview.lnum, xview.col]
+            let poses = []
+            " while foldclosed('.') != -1 && !(w.lnum == x.lnum && w.col == x.col)
+            while foldclosed('.') != -1 && index(poses, x) == -1
+            " \ && a:cmdline.is_input("<Over>(incsearch-next)")
+            " \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+                let poses += [x]
+                call winrestview(w)
+                if a:cmdline.is_input("<Over>(incsearch-next)")
+                \ || (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag = '')
+                \ || (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag = 'b')
+                    let s:cli.vcount1 += 1
+                else
+                    let s:cli.vcount1 -= 1
+                endif
+                let cmd = s:with_ignore_foldopen(
+                \   function('s:build_search_cmd'),
+                \   'n', s:cli.getline(), s:cli.get_prompt())
+                silent! exec 'keepjumps' 'normal!' cmd
+                let xview = winsaveview()
+                let x = [xview.lnum, xview.col]
+            endwhile
             if is_visual_mode
                 let w = winsaveview()
                 normal! gv
