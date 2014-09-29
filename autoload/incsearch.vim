@@ -257,14 +257,9 @@ function! s:on_char(cmdline)
             "   This block contains `normal`, please make sure <expr> mappings
             "   doesn't reach this block
             let is_visual_mode = s:U.is_visual(mode(1))
-            " Do not open fold incrementally
-            let foldopen_save = &foldopen
-            let &foldopen=''
-            try
-                let cmd = s:build_search_cmd('n', s:cli.getline(), s:cli.get_prompt())
-            finally
-                let &foldopen = foldopen_save
-            endtry
+            let cmd = s:with_ignore_foldopen(
+            \   function('s:build_search_cmd'),
+            \   'n', s:cli.getline(), s:cli.get_prompt())
             " silent!:
             "   Shut up errors! because this is just for the cursor emulation
             "   while searching
@@ -405,7 +400,8 @@ function! incsearch#stay_expr(...)
         " FIXME: cannot set {offset} if in operator-pending mode because this
         " have to use feedkeys()
         if !empty(offset) && mode(1) !=# 'no'
-            let cmd = s:generate_command(m, input, '/')
+            let cmd = s:with_ignore_foldopen(
+            \   function('s:generate_command'), m, input, '/')
             call feedkeys(cmd, 'n')
             " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
             call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
@@ -680,6 +676,17 @@ function! s:_echohl(msg, hlgroup, ...)
     exec 'echohl' a:hlgroup
     exec echocmd string(a:msg)
     echohl None
+endfunction
+
+" Not to generate command with zv
+function! s:with_ignore_foldopen(F, ...)
+    let foldopen_save = &foldopen
+    let &foldopen=''
+    try
+        return call(a:F, a:000)
+    finally
+        let &foldopen = foldopen_save
+    endtry
 endfunction
 
 "}}}
