@@ -459,7 +459,7 @@ function! s:build_search_cmd(mode, pattern, search_key)
     let op = (a:mode == 'no')          ? v:operator
     \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
     \      : ''
-    let zv = (&foldopen =~# '\vsearch|all' ? 'zv' : '')
+    let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
     " NOTE:
     "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
     "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
