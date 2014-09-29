@@ -153,7 +153,6 @@ augroup END
 
 let s:INT = { 'MAX': 2147483647 }
 
-" TODO: test
 " NOTE:
 "   Default highlight for visual selection has always higher priority than
 "   defined highlight, so you have to turn off default visual highlight and
@@ -184,7 +183,6 @@ function! incsearch#highlight#emulate_visual_highlight(...)
     call incsearch#highlight#update()
 endfunction
 
-" TODO: test
 function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
     " NOTE: highlight doesn't work if the range is over screen height, so
     "   limit pattern to visible window.
