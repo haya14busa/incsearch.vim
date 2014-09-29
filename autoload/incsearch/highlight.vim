@@ -59,7 +59,7 @@ augroup END
 
 let s:default_highlight = {
 \   'visual' : {
-\       'group'    : 'IncSearchVisual',
+\       'group'    : '_IncSearchVisual',
 \       'priority' : '10'
 \   },
 \   'match' : {
