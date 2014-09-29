@@ -155,17 +155,20 @@ let s:INT = { 'MAX': 2147483647 }
 "   emulate it. All this function do is pseudo highlight visual selected area
 " args: mode, visual_hl, v_start_pos, v_end_pos
 function! incsearch#highlight#emulate_visual_highlight(...)
-    let mode = get(a:, 1, s:U.is_visual(mode(1)) ? mode(1) : visualmode())
+    let is_visual_now = s:U.is_visual(mode(1))
+    let mode = get(a:, 1, is_visual_now ? mode(1) : visualmode())
     let visual_hl = get(a:, 2, incsearch#highlight#get_visual_hlobj())
     " Note: the default pos value assume visual selection is not cleared.
     " It uses curswant to emulate visual-block
-    let v_start_pos = get(a:, 3, [line("v"),col("v")]) " cannot get curswant
+    let v_start_pos = get(a:, 3,
+    \   (is_visual_now ? [line("v"),col("v")] : [line("'<"), col("'<")]))
     " See: https://github.com/vim-jp/issues/issues/604
     " getcurpos() could be negative value, so use winsaveview() instead
     let end_curswant_pos =
     \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1)
-    let v_end_pos = get(a:, 4,
-    \   [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ])
+    let v_end_pos = get(a:, 4, (is_visual_now
+    \   ? [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ]
+    \   : [line("'>"), col("'>")]))
     let pattern = incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
     let hgm = incsearch#highlight#hgm()
     let v = hgm.visual
