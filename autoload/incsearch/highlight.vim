@@ -144,6 +144,11 @@ function! incsearch#highlight#get_visual_hlobj()
     return s:_visual_hl
 endfunction
 
+augroup incsearch-update-visual-highlight
+    autocmd!
+    autocmd ColorScheme * if exists('s:_visual_hl') | unlet s:_visual_hl | endif
+augroup END
+
 " Visual Highlighting Emulation:
 
 let s:INT = { 'MAX': 2147483647 }
