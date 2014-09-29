@@ -75,6 +75,13 @@ function! s:is_pos_more_equal(x, y)
     return ! s:is_pos_less_equal(a:x, a:y)
 endfunction
 
+" x < y -> -1
+" x = y -> 0
+" x > y -> 1
+function! s:compare_pos(x, y)
+    return max([-1, min([1,(a:x[0] == a:y[0]) ? a:x[1] - a:y[1] : a:x[0] - a:y[0]])])
+endfunction
+
 function! s:sort_num(xs)
     " 7.4.341
     " http://ftp.vim.org/vim/patches/7.4/7.4.341
@@ -91,7 +98,7 @@ endfunction
 
 function! s:sort_pos(pos_list)
     " pos_list: [ [x1, y1], [x2, y2] ]
-    return sort(a:pos_list, 's:is_pos_more_equal')
+    return sort(a:pos_list, 's:compare_pos')
 endfunction
 
 " Return the number of matched patterns in the current buffer or the specified
