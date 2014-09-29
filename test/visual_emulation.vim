@@ -152,3 +152,11 @@ function! s:suite.unexpected_mode()
     call s:assert.equals(throwed, 1)
 endfunction
 
+function! s:suite.update_highlight_on_colorscheme()
+    colorscheme default
+    let old_hl = incsearch#highlight#get_visual_hlobj()
+    colorscheme desert
+    let new_hl = incsearch#highlight#get_visual_hlobj()
+    call s:assert.not_equals(old_hl, new_hl)
+endfunction
+
