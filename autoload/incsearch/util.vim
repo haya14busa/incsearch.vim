@@ -31,17 +31,29 @@ set cpo&vim
 " Utilities:
 
 function! incsearch#util#import()
-    return {
-    \     'is_visual'         :  function('s:is_visual')
-    \   , 'get_max_col'       :  function('s:get_max_col')
-    \   , 'is_pos_less_equal' :  function('s:is_pos_less_equal')
-    \   , 'is_pos_more_equal' :  function('s:is_pos_more_equal')
-    \   , 'sort_num'          :  function('s:sort_num')
-    \   , 'sort_pos'          :  function('s:sort_pos')
-    \   , 'count_pattern'     :  function('s:count_pattern')
-    \   , 'silent_feedkeys'   :  function('s:silent_feedkeys')
-    \ }
+    let prefix = '<SNR>' . s:SID() . '_'
+    let module = {}
+    for func in s:functions
+        let module[func] = function(prefix . func)
+    endfor
+    return copy(module)
 endfunction
+
+function! s:SID()
+    return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
+endfunction
+
+let s:functions = [
+\     'is_visual'
+\   , 'get_max_col'
+\   , 'is_pos_less_equal'
+\   , 'is_pos_more_equal'
+\   , 'sort_num'
+\   , 'sort_pos'
+\   , 'count_pattern'
+\   , 'silent_feedkeys'
+\ ]
+
 
 function! s:is_visual(mode)
     return a:mode =~# "[vV\<C-v>]"
