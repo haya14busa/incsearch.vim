@@ -18,12 +18,10 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
-" TODO:
-
 function! s:reset_buffer()
     normal! ggdG
     call s:add_lines(['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e'])
-    normal! Gddgg0
+    normal! Gddgg0zt
 endfunction
 
 function! s:suite.before_each()
