@@ -407,7 +407,7 @@ function! incsearch#stay_expr(...)
             call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
         endif
         " }}}
-        return (m =~# "[vV\<C-v>]") ? "\<ESC>gv" : "\<ESC>" " just exit
+        return s:U.is_visual(m) ? "\<ESC>gv" : "\<ESC>" " just exit
     else " exit stay mode while searching
         return s:generate_command(m, input, '/') " assume '/'
     endif
@@ -451,13 +451,13 @@ function! s:generate_command(mode, pattern, search_key)
         call s:cli.callevent('on_execute_pre') " XXX: side-effect!
         return s:build_search_cmd(a:mode, a:pattern, a:search_key)
     else " Cancel
-        return (a:mode =~# "[vV\<C-v>]") ? '\<ESC>gv' : "\<ESC>"
+        return s:U.is_visual(a:mode) ? '\<ESC>gv' : "\<ESC>"
     endif
 endfunction
 
 function! s:build_search_cmd(mode, pattern, search_key)
-    let op = (a:mode == 'no')          ? v:operator
-    \      : (a:mode =~# "[vV\<C-v>]") ? 'gv'
+    let op = (a:mode == 'no')      ? v:operator
+    \      : s:U.is_visual(a:mode) ? 'gv'
     \      : ''
     let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
     " NOTE:
