@@ -18,8 +18,8 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
-
-function! s:suite.scroll_f_works()
+function! s:suite.before_each()
+    set wrapscan&
     let h = winheight(0)
     normal! ggdG
     call s:add_lines(
@@ -27,7 +27,12 @@ function! s:suite.scroll_f_works()
     \   + range(h * 2)
     \   + ['pattern4 pattern5 pattern6']
     \ )
-    normal! gg0
+    normal! Gdd
+    normal! gg0zt
+endfunction
+
+
+function! s:suite.scroll_f_works()
     call s:assert.equals(s:get_pos_char(), 'p')
     exec "normal /pattern\\zs\\d\<CR>"
     normal! gg0
@@ -39,15 +44,7 @@ function! s:suite.scroll_f_works()
 endfunction
 
 function! s:suite.scroll_b_works()
-    :IncSearchNoreMap <C-k> <Over>(incsearch-scroll-b)
-    let h = winheight(0)
-    normal! ggdG
-    call s:add_lines(
-    \     ['pattern1 pattern2 pattern3']
-    \   + range(h * 2)
-    \   + ['pattern4 pattern5 pattern6']
-    \ )
-    normal! Gdd$
+    normal! G$
     call s:assert.equals(getline('.'), 'pattern4 pattern5 pattern6')
     normal! gg
     call s:assert.equals(getline('.'), 'pattern1 pattern2 pattern3')
@@ -59,4 +56,22 @@ function! s:suite.scroll_b_works()
     call s:assert.equals(s:get_pos_char(), '3')
 endfunction
 
-" TODO: forward <C-K> and backward <C-j>, note: wrapscan
+function! s:suite.wrapscan_scroll_reverse__move_cursor()
+    call s:assert.equals(s:get_pos_char(), 'p')
+    exec "normal /pattern\\zs\\d\<C-k>\<CR>"
+    call s:assert.equals(s:get_pos_char(), '6')
+endfunction
+
+function! s:suite.nowrapscan_scroll_reverse_doesnot_move_cursor_reversed_direction()
+    set nowrapscan
+    normal! G0
+    call s:assert.equals(s:get_pos_char(), 'p')
+    exec "normal /pattern\\zs\\d\<C-k>\<CR>"
+    call s:assert.not_equals(s:get_pos_char(), '3')
+    call s:assert.equals(s:get_pos_char(), '6')
+    normal! gg$
+    call s:assert.equals(s:get_pos_char(), '3')
+    exec "normal ?pattern\\zs\\d\<C-j>\<CR>"
+    call s:assert.not_equals(s:get_pos_char(), '4')
+    call s:assert.equals(s:get_pos_char(), '3')
+endfunction
