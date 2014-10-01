@@ -120,3 +120,15 @@ function! s:suite.backward_pattern()
     endfor
     call s:assert.equals(poses, [[3, 2], [2, 2], [1, 2]])
 endfunction
+
+function! s:suite.separate_highlight_with_searching()
+    " XXX: it just test scripts works or not
+    let g:incsearch#separate_highlight = 1
+    for keyseq in ['/', '?', 'g/']
+        exec "normal" keyseq . "pattern\<CR>"
+    endfor
+    let g:incsearch#separate_highlight = 0
+    for keyseq in ['/', '?', 'g/']
+        exec "normal" keyseq . "pattern\<CR>"
+    endfor
+endfunction
