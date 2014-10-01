@@ -273,31 +273,11 @@ function! s:on_char(cmdline)
         endif
     endif
 
-    " Highlight
-    let hgm = incsearch#highlight#hgm()
-    let m = hgm.match
-    let r = hgm.match_reverse
-    let o = hgm.on_cursor
-    let c = hgm.cursor
-    let on_cursor_pattern = '\M\%#\(' . pattern . '\M\)'
-    let should_separate_highlight =
-    \   g:incsearch#separate_highlight == s:TRUE && s:cli.flag !=# 'n'
-    if ! should_separate_highlight
-        call s:hi.add(m.group, m.group, pattern, m.priority)
-    else
-        let forward_pattern = s:forward_pattern(pattern, s:w.lnum, s:w.col)
-        let backward_pattern = s:backward_pattern(pattern, s:w.lnum, s:w.col)
-        if s:cli.flag == '' " forward
-            call s:hi.add(m.group , m.group , forward_pattern  , m.priority)
-            call s:hi.add(r.group , r.group , backward_pattern , r.priority)
-        elseif s:cli.flag == 'b' " backward
-            call s:hi.add(m.group , m.group , backward_pattern , m.priority)
-            call s:hi.add(r.group , r.group , forward_pattern  , r.priority)
-        endif
-    endif
-    call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
-    call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
-    call incsearch#highlight#update()
+    " Improved Incremental highlighing!
+    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+    call incsearch#highlight#incremental_highlight(
+    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -585,18 +565,6 @@ function! incsearch#convert_with_case(pattern)
     else
         return '\c' . a:pattern " smartcase without [A-Z]
     endif
-endfunction
-
-function! s:forward_pattern(pattern, line, col)
-    let forward_line = printf('%%>%dl', a:line)
-    let current_line = printf('%%%dl%%>%dc', a:line, a:col)
-    return '\v(' . forward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
-endfunction
-
-function! s:backward_pattern(pattern, line, col)
-    let backward_line = printf('%%<%dl', a:line)
-    let current_line = printf('%%%dl%%<%dc', a:line, a:col)
-    return '\v(' . backward_line . '|' . current_line . ')\M\(' . a:pattern . '\M\)'
 endfunction
 
 function! s:silent_after_search(...) " arg: mode(1)
