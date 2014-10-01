@@ -40,7 +40,7 @@ let s:U = incsearch#util#import()
 
 let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
-let g:incsearch#highlight#hi = s:hi
+let g:incsearch#highlight#_hi = s:hi
 
 function! incsearch#highlight#update()
     call s:hi.disable_all()

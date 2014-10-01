@@ -48,7 +48,7 @@ let s:V = vital#of('incsearch')
 let s:U = incsearch#util#import()
 
 " Highlight:
-let s:hi = g:incsearch#highlight#hi
+let s:hi = g:incsearch#highlight#_hi
 
 " CommandLine Interface: {{{
 let s:cli = s:V.import('Over.Commandline').make_default("/")
