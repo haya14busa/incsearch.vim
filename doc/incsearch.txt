@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.3
+Version : 0.9.4
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -269,6 +269,16 @@ KNOWN ISSUES						*incsearch-issues*
 
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
+
+0.9.4	2014-10-01
+	1. Improve cursor position while incremental searching
+	    - Now you can see cursor position working with |{offset}| unlike
+	      default |'incsearch'|
+	2. Fix and improve visual selection while incremental searching
+	3. Fix to ignore search related errors while searching
+	4. Handle unfolding after search execution
+	5. Cover more test cases
+	6. Start CI on windows with AppVeyor in addition to travis
 
 0.9.3	2014-09-28
 	1. Do not use |:map-<expr>| for normal and visual mode mappings.
