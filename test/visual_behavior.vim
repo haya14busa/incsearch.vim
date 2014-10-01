@@ -1,8 +1,6 @@
 let s:suite = themis#suite('visual_behaviors')
 let s:assert = themis#helper('assert')
 
-" TODO:
-
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
 map g/ <Plug>(incsearch-stay)
@@ -20,13 +18,17 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
-function! s:suite.forward()
+function! s:suite.before_each()
     normal! ggdG
     call s:add_lines([
     \   '1pattern 2pattern'
     \ , '3pattern 4pattern'
     \ ])
-    normal! gg0
+    normal! Gdd
+    normal! gg0zt
+endfunction
+
+function! s:suite.forward()
     call setreg(v:register, '')
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "v/2pattern\<CR>y"
@@ -43,12 +45,7 @@ function! s:suite.forward()
 endfunction
 
 function! s:suite.backward()
-    normal! ggdG
-    call s:add_lines([
-    \   '1pattern 2pattern'
-    \ , '3pattern 4pattern'
-    \ ])
-    normal! Gdd$
+    normal! G$
     call setreg(v:register, '')
     exec "normal" "v?3pattern?e\<CR>" | normal! y
     call s:assert.equals(getreg(), 'n 4pattern')
@@ -61,12 +58,6 @@ function! s:suite.backward()
 endfunction
 
 function! s:suite.stay()
-    normal! ggdG
-    call s:add_lines([
-    \   '1pattern 2pattern'
-    \ , '3pattern 4pattern'
-    \ ])
-    normal! gg0
     call setreg(v:register, '')
     call s:assert.equals(getreg(), '')
     call s:assert.equals(s:get_pos_char(), '1')
