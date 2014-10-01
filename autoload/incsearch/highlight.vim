@@ -28,6 +28,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+let s:TRUE = !0
+let s:FALSE = 0
+let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
 " Utility Helper:
 let s:U = incsearch#util#import()
@@ -37,7 +40,7 @@ let s:U = incsearch#util#import()
 
 let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
-let g:incsearch#highlight#hi = s:hi
+let g:incsearch#highlight#_hi = s:hi
 
 function! incsearch#highlight#update()
     call s:hi.disable_all()
@@ -223,6 +226,41 @@ function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
     else
         throw 'incsearch.vim: unexpected mode ' . a:mode
     endif
+endfunction
+
+" Incremental Highlighting:
+
+function! incsearch#highlight#incremental_highlight(pattern, ...)
+    let should_separate_highlight = get(a:, 1, s:FALSE)
+    let direction = get(a:, 2, s:DIRECTION.forward)
+    let start_pos = get(a:, 3, getpos('.')[1:2])
+    let hgm = incsearch#highlight#hgm()
+    let [m, r, o, c] = [hgm.match, hgm.match_reverse, hgm.on_cursor, hgm.cursor]
+    let on_cursor_pattern = '\M\%#\(' . a:pattern . '\M\)'
+    if ! should_separate_highlight
+        call s:hi.add(m.group, m.group, a:pattern, m.priority)
+    else
+        let [p1, p2] = (direction == s:DIRECTION.forward)
+        \   ? [incsearch#highlight#forward_pattern(a:pattern, start_pos)
+        \     ,incsearch#highlight#backward_pattern(a:pattern, start_pos)]
+        \   : [incsearch#highlight#backward_pattern(a:pattern, start_pos)
+        \     ,incsearch#highlight#forward_pattern(a:pattern, start_pos)]
+        call s:hi.add(m.group , m.group , p1 , m.priority) " right direction
+        call s:hi.add(r.group , r.group , p2 , r.priority) " reversed direction
+    endif
+    call s:hi.add(o.group , o.group , on_cursor_pattern , o.priority)
+    call s:hi.add(c.group , c.group , '\v%#'            , c.priority)
+    call incsearch#highlight#update()
+endfunction
+
+function! incsearch#highlight#forward_pattern(pattern, from_pos)
+    let [line, col] = a:from_pos
+    return printf('\v(%%>%dl|%%%dl%%>%dc)\M\(%s\M\)', line, line, col, a:pattern)
+endfunction
+
+function! incsearch#highlight#backward_pattern(pattern, from_pos)
+    let [line, col] = a:from_pos
+    return printf('\v(%%<%dl|%%%dl%%<%dc)\M\(%s\M\)', line, line, col, a:pattern)
 endfunction
 
 
