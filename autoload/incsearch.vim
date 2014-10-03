@@ -469,13 +469,9 @@ function! s:search_for_non_expr(search_key, ...)
     let should_execute = !empty(offset) || input ==# ''
     if should_execute
         " Execute with feedkeys() to work with
-        "  1. {offset}
-        "  2. empty input (use last search pattern)
-        "  FIXME: Pattern not found error will not occur
+        "  1. :h {offset}
+        "  2. empty input (:h last-pattern)
         "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
-        "  FIXME: if the offset is `/e`, `/b+` , etc... and currrent cursor
-        "  position matches the input pattern, the incremental highlight of
-        "  cursor position is wrong... but it's hard to fix
         let cmd = s:generate_command(m, input, a:search_key)
         call winrestview(s:w)
         call feedkeys(cmd, 'n')
@@ -574,7 +570,6 @@ endfunction
 
 function! s:silent_after_search(...) " arg: mode(1)
     " :h function-search-undo
-    " Handle :set hlsearch
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:_silent_hlsearch()
         call s:_silent_searchforward()
@@ -582,6 +577,7 @@ function! s:silent_after_search(...) " arg: mode(1)
 endfunction
 
 function! s:_silent_hlsearch()
+    " Handle :set hlsearch
     call s:U.silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
 endfunction
 
