@@ -21,6 +21,11 @@
 "     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 "     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " }}}
+"
+" vimlint:
+" @vimlint(EVL103, 1, a:cmdline)
+" @vimlint(EVL102, 1, v:errmsg)
+" @vimlint(EVL102, 1, v:warningmsg)
 "=============================================================================
 scriptencoding utf-8
 " Saving 'cpoptions' {{{
@@ -140,7 +145,7 @@ call s:reset()
 
 function! s:inc.get_pattern()
     " get `pattern` and ignore {offset}
-    let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, _] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
     return pattern
 endfunction
 
