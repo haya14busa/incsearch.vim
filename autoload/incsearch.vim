@@ -219,7 +219,7 @@ function! s:on_char_pre(cmdline)
     endif
 
     " Handle nowrapscan:
-    "   if you `:set nowrapscan`, you can't move to the reverse direction
+    "   if you `:set nowrapscan`, you can't move to the reversed direction
     if &wrapscan == s:FALSE && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
@@ -227,7 +227,12 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
         let pattern = s:inc.get_pattern()
-        let max_cnt = s:U.count_pattern(pattern, start, end)
+        let [from, to] = [[s:w.lnum, s:w.col],
+        \       s:cli.flag !=# 'b'
+        \       ? [line('$'), s:U.get_max_col('$')]
+        \       : [1, 1]
+        \   ]
+        let max_cnt = s:U.count_pattern(pattern, from, to)
         let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
     endif
 endfunction
