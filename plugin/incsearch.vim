@@ -49,6 +49,12 @@ onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
 onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
 onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
 
+noremap <expr> <Plug>(incsearch-auto-nohlsearch) incsearch#auto_nohlsearch()
+noremap <Plug>(_incsearch-n) n
+noremap <Plug>(_incsearch-N) N
+map <Plug>(incsearch-nohl-n) <Plug>(incsearch-auto-nohlsearch)<Plug>(_incsearch-n)
+map <Plug>(incsearch-nohl-N) <Plug>(incsearch-auto-nohlsearch)<Plug>(_incsearch-N)
+
 " for normal and visual mode
 function! s:mode_wrap(cmd)
     let m = mode(1)

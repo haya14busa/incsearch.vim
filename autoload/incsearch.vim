@@ -45,6 +45,7 @@ let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direct
 " This changes emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
+let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -530,6 +531,23 @@ function! s:search_for_non_expr(search_key, ...)
             normal! zv
         endif
     endif
+
+    if g:incsearch#auto_nohlsearch
+        call incsearch#auto_nohlsearch()
+    endif
+endfunction
+
+" Make sure move cursor by search related action after calling this function
+" because the first move invoke intended autocmd
+function! incsearch#auto_nohlsearch()
+    augroup incsearch-auto-nohlsearch
+        autocmd!
+        autocmd CursorMoved <buffer>
+        \  autocmd incsearch-auto-nohlsearch CursorMoved <buffer>
+        \  call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>", 'nohlsearch', 'n')
+        \   | autocmd! incsearch-auto-nohlsearch * <buffer>
+    augroup END
+    return ''
 endfunction
 
 "}}}
