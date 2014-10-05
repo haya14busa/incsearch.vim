@@ -396,10 +396,14 @@ function! incsearch#stay_expr(...)
             call feedkeys(cmd, 'n')
             " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
             call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
+            call incsearch#auto_nohlsearch(2)
+        else
+            call incsearch#auto_nohlsearch(0)
         endif
         " }}}
         return s:U.is_visual(m) ? "\<ESC>gv" : "\<ESC>" " just exit
     else " exit stay mode while searching
+        call incsearch#auto_nohlsearch(1)
         return s:generate_command(m, input, '/') " assume '/'
     endif
 endfunction
