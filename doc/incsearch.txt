@@ -96,13 +96,13 @@ Additional usage~
 						    *incsearch-additional-usage*
 
 						*g:incsearch#auto_nohlsearch*
-<Plug>(incsearch-noh)				*<Plug>(incsearch-noh)*
-<Plug>(incsearch-noh-n)				*<Plug>(incsearch-nohl-n)*
-<Plug>(incsearch-noh-N)				*<Plug>(incsearch-nohl-N)*
-<Plug>(incsearch-noh-*)				*<Plug>(incsearch-nohl-star)*
-<Plug>(incsearch-noh-#)				*<Plug>(incsearch-nohl-#)*
-<Plug>(incsearch-noh-g*)			*<Plug>(incsearch-nohl-gstar)*
-<Plug>(incsearch-noh-g#)			*<Plug>(incsearch-nohl-g#)*
+<Plug>(incsearch-nohl)				*<Plug>(incsearch-nohl)*
+<Plug>(incsearch-nohl-n)			*<Plug>(incsearch-nohl-n)*
+<Plug>(incsearch-nohl-N)			*<Plug>(incsearch-nohl-N)*
+<Plug>(incsearch-nohl-*)			*<Plug>(incsearch-nohl-star)*
+<Plug>(incsearch-nohl-#)			*<Plug>(incsearch-nohl-#)*
+<Plug>(incsearch-nohl-g*)			*<Plug>(incsearch-nohl-gstar)*
+<Plug>(incsearch-nohl-g#)			*<Plug>(incsearch-nohl-g#)*
 
 	Let's farewell to this kind of mapping! >
 	    nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>
@@ -113,25 +113,25 @@ Additional usage~
 >
 	    set hlsearch
 	    let g:incsearch#auto_nohlsearch = 1
-	    map n  <Plug>(incsearch-noh-n)
-	    map N  <Plug>(incsearch-noh-N)
-	    map *  <Plug>(incsearch-noh-*)
-	    map #  <Plug>(incsearch-noh-#)
-	    map g* <Plug>(incsearch-noh-g*)
-	    map g# <Plug>(incsearch-noh-g#)
+	    map n  <Plug>(incsearch-nohl-n)
+	    map N  <Plug>(incsearch-nohl-N)
+	    map *  <Plug>(incsearch-nohl-*)
+	    map #  <Plug>(incsearch-nohl-#)
+	    map g* <Plug>(incsearch-nohl-g*)
+	    map g# <Plug>(incsearch-nohl-g#)
 <
-	NOTE: |<Plug>(incsearch-noh-n)| staffs are just alias to
-	`<Plug>(incsearch-noh)n` except |n| doesn't be remapped, so the basic
+	NOTE: |<Plug>(incsearch-nohl-n)| staffs are just alias to
+	`<Plug>(incsearch-nohl)n` except |n| doesn't be remapped, so the basic
 	behavior is completely same as default one.
 
 	If you want to use this feature with other search related plugins, use
-	|<Plug>(incsearch-noh)|. Please make sure to place |<Plug>(incsearch-noh)|
+	|<Plug>(incsearch-nohl)|. Please make sure to place |<Plug>(incsearch-nohl)|
 	before the cursor moving mappings.
 
 	Working with |anzu.txt| example:
 >
-	    map n <Plug>(incsearch-noh)<Plug>(anzu-n-with-echo)
-	    map N <Plug>(incsearch-noh)<Plug>(anzu-N-with-echo)
+	    map n <Plug>(incsearch-nohl)<Plug>(anzu-n-with-echo)
+	    map N <Plug>(incsearch-nohl)<Plug>(anzu-N-with-echo)
 <
 
 					    *g:incsearch#consistent_n_direction*

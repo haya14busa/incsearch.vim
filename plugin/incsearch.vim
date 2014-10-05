@@ -54,19 +54,19 @@ onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
 "   - This mappings doesn't move the cursor, please use this with other
 "     mappings at the same time.
 "   - Make sure calling this mapping __before__ moving commands
-"     e.g. `<Plug>(incsearch-noh)n` works but `n<Plug>(incsearch-noh)` doesn't
+"     e.g. `<Plug>(incsearch-nohl)n` works but `n<Plug>(incsearch-nohl)` doesn't
 "     work
-noremap <expr> <Plug>(incsearch-noh) incsearch#auto_nohlsearch(1)
+noremap <expr> <Plug>(incsearch-nohl) incsearch#auto_nohlsearch(1)
 " NOTE: Should I consider to make below mappings public?
-" noremap <expr> <Plug>(incsearch-noh0) incsearch#auto_nohlsearch(0)
-" noremap <expr> <Plug>(incsearch-noh2) incsearch#auto_nohlsearch(2)
+" noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
+" noremap <expr> <Plug>(incsearch-nohl2) incsearch#auto_nohlsearch(2)
 
-map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-noh)<Plug>(_incsearch-n)
-map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-noh)<Plug>(_incsearch-N)
-map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-noh)<Plug>(_incsearch-*)
-map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-noh)<Plug>(_incsearch-#)
-map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-noh)<Plug>(_incsearch-g*)
-map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-noh)<Plug>(_incsearch-g#)
+map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-n)
+map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-nohl)<Plug>(_incsearch-N)
+map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-nohl)<Plug>(_incsearch-*)
+map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-nohl)<Plug>(_incsearch-#)
+map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-nohl)<Plug>(_incsearch-g*)
+map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)
 
 " These mappings are just alias to default mappings except they won't be
 " remapped any more
