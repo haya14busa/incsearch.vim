@@ -49,11 +49,30 @@ onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
 onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
 onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
 
-noremap <expr> <Plug>(incsearch-auto-nohlsearch) incsearch#auto_nohlsearch()
-noremap <Plug>(_incsearch-n) n
-noremap <Plug>(_incsearch-N) N
-map <Plug>(incsearch-nohl-n) <Plug>(incsearch-auto-nohlsearch)<Plug>(_incsearch-n)
-map <Plug>(incsearch-nohl-N) <Plug>(incsearch-auto-nohlsearch)<Plug>(_incsearch-N)
+" Apply automatic :h :nohlsearch with :h :autocmd
+" NOTE:
+"   - This mappings doesn't move the cursor, please use this with other
+"     mappings at the same time.
+"   - Make sure calling this mapping __before__ moving commands
+"     e.g. `<Plug>(incsearch-noh)n` works but `n<Plug>(incsearch-noh)` doesn't
+"     work
+noremap <expr> <Plug>(incsearch-noh) incsearch#auto_nohlsearch()
+
+map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-noh)<Plug>(_incsearch-n)
+map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-noh)<Plug>(_incsearch-N)
+map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-noh)<Plug>(_incsearch-*)
+map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-noh)<Plug>(_incsearch-#)
+map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-noh)<Plug>(_incsearch-g*)
+map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-noh)<Plug>(_incsearch-g#)
+
+" These mappings are just alias to default mappings except they won't be
+" remapped any more
+noremap <Plug>(_incsearch-n)  n
+noremap <Plug>(_incsearch-N)  N
+noremap <Plug>(_incsearch-*)  *
+noremap <Plug>(_incsearch-#)  #
+noremap <Plug>(_incsearch-g*) g*
+noremap <Plug>(_incsearch-g#) g#
 
 " for normal and visual mode
 function! s:mode_wrap(cmd)

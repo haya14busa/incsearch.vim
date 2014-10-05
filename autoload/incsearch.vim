@@ -532,20 +532,23 @@ function! s:search_for_non_expr(search_key, ...)
         endif
     endif
 
-    if g:incsearch#auto_nohlsearch
-        call incsearch#auto_nohlsearch()
-    endif
+    call incsearch#auto_nohlsearch()
 endfunction
 
-" Make sure move cursor by search related action after calling this function
-" because the first move invoke intended autocmd
+" Make sure move cursor by search related action __after__ calling this
+" function because the first move event just set nested autocmd which
+" does :nohlsearch
+" @expr
 function! incsearch#auto_nohlsearch()
+    " NOTE: see this value inside this function in order to toggle auto
+    " :nohlsearch feature easily with g:incsearch#auto_nohlsearch option
+    if !g:incsearch#auto_nohlsearch | return '' | endif
     augroup incsearch-auto-nohlsearch
         autocmd!
-        autocmd CursorMoved <buffer>
-        \  autocmd incsearch-auto-nohlsearch CursorMoved <buffer>
+        autocmd CursorMoved *
+        \  autocmd incsearch-auto-nohlsearch CursorMoved *
         \  call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>", 'nohlsearch', 'n')
-        \   | autocmd! incsearch-auto-nohlsearch * <buffer>
+        \  | autocmd! incsearch-auto-nohlsearch
     augroup END
     return ''
 endfunction
