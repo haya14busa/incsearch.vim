@@ -80,6 +80,7 @@ function! s:suite.incremental_separate_highlight()
 endfunction
 
 function! s:suite.forward_pattern()
+    call s:reset_buffer() " XXX:
     let U = incsearch#util#import()
     let L = vital#of('incsearch').import('Data.List')
     let from = [3,3]
