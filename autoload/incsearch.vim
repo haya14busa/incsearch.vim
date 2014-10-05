@@ -271,10 +271,14 @@ function! s:on_char(cmdline)
             let cmd = s:with_ignore_foldopen(
             \   function('s:build_search_cmd'),
             \   'n', s:cli.getline(), s:cli.get_prompt())
-            " silent!:
+            " NOTE:
+            " :silent!
             "   Shut up errors! because this is just for the cursor emulation
             "   while searching
-            silent! exec 'keepjumps' 'normal!' cmd
+            " :nohlsearch
+            "   Please do not highlight at the first place if you set back
+            "   info! I'll handle it myself :h function-search-undo
+            silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
             if is_visual_mode
                 let w = winsaveview()
                 normal! gv
@@ -363,7 +367,7 @@ function! incsearch#stay(mode, ...)
         if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
             normal! m`
         endif
-        silent! exec 'keepjumps' 'normal!' cmd
+        silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
     endif
 endfunction
 
@@ -645,7 +649,7 @@ function! s:emulate_search_error(direction)
     "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
     let w = winsaveview()
     " Get first error
-    silent! exec 'keepjumps' 'normal!' keyseq . "\<CR>"
+    silent! exec 'keepjumps' 'normal!' keyseq . "\<CR>" | nohlsearch
     call winrestview(w)
     if g:incsearch#do_not_save_error_message_history
         if v:errmsg != ''
@@ -658,7 +662,7 @@ function! s:emulate_search_error(direction)
         let last_error = v:errmsg
         try
             " Show warning
-            exec 'keepjumps' 'normal!' keyseq . "\<CR>"
+            exec 'keepjumps' 'normal!' keyseq . "\<CR>" | nohlsearch
         catch /^Vim\%((\a\+)\)\=:E/
             let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
             call s:Error(first_error, 'echom')
