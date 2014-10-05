@@ -25,6 +25,7 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before_each()
+    set wrapscan&
     call s:reset_buffer()
     call s:assert.equals(s:get_pos_char(), '1')
     call clearmatches()
