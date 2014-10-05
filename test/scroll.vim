@@ -31,6 +31,10 @@ function! s:suite.before_each()
     normal! gg0zt
 endfunction
 
+function! s:suite.after()
+    set wrapscan&
+endfunction
+
 
 function! s:suite.scroll_f_works()
     call s:assert.equals(s:get_pos_char(), 'p')
