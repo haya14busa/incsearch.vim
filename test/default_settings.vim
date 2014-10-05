@@ -18,9 +18,9 @@ endfunction
 
 function! s:suite.mappings()
     " Main:
-    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d_mode_wrap('forward')")
-    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d_mode_wrap('backward')")
-    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d_mode_wrap('stay')")
+    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d\\+_mode_wrap('forward')")
+    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d\\+_mode_wrap('backward')")
+    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d\\+_mode_wrap('stay')")
     call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'o'), 'incsearch#forward_expr()')
     call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'o'), 'incsearch#backward_expr()')
     call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), 'incsearch#stay_expr()')
