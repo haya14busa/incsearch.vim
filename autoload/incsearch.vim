@@ -409,6 +409,7 @@ function! s:search(search_key, ...)
     let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
     let input = s:get_input(a:search_key, m)
+    call incsearch#auto_nohlsearch() " NOTE: `.` repeat doesn't handle this
     return s:generate_command(m, input, a:search_key)
 endfunction
 
@@ -538,6 +539,7 @@ endfunction
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which
 " does :nohlsearch
+" :h autocmd-searchpat
 " @expr
 function! incsearch#auto_nohlsearch()
     " NOTE: see this value inside this function in order to toggle auto
@@ -545,10 +547,17 @@ function! incsearch#auto_nohlsearch()
     if !g:incsearch#auto_nohlsearch | return '' | endif
     augroup incsearch-auto-nohlsearch
         autocmd!
-        autocmd CursorMoved *
-        \  autocmd incsearch-auto-nohlsearch CursorMoved *
-        \  call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>", 'nohlsearch', 'n')
-        \  | autocmd! incsearch-auto-nohlsearch
+        if s:U.is_visual(mode(1))
+            autocmd CursorMoved *
+            \  autocmd incsearch-auto-nohlsearch CursorMoved *
+            \  call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? 'gv' : ''), 'n')
+            \  | autocmd! incsearch-auto-nohlsearch
+        else
+            autocmd CursorMoved *
+            \  autocmd incsearch-auto-nohlsearch CursorMoved *
+            \  call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? 'gv' : ''), 'nohlsearch', 'n')
+            \  | autocmd! incsearch-auto-nohlsearch
+        endif
     augroup END
     return ''
 endfunction
