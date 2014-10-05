@@ -24,8 +24,11 @@ function! s:reset_buffer()
     normal! Gddgg0zt
 endfunction
 
-function! s:suite.before_each()
+function! s:suite.before()
     set wrapscan&
+endfunction
+
+function! s:suite.before_each()
     call s:reset_buffer()
     call s:assert.equals(s:get_pos_char(), '1')
     call clearmatches()

@@ -49,6 +49,10 @@ function! s:suite.before()
     normal! ggdGgg
 endfunction
 
+function! s:suite.after()
+    set wrapscan&
+endfunction
+
 " Main:
 
 function! s:suite.forward()
