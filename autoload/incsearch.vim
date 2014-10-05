@@ -543,7 +543,6 @@ endfunction
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which
 " does :nohlsearch
-" :h autocmd-searchpat
 " @expr
 function! incsearch#auto_nohlsearch(nest)
     " NOTE: see this value inside this function in order to toggle auto
@@ -554,6 +553,10 @@ function! incsearch#auto_nohlsearch(nest)
     \     '
     \   : 'call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "nohlsearch", "n")
     \     '
+    " NOTE: :h autocmd-searchpat
+    "   You cannot implement this feature without feedkeys() bacause of
+    "   :h autocmd-searchpat , so there are some events which we cannot fire
+    "   like :h InsertEnter
     augroup incsearch-auto-nohlsearch
         autocmd!
         execute join([
