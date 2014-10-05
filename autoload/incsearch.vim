@@ -396,10 +396,14 @@ function! incsearch#stay_expr(...)
             call feedkeys(cmd, 'n')
             " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
             call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
+            call incsearch#auto_nohlsearch(2)
+        else
+            call incsearch#auto_nohlsearch(0)
         endif
         " }}}
         return s:U.is_visual(m) ? "\<ESC>gv" : "\<ESC>" " just exit
     else " exit stay mode while searching
+        call incsearch#auto_nohlsearch(1)
         return s:generate_command(m, input, '/') " assume '/'
     endif
 endfunction
@@ -409,6 +413,7 @@ function! s:search(search_key, ...)
     let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
     let input = s:get_input(a:search_key, m)
+    call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
     return s:generate_command(m, input, a:search_key)
 endfunction
 
@@ -532,20 +537,34 @@ function! s:search_for_non_expr(search_key, ...)
         endif
     endif
 
-    if g:incsearch#auto_nohlsearch
-        call incsearch#auto_nohlsearch()
-    endif
+    call incsearch#auto_nohlsearch(1)
 endfunction
 
-" Make sure move cursor by search related action after calling this function
-" because the first move invoke intended autocmd
-function! incsearch#auto_nohlsearch()
+" Make sure move cursor by search related action __after__ calling this
+" function because the first move event just set nested autocmd which
+" does :nohlsearch
+" @expr
+function! incsearch#auto_nohlsearch(nest)
+    " NOTE: see this value inside this function in order to toggle auto
+    " :nohlsearch feature easily with g:incsearch#auto_nohlsearch option
+    if !g:incsearch#auto_nohlsearch | return '' | endif
+    let cmd = s:U.is_visual(mode(1))
+    \   ? 'call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "n")
+    \     '
+    \   : 'call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "nohlsearch", "n")
+    \     '
+    " NOTE: :h autocmd-searchpat
+    "   You cannot implement this feature without feedkeys() bacause of
+    "   :h autocmd-searchpat , so there are some events which we cannot fire
+    "   like :h InsertEnter
     augroup incsearch-auto-nohlsearch
         autocmd!
-        autocmd CursorMoved <buffer>
-        \  autocmd incsearch-auto-nohlsearch CursorMoved <buffer>
-        \  call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>", 'nohlsearch', 'n')
-        \   | autocmd! incsearch-auto-nohlsearch * <buffer>
+        execute join([
+        \   'autocmd CursorMoved *'
+        \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
+        \ , cmd
+        \ , '| autocmd! incsearch-auto-nohlsearch'
+        \ ], ' ')
     augroup END
     return ''
 endfunction
