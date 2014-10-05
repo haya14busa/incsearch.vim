@@ -44,6 +44,25 @@ map g/ <Plug>(incsearch-stay)
 
 ### Additional usages
 
+#### Automatic :nohlsearch
+
+![](https://cloud.githubusercontent.com/assets/3797062/4518938/f3c11110-4ca6-11e4-88c6-708f510a0c3c.gif)
+
+Farewell, `nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>`!
+This feature turns 'hlsearch' off automatically after searching related motions.
+
+```vim
+" :h g:incsearch#auto_nohlsearch
+set hlsearch
+let g:incsearch#auto_nohlsearch = 1
+map n  <Plug>(incsearch-nohl-n)
+map N  <Plug>(incsearch-nohl-N)
+map *  <Plug>(incsearch-nohl-*)
+map #  <Plug>(incsearch-nohl-#)
+map g* <Plug>(incsearch-nohl-g*)
+map g# <Plug>(incsearch-nohl-g#)
+```
+
 #### Consistent n and N direction
 `n` and `N` directions are always forward and backward respectively even after performing `<Plug>(incsearch-backward)`.
 
