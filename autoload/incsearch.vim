@@ -695,6 +695,8 @@ function! s:emulate_search_error(direction)
             if last_error != '' && last_error !=# first_error
                 call s:Error(last_error, 'echom')
             endif
+        finally
+            call winrestview(w)
         endtry
         if v:errmsg == ''
             let v:errmsg = old_errmsg
