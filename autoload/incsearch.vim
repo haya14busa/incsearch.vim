@@ -251,16 +251,19 @@ function! s:on_char(cmdline)
         return
     endif
 
-    let pattern = incsearch#convert_with_case(raw_pattern)
+    " TODO: convert it if needed
+    let pattern = raw_pattern
 
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, s:cli.get_prompt() . offset)
 
     " Improved Incremental highlighing!
+    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+    let case = incsearch#detect_case(raw_pattern)
     let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
-    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
+    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
