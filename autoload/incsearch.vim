@@ -146,7 +146,7 @@ call s:reset()
 
 function! s:inc.get_pattern()
     " get `pattern` and ignore {offset}
-    let [pattern, _] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, _] = incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
     return pattern
 endfunction
 
@@ -255,7 +255,7 @@ function! s:on_char(cmdline)
     let pattern = raw_pattern
 
     " Improved Incremental cursor move!
-    call s:move_cursor(pattern, a:cmdline.flag, s:cli.get_prompt() . offset)
+    call s:move_cursor(pattern, a:cmdline.flag, s:cli.base_key . offset)
 
     " Improved Incremental highlighing!
     " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
@@ -292,7 +292,7 @@ function! s:move_cursor(pattern, flag, ...)
             let is_visual_mode = s:U.is_visual(mode(1))
             let cmd = s:with_ignore_foldopen(
             \   function('s:build_search_cmd'),
-            \   'n', a:pattern . offset, s:cli.get_prompt())
+            \   'n', a:pattern . offset, s:cli.base_key)
             " NOTE:
             " :silent!
             "   Shut up errors! because this is just for the cursor emulation
@@ -385,6 +385,7 @@ endfunction
 function! incsearch#stay_expr(...)
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.base_key = '/' " assume `/`
     let m = mode(1)
 
     let input = s:get_input('', m)
@@ -426,6 +427,7 @@ function! s:search(search_key, ...)
     let m = mode(1)
     let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.base_key = a:search_key " `/` or `?`
     let input = s:get_input(a:search_key, m)
     call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
     return s:generate_command(m, input, a:search_key)
@@ -483,6 +485,7 @@ endfunction
 function! s:search_for_non_expr(search_key, ...)
     let m = mode(1)
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.base_key = a:search_key " `/` or `?`
     " side effect: move cursor
     let input = s:get_input(a:search_key, m)
     let is_cancel = s:cli.exit_code()
