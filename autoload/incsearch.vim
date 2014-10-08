@@ -291,6 +291,7 @@ function! s:on_char(cmdline)
     " Improved Incremental highlighing!
     let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+    " let pattern = incsearch#migemo#convert(s:inc.get_pattern())
     call incsearch#highlight#incremental_highlight(
     \   pattern, should_separete, d, [s:w.lnum, s:w.col])
 
@@ -301,11 +302,38 @@ function! s:on_char(cmdline)
     endif
 endfunction
 
+" パターン
+function! s:inc.on_update(cmdline)
+    let pattern = s:inc.get_pattern()
+    if exists('s:old_pattern') && pattern ==# s:old_pattern
+        if !exists('s:cmigemo_process')
+            call s:open_cmigemo_process(pattern)
+        endif
+        if s:cmigemo_process.stdout.eof
+            call incsearch#highlight#incremental_highlight(s:cmigemo_response)
+            redraw
+        else
+            let s:cmigemo_response .= s:cmigemo_process.stdout.read()
+        endif
+        return
+    endif
+    let s:old_pattern = pattern
+    call s:open_cmigemo_process(pattern)
+endfunction
+
+function! s:open_cmigemo_process(pattern)
+    let dict = incsearch#migemo#dict()
+    let s:cmigemo_response = ''
+    let p = escape(a:pattern, '"')
+    let s:cmigemo_process = vimproc#popen2('cmigemo -v -w "'. p .'" -d "'. dict .'"')
+endfunction
+
 function! s:inc.on_char_pre(cmdline)
     call s:on_searching(function('s:on_char_pre'), a:cmdline)
 endfunction
 
 function! s:inc.on_char(cmdline)
+    call Plog('on_char')
     call s:on_searching(function('s:on_char'), a:cmdline)
 endfunction
 

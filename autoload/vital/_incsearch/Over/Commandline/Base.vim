@@ -388,15 +388,15 @@ function! s:base._main(...)
 		call self.draw()
 		while !self._is_exit()
 			try
-" 				call self.callevent("on_update")
-" 				if !getchar(1)
-" 					continue
-" 				endif
-"
-" 				call self._input(s:_getchar(0))
-" 				call self.draw()
-				call self._input(s:_getchar())
+				call self.callevent("on_update")
+				if !getchar(1)
+					continue
+				endif
+
+				call self._input(s:_getchar(0))
 				call self.draw()
+				" call self._input(s:_getchar())
+				" call self.draw()
 			catch
 				call self.callevent("on_exception")
 			endtry
