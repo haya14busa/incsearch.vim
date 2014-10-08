@@ -602,23 +602,30 @@ function! incsearch#parse_pattern(expr, search_key)
     return result
 endfunction
 
-function! incsearch#convert_with_case(pattern)
-    if &ignorecase == s:FALSE
-        return '\C' . a:pattern " noignorecase
+" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
+function! incsearch#detect_case(pattern)
+    " Explicit \c has highest priority
+    if a:pattern =~# s:non_escaped_backslash . 'c'
+        return '\c'
     endif
-
+    if a:pattern =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
+        return '\C' " noignorecase or explicit \C
+    endif
     if &smartcase == s:FALSE
-        return '\c' . a:pattern " ignorecase & nosmartcase
+        return '\c' " ignorecase & nosmartcase
     endif
-
     " Find uppercase letter which isn't escaped
-    let very_magic = '\v'
-    let escaped_backslash = '%(^|[^\\])%(\\\\)*'
-    if a:pattern =~# very_magic . escaped_backslash . '[A-Z]'
-        return '\C' . a:pattern " smartcase with [A-Z]
+    if a:pattern =~# s:escaped_backslash . '[A-Z]'
+        return '\C' " smartcase with [A-Z]
     else
-        return '\c' . a:pattern " smartcase without [A-Z]
+        return '\c' " smartcase without [A-Z]
     endif
+endfunction
+
+function! incsearch#convert_with_case(pattern)
+    return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
 function! s:silent_after_search(...) " arg: mode(1)
