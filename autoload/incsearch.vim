@@ -144,12 +144,6 @@ function! s:reset()
 endfunction
 call s:reset()
 
-function! s:inc.get_pattern()
-    " get `pattern` and ignore {offset}
-    let [pattern, _] = incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
-    return pattern
-endfunction
-
 " Avoid search-related error while incremental searching
 function! s:on_searching(func, ...)
     try
@@ -188,7 +182,7 @@ function! s:on_char_pre(cmdline)
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
-            let pattern = s:inc.get_pattern()
+            let pattern = s:cli_get_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
         call a:cmdline.setchar('')
@@ -196,7 +190,7 @@ function! s:on_char_pre(cmdline)
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
-        let pattern = s:inc.get_pattern()
+        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -211,7 +205,7 @@ function! s:on_char_pre(cmdline)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
         endif
-        let pattern = s:inc.get_pattern()
+        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -232,7 +226,7 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
-        let pattern = s:inc.get_pattern()
+        let pattern = s:cli_get_pattern()
         let [from, to] = [[s:w.lnum, s:w.col],
         \       s:cli.flag !=# 'b'
         \       ? [line('$'), s:U.get_max_col('$')]
@@ -244,7 +238,7 @@ function! s:on_char_pre(cmdline)
 endfunction
 
 function! s:on_char(cmdline)
-    let [raw_pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [raw_pattern, offset] = s:cli_parse_pattern()
 
     if raw_pattern ==# ''
         call s:hi.disable_all()
@@ -362,7 +356,7 @@ function! incsearch#stay(mode, ...)
     " Avoid using feedkeys() as much as possible because
     " feedkeys() cannot be tested and sometimes cause unexpected behavior
     " FIXME: redundant
-    let [_, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [_, offset] = s:cli_parse_pattern()
     if !empty(offset)
         call feedkeys(cmd, 'n')
     else
@@ -390,7 +384,7 @@ function! incsearch#stay_expr(...)
 
     let input = s:get_input('', m)
 
-    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, offset] = s:cli_parse_pattern()
 
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
@@ -493,7 +487,7 @@ function! s:search_for_non_expr(search_key, ...)
         return
     endif
 
-    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, offset] = s:cli_parse_pattern()
     let should_execute = !empty(offset) || input ==# ''
     if should_execute
         " Execute with feedkeys() to work with
@@ -589,10 +583,11 @@ endfunction
 "}}}
 
 " Helper: {{{
+" @return [pattern, offset]
 function! incsearch#parse_pattern(expr, search_key)
     " search_key : '/' or '?'
-    " expr       : /{pattern\/pattern}/{offset}
-    " expr       : /{pattern}/;/{newpattern} :h //;
+    " expr       : {pattern\/pattern}/{offset}
+    " expr       : {pattern}/;/{newpattern} :h //;
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
@@ -606,6 +601,17 @@ function! incsearch#parse_pattern(expr, search_key)
     endif
     unlet result[1]
     return result
+endfunction
+
+" CommandLine Interface parse pattern wrapper
+function! s:cli_parse_pattern()
+    return incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+endfunction
+
+" CommandLine Interface parse pattern wrapper for just getting pattern
+function! s:cli_get_pattern()
+    let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
+    return pattern
 endfunction
 
 " https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
