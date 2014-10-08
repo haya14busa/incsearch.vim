@@ -244,23 +244,45 @@ function! s:on_char_pre(cmdline)
 endfunction
 
 function! s:on_char(cmdline)
-    call winrestview(s:w)
-    let pattern = s:inc.get_pattern()
+    let [raw_pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
 
-    if pattern ==# ''
+    if raw_pattern ==# ''
         call s:hi.disable_all()
         return
     endif
 
-    let pattern = incsearch#convert_with_case(pattern)
+    " TODO: convert it if needed
+    let pattern = raw_pattern
 
+    " Improved Incremental cursor move!
+    call s:move_cursor(pattern, a:cmdline.flag, s:cli.get_prompt() . offset)
+
+    " Improved Incremental highlighing!
+    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+    let case = incsearch#detect_case(raw_pattern)
+    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+    call incsearch#highlight#incremental_highlight(
+    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+
+    " pseudo-normal-zz after scroll
+    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
+        call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
+    endif
+endfunction
+
+" Caveat: It handle :h last-pattern
+function! s:move_cursor(pattern, flag, ...)
+    let offset = get(a:, 1, '')
+    call winrestview(s:w)
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
-    if a:cmdline.flag !=# 'n' " skip if stay mode
+    if a:flag !=# 'n' " skip if stay mode
         if s:cli.is_expr
             for _ in range(s:cli.vcount1)
                 " NOTE: This cannot handle {offset} for cursor position
-                call search(pattern, a:cmdline.flag)
+                call search(a:pattern, a:flag)
             endfor
         else
             " More precise cursor position while searching
@@ -270,7 +292,7 @@ function! s:on_char(cmdline)
             let is_visual_mode = s:U.is_visual(mode(1))
             let cmd = s:with_ignore_foldopen(
             \   function('s:build_search_cmd'),
-            \   'n', s:cli.getline(), s:cli.get_prompt())
+            \   'n', a:pattern . offset, s:cli.get_prompt())
             " NOTE:
             " :silent!
             "   Shut up errors! because this is just for the cursor emulation
@@ -286,18 +308,6 @@ function! s:on_char(cmdline)
                 call incsearch#highlight#emulate_visual_highlight()
             endif
         endif
-    endif
-
-    " Improved Incremental highlighing!
-    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
-    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
-    call incsearch#highlight#incremental_highlight(
-    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
-
-    " pseudo-normal-zz after scroll
-    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
-        call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
 endfunction
 
@@ -595,23 +605,30 @@ function! incsearch#parse_pattern(expr, search_key)
     return result
 endfunction
 
-function! incsearch#convert_with_case(pattern)
-    if &ignorecase == s:FALSE
-        return '\C' . a:pattern " noignorecase
+" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
+function! incsearch#detect_case(pattern)
+    " Explicit \c has highest priority
+    if a:pattern =~# s:non_escaped_backslash . 'c'
+        return '\c'
     endif
-
+    if a:pattern =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
+        return '\C' " noignorecase or explicit \C
+    endif
     if &smartcase == s:FALSE
-        return '\c' . a:pattern " ignorecase & nosmartcase
+        return '\c' " ignorecase & nosmartcase
     endif
-
     " Find uppercase letter which isn't escaped
-    let very_magic = '\v'
-    let escaped_backslash = '%(^|[^\\])%(\\\\)*'
-    if a:pattern =~# very_magic . escaped_backslash . '[A-Z]'
-        return '\C' . a:pattern " smartcase with [A-Z]
+    if a:pattern =~# s:escaped_backslash . '[A-Z]'
+        return '\C' " smartcase with [A-Z]
     else
-        return '\c' . a:pattern " smartcase without [A-Z]
+        return '\c' " smartcase without [A-Z]
     endif
+endfunction
+
+function! incsearch#convert_with_case(pattern)
+    return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
 function! s:silent_after_search(...) " arg: mode(1)
