@@ -50,3 +50,27 @@ function! s:suite.convert_with_case_ignore_uppercase_escaped_letters()
     call s:assert.equals(incsearch#convert_with_case('\VPatterN'), '\C\VPatterN')
     set ignorecase& smartcase&
 endfunction
+
+function! s:suite.convert_with_case_explicit_flag()
+    set noignorecase nosmartcase
+    call s:assert.equals(incsearch#convert_with_case('\cpattern'), '\c\cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\Cpattern'), '\C\Cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\CPatterN'), '\C\CPatterN')
+    call s:assert.equals(incsearch#convert_with_case('\cPatterN'), '\c\cPatterN')
+    set ignorecase nosmartcase
+    call s:assert.equals(incsearch#convert_with_case('\cpattern'), '\c\cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\Cpattern'), '\C\Cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\CPatterN'), '\C\CPatterN')
+    call s:assert.equals(incsearch#convert_with_case('\cPatterN'), '\c\cPatterN')
+    set noignorecase smartcase
+    call s:assert.equals(incsearch#convert_with_case('\cpattern'), '\c\cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\Cpattern'), '\C\Cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\CPatterN'), '\C\CPatterN')
+    call s:assert.equals(incsearch#convert_with_case('\cPatterN'), '\c\cPatterN')
+    set ignorecase smartcase
+    call s:assert.equals(incsearch#convert_with_case('\cpattern'), '\c\cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\Cpattern'), '\C\Cpattern')
+    call s:assert.equals(incsearch#convert_with_case('\CPatterN'), '\C\CPatterN')
+    call s:assert.equals(incsearch#convert_with_case('\cPatterN'), '\c\cPatterN')
+    set ignorecase& smartcase&
+endfunction
