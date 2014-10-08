@@ -245,22 +245,41 @@ endfunction
 
 function! s:on_char(cmdline)
     call winrestview(s:w)
-    let pattern = s:inc.get_pattern()
+    let [raw_pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
 
-    if pattern ==# ''
+    if raw_pattern ==# ''
         call s:hi.disable_all()
         return
     endif
 
-    let pattern = incsearch#convert_with_case(pattern)
+    let pattern = incsearch#convert_with_case(raw_pattern)
 
+    " Improved Incremental cursor move!
+    call s:move_cursor(pattern, a:cmdline.flag, s:cli.get_prompt() . offset)
+
+    " Improved Incremental highlighing!
+    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+    call incsearch#highlight#incremental_highlight(
+    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
+
+    " pseudo-normal-zz after scroll
+    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
+        call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
+    endif
+endfunction
+
+" Caveat: It handle :h last-pattern
+function! s:move_cursor(pattern, flag, ...)
+    let offset = get(a:, 1, '')
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
-    if a:cmdline.flag !=# 'n' " skip if stay mode
+    if a:flag !=# 'n' " skip if stay mode
         if s:cli.is_expr
             for _ in range(s:cli.vcount1)
                 " NOTE: This cannot handle {offset} for cursor position
-                call search(pattern, a:cmdline.flag)
+                call search(a:pattern, a:flag)
             endfor
         else
             " More precise cursor position while searching
@@ -270,7 +289,7 @@ function! s:on_char(cmdline)
             let is_visual_mode = s:U.is_visual(mode(1))
             let cmd = s:with_ignore_foldopen(
             \   function('s:build_search_cmd'),
-            \   'n', s:cli.getline(), s:cli.get_prompt())
+            \   'n', a:pattern . offset, s:cli.get_prompt())
             " NOTE:
             " :silent!
             "   Shut up errors! because this is just for the cursor emulation
@@ -286,18 +305,6 @@ function! s:on_char(cmdline)
                 call incsearch#highlight#emulate_visual_highlight()
             endif
         endif
-    endif
-
-    " Improved Incremental highlighing!
-    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
-    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
-    call incsearch#highlight#incremental_highlight(
-    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
-
-    " pseudo-normal-zz after scroll
-    if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-    \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
-        call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
 endfunction
 
