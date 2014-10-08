@@ -266,38 +266,40 @@ function! s:on_char(cmdline)
     endif
 endfunction
 
-" Caveat: It handle :h last-pattern
+" Caveat: It handle :h last-pattern, so be careful if you want to pass empty
+" string as a pattern
 function! s:move_cursor(pattern, flag, ...)
     let offset = get(a:, 1, '')
+    if a:flag ==# 'n' " skip if stay mode
+        return
+    endif
     call winrestview(s:w)
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
-    if a:flag !=# 'n' " skip if stay mode
-        if s:cli.is_expr
-            for _ in range(s:cli.vcount1)
-                " NOTE: This cannot handle {offset} for cursor position
-                call search(a:pattern, a:flag)
-            endfor
-        else
-            " More precise cursor position while searching
-            " Caveat:
-            "   This block contains `normal`, please make sure <expr> mappings
-            "   doesn't reach this block
-            let is_visual_mode = s:U.is_visual(mode(1))
-            let cmd = s:with_ignore_foldopen(
-            \   function('s:build_search_cmd'),
-            \   'n', a:pattern . offset, s:cli.base_key)
-            " NOTE:
-            " :silent!
-            "   Shut up errors! because this is just for the cursor emulation
-            "   while searching
-            silent! call s:execute_search(cmd)
-            if is_visual_mode
-                let w = winsaveview()
-                normal! gv
-                call winrestview(w)
-                call incsearch#highlight#emulate_visual_highlight()
-            endif
+    if s:cli.is_expr
+        for _ in range(s:cli.vcount1)
+            " NOTE: This cannot handle {offset} for cursor position
+            call search(a:pattern, a:flag)
+        endfor
+    else
+        " More precise cursor position while searching
+        " Caveat:
+        "   This block contains `normal`, please make sure <expr> mappings
+        "   doesn't reach this block
+        let is_visual_mode = s:U.is_visual(mode(1))
+        let cmd = s:with_ignore_foldopen(
+        \   function('s:build_search_cmd'),
+        \   'n', a:pattern . offset, s:cli.base_key)
+        " NOTE:
+        " :silent!
+        "   Shut up errors! because this is just for the cursor emulation
+        "   while searching
+        silent! call s:execute_search(cmd)
+        if is_visual_mode
+            let w = winsaveview()
+            normal! gv
+            call winrestview(w)
+            call incsearch#highlight#emulate_visual_highlight()
         endif
     endif
 endfunction
