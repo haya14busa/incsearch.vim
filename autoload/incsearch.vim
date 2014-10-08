@@ -291,10 +291,7 @@ function! s:move_cursor(pattern, flag, ...)
             " :silent!
             "   Shut up errors! because this is just for the cursor emulation
             "   while searching
-            " :nohlsearch
-            "   Please do not highlight at the first place if you set back
-            "   info! I'll handle it myself :h function-search-undo
-            silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
+            silent! call s:execute_search(cmd)
             if is_visual_mode
                 let w = winsaveview()
                 normal! gv
@@ -371,7 +368,9 @@ function! incsearch#stay(mode, ...)
         if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
             normal! m`
         endif
-        silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
+        " :silent!
+        "   Shut up because error emulation has already done
+        silent! call s:execute_search(cmd)
     endif
 endfunction
 
@@ -395,7 +394,7 @@ function! incsearch#stay_expr(...)
         endif
     endif
 
-    if s:cli.flag ==# 'n' " stay TODO: better flag name
+    if s:cli.flag ==# 'n' " stay
         " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
         " FIXME: cannot set {offset} if in operator-pending mode because this
         " have to use feedkeys()
@@ -675,7 +674,7 @@ function! s:emulate_search_error(direction)
     "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
     let w = winsaveview()
     " Get first error
-    silent! exec 'keepjumps' 'normal!' keyseq . "\<CR>" | nohlsearch
+    silent! call s:execute_search(keyseq . "\<CR>")
     call winrestview(w)
     if g:incsearch#do_not_save_error_message_history
         if v:errmsg != ''
@@ -687,8 +686,8 @@ function! s:emulate_search_error(direction)
         " NOTE: show more than two errors e.g. `/\za`
         let last_error = v:errmsg
         try
-            " Show warning
-            exec 'keepjumps' 'normal!' keyseq . "\<CR>" | nohlsearch
+            " Do not use silent! to show warning
+            call s:execute_search(keyseq . "\<CR>")
         catch /^Vim\%((\a\+)\)\=:E/
             let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
             call s:Error(first_error, 'echom')
@@ -730,6 +729,14 @@ function! s:with_ignore_foldopen(F, ...)
     finally
         let &foldopen = foldopen_save
     endtry
+endfunction
+
+" Try to avoid side-effect as much as possible except cursor movement
+function! s:execute_search(cmd)
+    " :nohlsearch
+    "   Please do not highlight at the first place if you set back
+    "   info! I'll handle it myself :h function-search-undo
+    execute 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 
 "}}}
