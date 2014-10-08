@@ -244,7 +244,6 @@ function! s:on_char_pre(cmdline)
 endfunction
 
 function! s:on_char(cmdline)
-    call winrestview(s:w)
     let [raw_pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
 
     if raw_pattern ==# ''
@@ -273,6 +272,7 @@ endfunction
 " Caveat: It handle :h last-pattern
 function! s:move_cursor(pattern, flag, ...)
     let offset = get(a:, 1, '')
+    call winrestview(s:w)
     " pseud-move cursor position: this is restored afterward if called by
     " <expr> mappings
     if a:flag !=# 'n' " skip if stay mode
