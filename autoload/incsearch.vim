@@ -349,7 +349,7 @@ function! incsearch#stay(mode, ...)
         normal! gv
     endif
     let m = mode(1)
-    let cmd = incsearch#stay_expr(get(a:, 1, v:count1))
+    let cmd = incsearch#stay_expr(get(a:, 1, v:count1), 0) " force non-expr state
     call winrestview(s:w)
 
     " Avoid using feedkeys() as much as possible because
@@ -379,6 +379,7 @@ endfunction
 function! incsearch#stay_expr(...)
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.is_expr = get(a:, 2, s:TRUE)
     let s:cli.base_key = '/' " assume `/`
     let m = mode(1)
 
