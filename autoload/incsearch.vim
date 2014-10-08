@@ -349,7 +349,7 @@ function! incsearch#stay(mode, ...)
         normal! gv
     endif
     let m = mode(1)
-    let cmd = incsearch#stay_expr(get(a:, 1, v:count1)) " arg: Please histadd for me!
+    let cmd = incsearch#stay_expr(get(a:, 1, v:count1))
     call winrestview(s:w)
 
     " Avoid using feedkeys() as much as possible because
@@ -357,16 +357,15 @@ function! incsearch#stay(mode, ...)
     " FIXME: redundant
     let [_, offset] = s:cli_parse_pattern()
     if !empty(offset)
-        call feedkeys(cmd, 'n')
-    else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
+        call feedkeys(cmd, 'n')
+    else
         " NOTE: Should I emulate warning? But 'search hit BOTTOM, continuing
         " at TOP' is not appropriage warning message if the cursor doesn't
         " move?
         call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
-        call winrestview(s:w)
         if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
             normal! m`
         endif
