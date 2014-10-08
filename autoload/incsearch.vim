@@ -244,7 +244,6 @@ function! s:on_char_pre(cmdline)
 endfunction
 
 function! s:on_char(cmdline)
-    call winrestview(s:w)
     let pattern = s:inc.get_pattern()
 
     if pattern ==# ''
@@ -254,39 +253,8 @@ function! s:on_char(cmdline)
 
     let pattern = incsearch#convert_with_case(pattern)
 
-    " pseud-move cursor position: this is restored afterward if called by
-    " <expr> mappings
-    if a:cmdline.flag !=# 'n' " skip if stay mode
-        if s:cli.is_expr
-            for _ in range(s:cli.vcount1)
-                " NOTE: This cannot handle {offset} for cursor position
-                call search(pattern, a:cmdline.flag)
-            endfor
-        else
-            " More precise cursor position while searching
-            " Caveat:
-            "   This block contains `normal`, please make sure <expr> mappings
-            "   doesn't reach this block
-            let is_visual_mode = s:U.is_visual(mode(1))
-            let cmd = s:with_ignore_foldopen(
-            \   function('s:build_search_cmd'),
-            \   'n', s:cli.getline(), s:cli.get_prompt())
-            " NOTE:
-            " :silent!
-            "   Shut up errors! because this is just for the cursor emulation
-            "   while searching
-            " :nohlsearch
-            "   Please do not highlight at the first place if you set back
-            "   info! I'll handle it myself :h function-search-undo
-            silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
-            if is_visual_mode
-                let w = winsaveview()
-                normal! gv
-                call winrestview(w)
-                call incsearch#highlight#emulate_visual_highlight()
-            endif
-        endif
-    endif
+    " TODO:
+    call s:incremental_move(pattern, a:cmdline.flag)
 
     " Improved Incremental highlighing!
     let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
@@ -302,23 +270,61 @@ function! s:on_char(cmdline)
     endif
 endfunction
 
-" パターン
-function! s:inc.on_update(cmdline)
-    let pattern = s:inc.get_pattern()
-    if exists('s:old_pattern') && pattern ==# s:old_pattern
-        if !exists('s:cmigemo_process')
-            call s:open_cmigemo_process(pattern)
-        endif
-        if s:cmigemo_process.stdout.eof
-            call incsearch#highlight#incremental_highlight(s:cmigemo_response)
-            redraw
-        else
-            let s:cmigemo_response .= s:cmigemo_process.stdout.read()
-        endif
+function! s:incremental_move(pattern, flag)
+    call winrestview(s:w)
+    " pseud-move cursor position: this is restored afterward if called by
+    " <expr> mappings
+    if a:flag ==# 'n' " skip if stay mode
         return
     endif
-    let s:old_pattern = pattern
-    call s:open_cmigemo_process(pattern)
+    if s:cli.is_expr
+        for _ in range(s:cli.vcount1)
+            " NOTE: This cannot handle {offset} for cursor position
+            call search(a:pattern, a:flag)
+        endfor
+    else
+        if a:pattern ==# '' " Avoid useing last-pattern
+            return
+        endif
+        " More precise cursor position while searching
+        " Caveat:
+        "   This block contains `normal`, please make sure <expr> mappings
+        "   doesn't reach this block
+        let is_visual_mode = s:U.is_visual(mode(1))
+        let cmd = s:with_ignore_foldopen(
+        \   function('s:build_search_cmd'),
+        \   'n', a:pattern, s:cli.get_prompt())
+        " NOTE:
+        " :silent!
+        "   Shut up errors! because this is just for the cursor emulation
+        "   while searching
+        " :nohlsearch
+        "   Please do not highlight at the first place if you set back
+        "   info! I'll handle it myself :h function-search-undo
+        silent! exec 'keepjumps' 'normal!' cmd | nohlsearch
+        if is_visual_mode
+            let w = winsaveview()
+            normal! gv
+            call winrestview(w)
+            call incsearch#highlight#emulate_visual_highlight()
+        endif
+    endif
+endfunction
+
+" パターン
+function! s:inc.on_update(cmdline)
+    if exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
+        return
+    endif
+    let s:old_time = reltime()
+
+    let pattern = s:inc.get_pattern()
+    let mp = s:async_migemo_convert(pattern)
+    if mp.state ==# 'done'
+        call s:incremental_move(mp.pattern, a:cmdline.flag)
+        call incsearch#highlight#incremental_highlight(mp.pattern)
+        redraw
+    endif
 endfunction
 
 function! s:open_cmigemo_process(pattern)
@@ -328,12 +334,32 @@ function! s:open_cmigemo_process(pattern)
     let s:cmigemo_process = vimproc#popen2('cmigemo -v -w "'. p .'" -d "'. dict .'"')
 endfunction
 
+let s:migemo_memo = {}
+function! s:async_migemo_convert(pattern)
+    if a:pattern ==# ''
+        return {'state': 'done', 'pattern': ''}
+    endif
+    if has_key(s:migemo_memo, a:pattern)
+        return {'state': 'done', 'pattern': s:migemo_memo[a:pattern]}
+    endif
+    if !exists('s:old_pattern') || a:pattern !=# s:old_pattern || !exists('s:cmigemo_process')
+        call s:open_cmigemo_process(a:pattern)
+    endif
+    let s:old_pattern = a:pattern
+    if s:cmigemo_process.stdout.eof
+        let s:migemo_memo[a:pattern] = s:cmigemo_response
+        return {'state': 'done', 'pattern': s:cmigemo_response}
+    else
+        let s:cmigemo_response .= s:cmigemo_process.stdout.read()
+        return {'state': 'yet', 'pattern': s:cmigemo_response}
+    endif
+endfunction
+
 function! s:inc.on_char_pre(cmdline)
     call s:on_searching(function('s:on_char_pre'), a:cmdline)
 endfunction
 
 function! s:inc.on_char(cmdline)
-    call Plog('on_char')
     call s:on_searching(function('s:on_char'), a:cmdline)
 endfunction
 
@@ -449,14 +475,18 @@ function! s:search(search_key, ...)
     return s:generate_command(m, input, a:search_key)
 endfunction
 
+function! s:key2flag(key)
+    return   a:key ==# '/' ? ''
+    \      : a:key ==# '?' ? 'b'
+    \      : a:key ==# ''  ? 'n'
+    \      : ''
+endfunction
+
 function! s:get_input(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
-    let s:cli.flag = a:search_key ==# '/' ? ''
-    \              : a:search_key ==# '?' ? 'b'
-    \              : a:search_key ==# ''  ? 'n'
-    \              : ''
+    let s:cli.flag = s:key2flag(a:search_key)
 
     " Handle visual mode highlight
     if s:U.is_visual(a:mode)
@@ -509,6 +539,16 @@ function! s:search_for_non_expr(search_key, ...)
     endif
 
     let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    " let pattern = incsearch#migemo#convert(pattern)
+    while 1
+        let mp = s:async_migemo_convert(pattern)
+        if mp.state ==# 'done'
+            let pattern = mp.pattern
+            break
+        endif
+    endwhile
+    call s:incremental_move(pattern, s:key2flag(a:search_key))
+    redraw
     let should_execute = !empty(offset) || input ==# ''
     if should_execute
         " Execute with feedkeys() to work with
@@ -697,6 +737,8 @@ function! s:emulate_search_error(direction)
             if last_error != '' && last_error !=# first_error
                 call s:Error(last_error, 'echom')
             endif
+        finally
+            call winrestview(w)
         endtry
         if v:errmsg == ''
             let v:errmsg = old_errmsg

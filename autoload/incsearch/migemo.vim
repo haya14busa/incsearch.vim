@@ -36,27 +36,16 @@ function! incsearch#migemo#convert(pattern)
     if !exists('s:migemodict')
         let s:migemodict = s:SearchDict()
     endif
-
-    let t = s:PM.touch('easymotion', 'cmigemo -v -d ' . s:migemodict)
-    if t ==# 'new'
-        " wait for longer time to make sure cmigemo runs, since cmigemo is
-        " really slow to be ready.
-        call s:PM.read_wait('easymotion', 2.0, ['PATTERN: '])
+    if has('migemo')
+        " Use migemo().
+        return migemo(a:pattern)
+    elseif executable('cmigemo')
+        " Use cmigemo.
+        return s:P.system('cmigemo -v -w "'.a:pattern.'" -d "'.s:migemodict.'"')
+    else
+        " Not supported
+        return a:pattern
     endif
-    return substitute(matchstr(s:f(a:pattern),
-                \ 'PATTERN:\s\zs.*\ze',),
-                \ '.$', '', '')
-
-    " if has('migemo')
-    "     " Use migemo().
-    "     return migemo(a:pattern)
-    " elseif executable('cmigemo')
-    "     " Use cmigemo.
-    "     return s:P.system('cmigemo -v -w "'.a:pattern.'" -d "'.s:migemodict.'"')
-    " else
-    "     " Not supported
-    "     return a:pattern
-    " endif
 endfunction
 
 function! incsearch#migemo#dict()
@@ -106,16 +95,6 @@ function! s:SearchDict()
   echoerr 'a dictionary for migemo is not found'
   echoerr 'your encoding is '.&encoding
 endfunction
-
-function! s:f(msg) "{{{
-    if !s:PM.is_available()
-        return 'vimproc is required'
-    endif
-    call s:PM.writeln('easymotion', a:msg)
-    let [out, err, type] = s:PM.read('easymotion', ['PATTERN: '])
-
-    return out
-endfunction "}}}
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
