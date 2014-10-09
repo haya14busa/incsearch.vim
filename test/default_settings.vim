@@ -13,15 +13,32 @@ function! s:suite.config()
     call s:assert.equals(g:incsearch#separate_highlight, 0)
     call s:assert.equals(g:incsearch#consistent_n_direction, 0)
     call s:assert.equals(g:incsearch#do_not_save_error_message_history, 0)
+    call s:assert.equals(g:incsearch#auto_nohlsearch, 0)
 endfunction
 
 function! s:suite.mappings()
-    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d_mode_wrap('forward')")
-    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d_mode_wrap('backward')")
-    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d_mode_wrap('stay')")
+    " Main:
+    call s:assert.match(maparg('<Plug>(incsearch-forward)', 'nv'), "<SNR>\\d\\+_mode_wrap('forward')")
+    call s:assert.match(maparg('<Plug>(incsearch-backward)', 'nv'), "<SNR>\\d\\+_mode_wrap('backward')")
+    call s:assert.match(maparg('<Plug>(incsearch-stay)', 'nv'), "<SNR>\\d\\+_mode_wrap('stay')")
     call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'o'), 'incsearch#forward_expr()')
     call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'o'), 'incsearch#backward_expr()')
     call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), 'incsearch#stay_expr()')
+    " Additional:
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl)', 'nvo'), 'incsearch#auto_nohlsearch(1)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-n)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-n)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-N)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-N)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-*)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-*)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-#)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-#)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-g*)', 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-g*)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl-g#)', 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-g#)')
+    " Alias To The Default:
+    call s:assert.equals(maparg('<Plug>(_incsearch-n)' , 'nvo'), 'n')
+    call s:assert.equals(maparg('<Plug>(_incsearch-N)' , 'nvo'), 'N')
+    call s:assert.equals(maparg('<Plug>(_incsearch-*)' , 'nvo'), '*')
+    call s:assert.equals(maparg('<Plug>(_incsearch-#)' , 'nvo'), '#')
+    call s:assert.equals(maparg('<Plug>(_incsearch-g*)', 'nvo'), 'g*')
+    call s:assert.equals(maparg('<Plug>(_incsearch-g#)', 'nvo'), 'g#')
 endfunction
 
 function! s:suite.command_exist()

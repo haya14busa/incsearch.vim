@@ -1,7 +1,11 @@
 language: viml
 install:
-    - git clone https://github.com/thinca/vim-themis
+  - git clone https://github.com/thinca/vim-themis
+  - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
+  - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
 before_script:
-    - vim --version
+  - vim --version
 script:
-    - vim-themis/bin/themis --reporter spec
+  - vim-themis/bin/themis --reporter spec
+  - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 autoload/incsearch.vim
+  - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 autoload/incsearch

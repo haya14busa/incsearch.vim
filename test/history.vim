@@ -13,27 +13,27 @@ endfunction
 
 function! s:suite.commandline_history_forward()
     call s:assert.equals(histget('search', -1), ' ')
-    exec "normal" "/pattern\<CR>"
+    silent! exec "normal" "/pattern\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern')
-    exec "normal" "/pattern/e\<CR>"
+    silent! exec "normal" "/pattern/e\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern/e')
 endfunction
 
 function! s:suite.commandline_history_backward()
     call s:assert.equals(histget('search', -1), ' ')
-    exec "normal" "?pattern\<CR>"
+    silent! exec "normal" "?pattern\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern')
-    exec "normal" "?pattern/e\<CR>"
+    silent! exec "normal" "?pattern/e\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern/e')
 endfunction
 
 function! s:suite.commandline_history_stay()
     call s:assert.equals(histget('search', -1), ' ')
-    exec "normal" "g/pattern\<CR>"
+    silent! exec "normal" "g/pattern\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern')
-    exec "normal" "g/pattern/e\<CR>"
+    silent! exec "normal" "g/pattern/e\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern/e')
-    exec "normal" "g/pattern/e\<Tab>\<CR>"
+    silent! exec "normal" "g/pattern/e\<Tab>\<CR>"
     call s:assert.equals(histget('search', -1), 'pattern/e')
 endfunction
 

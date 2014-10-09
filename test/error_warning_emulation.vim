@@ -24,6 +24,14 @@ endfunction
 " :h v:errmsg
 " :h v:warningmsg
 
+function! s:suite.before_each()
+    set wrapscan&
+endfunction
+
+function! s:suite.after_each()
+    set wrapscan&
+endfunction
+
 function! s:suite.error_forward_backward()
     normal! ggdG
     call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
@@ -120,7 +128,6 @@ function! s:suite.nowrapscan_forward_error()
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
     silent! exec "normal" "/aaa/e\<CR>"
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
-    set wrapscan&
 endfunction
 
 function! s:suite.nowrapscan_backward_error()
@@ -138,7 +145,6 @@ function! s:suite.nowrapscan_backward_error()
     call s:assert.equals(v:errmsg, 'E384: search hit TOP without match for: aaa')
     silent! exec "normal" "?aaa?e\<CR>"
     call s:assert.equals(v:errmsg, 'E384: search hit TOP without match for: aaa')
-    set wrapscan&
 endfunction
 
 function! s:suite.nowrapscan_stay_error()
@@ -156,7 +162,6 @@ function! s:suite.nowrapscan_stay_error()
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
     silent! exec "normal" "g/aaa/e\<CR>"
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
-    set wrapscan&
 endfunction
 
 

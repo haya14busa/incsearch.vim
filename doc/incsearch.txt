@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.4
+Version : 0.9.5
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -94,6 +94,45 @@ Basic usage~
 ------------------------------------------------------------------------------
 Additional usage~
 						    *incsearch-additional-usage*
+
+						*g:incsearch#auto_nohlsearch*
+<Plug>(incsearch-nohl)				*<Plug>(incsearch-nohl)*
+<Plug>(incsearch-nohl-n)			*<Plug>(incsearch-nohl-n)*
+<Plug>(incsearch-nohl-N)			*<Plug>(incsearch-nohl-N)*
+<Plug>(incsearch-nohl-*)			*<Plug>(incsearch-nohl-star)*
+<Plug>(incsearch-nohl-#)			*<Plug>(incsearch-nohl-#)*
+<Plug>(incsearch-nohl-g*)			*<Plug>(incsearch-nohl-gstar)*
+<Plug>(incsearch-nohl-g#)			*<Plug>(incsearch-nohl-g#)*
+
+	Let's farewell to this kind of mapping! >
+	    nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>
+<
+	If you set |g:incsearch#auto_nohlsearch| to 1 (default: 0) and use
+	above mappings, |'hlsearch'| will be __automatically__ turned off
+	after the cursor move. Example:
+>
+	    set hlsearch
+	    let g:incsearch#auto_nohlsearch = 1
+	    map n  <Plug>(incsearch-nohl-n)
+	    map N  <Plug>(incsearch-nohl-N)
+	    map *  <Plug>(incsearch-nohl-*)
+	    map #  <Plug>(incsearch-nohl-#)
+	    map g* <Plug>(incsearch-nohl-g*)
+	    map g# <Plug>(incsearch-nohl-g#)
+<
+	NOTE: |<Plug>(incsearch-nohl-n)| staffs are just alias to
+	`<Plug>(incsearch-nohl)n` except |n| doesn't be remapped, so the basic
+	behavior is completely same as default one.
+
+	If you want to use this feature with other search related plugins, use
+	|<Plug>(incsearch-nohl)|. Please make sure to place |<Plug>(incsearch-nohl)|
+	before the cursor moving mappings.
+
+	Working with |anzu.txt| example:
+>
+	    map n <Plug>(incsearch-nohl)<Plug>(anzu-n-with-echo)
+	    map N <Plug>(incsearch-nohl)<Plug>(anzu-N-with-echo)
+<
 
 					    *g:incsearch#consistent_n_direction*
 	If you set this option to 1, |n| and |N| directions are always forward
@@ -269,6 +308,16 @@ KNOWN ISSUES						*incsearch-issues*
 
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
+
+0.9.5	2014-10-10
+	1. Implement automatic |:nohlsearch| feature.
+	    - |:nohlsearch| will be called when cursor move after search
+	      execution
+	    - See: |g:incsearch#auto_nohlsearch|
+	2. Fix case handling with explicit |\C| flag
+	3. Fix |'hlsearch'| handling
+	4. Fix |'nowrapscan'| handling
+	5. CI with |vimlint.txt|
 
 0.9.4	2014-10-01
 	1. Improve cursor position while incremental searching

@@ -24,6 +24,10 @@ function! s:reset_buffer()
     normal! Gddgg0zt
 endfunction
 
+function! s:suite.before()
+    set wrapscan&
+endfunction
+
 function! s:suite.before_each()
     call s:reset_buffer()
     call s:assert.equals(s:get_pos_char(), '1')
@@ -80,6 +84,7 @@ function! s:suite.incremental_separate_highlight()
 endfunction
 
 function! s:suite.forward_pattern()
+    call s:reset_buffer() " XXX:
     let U = incsearch#util#import()
     let L = vital#of('incsearch').import('Data.List')
     let from = [3,3]

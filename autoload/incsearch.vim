@@ -21,6 +21,11 @@
 "     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 "     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " }}}
+"
+" vimlint:
+" @vimlint(EVL103, 1, a:cmdline)
+" @vimlint(EVL102, 1, v:errmsg)
+" @vimlint(EVL102, 1, v:warningmsg)
 "=============================================================================
 scriptencoding utf-8
 " Saving 'cpoptions' {{{
@@ -40,6 +45,7 @@ let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direct
 " This changes emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
+let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
 
 
 let s:V = vital#of('incsearch')
@@ -138,12 +144,6 @@ function! s:reset()
 endfunction
 call s:reset()
 
-function! s:inc.get_pattern()
-    " get `pattern` and ignore {offset}
-    let [pattern, flags] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
-    return pattern
-endfunction
-
 " Avoid search-related error while incremental searching
 function! s:on_searching(func, ...)
     try
@@ -182,7 +182,7 @@ function! s:on_char_pre(cmdline)
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
-            let pattern = s:inc.get_pattern()
+            let pattern = s:cli_get_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
         call a:cmdline.setchar('')
@@ -190,7 +190,7 @@ function! s:on_char_pre(cmdline)
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
-        let pattern = s:inc.get_pattern()
+        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -205,7 +205,7 @@ function! s:on_char_pre(cmdline)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
         endif
-        let pattern = s:inc.get_pattern()
+        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -219,70 +219,88 @@ function! s:on_char_pre(cmdline)
     endif
 
     " Handle nowrapscan:
-    "   if you `:set nowrapscan`, you can't move to the reverse direction
+    "   if you `:set nowrapscan`, you can't move to the reversed direction
     if &wrapscan == s:FALSE && (
     \    a:cmdline.is_input("<Over>(incsearch-next)")
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
-        let pattern = s:inc.get_pattern()
-        let max_cnt = s:U.count_pattern(pattern, start, end)
+        let pattern = s:cli_get_pattern()
+        let [from, to] = [[s:w.lnum, s:w.col],
+        \       s:cli.flag !=# 'b'
+        \       ? [line('$'), s:U.get_max_col('$')]
+        \       : [1, 1]
+        \   ]
+        let max_cnt = s:U.count_pattern(pattern, from, to)
         let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
     endif
 endfunction
 
 function! s:on_char(cmdline)
-    call winrestview(s:w)
-    let pattern = s:inc.get_pattern()
+    let [raw_pattern, offset] = s:cli_parse_pattern()
 
-    if pattern ==# ''
+    if raw_pattern ==# ''
         call s:hi.disable_all()
         return
     endif
 
-    let pattern = incsearch#convert_with_case(pattern)
+    " TODO: convert it if needed
+    let pattern = raw_pattern
 
-    " pseud-move cursor position: this is restored afterward if called by
-    " <expr> mappings
-    if a:cmdline.flag !=# 'n' " skip if stay mode
-        if s:cli.is_expr
-            for _ in range(s:cli.vcount1)
-                " NOTE: This cannot handle {offset} for cursor position
-                call search(pattern, a:cmdline.flag)
-            endfor
-        else
-            " More precise cursor position while searching
-            " Caveat:
-            "   This block contains `normal`, please make sure <expr> mappings
-            "   doesn't reach this block
-            let is_visual_mode = s:U.is_visual(mode(1))
-            let cmd = s:with_ignore_foldopen(
-            \   function('s:build_search_cmd'),
-            \   'n', s:cli.getline(), s:cli.get_prompt())
-            " silent!:
-            "   Shut up errors! because this is just for the cursor emulation
-            "   while searching
-            silent! exec 'keepjumps' 'normal!' cmd
-            if is_visual_mode
-                let w = winsaveview()
-                normal! gv
-                call winrestview(w)
-                call incsearch#highlight#emulate_visual_highlight()
-            endif
-        endif
-    endif
+    " Improved Incremental cursor move!
+    call s:move_cursor(pattern, a:cmdline.flag, s:cli.base_key . offset)
 
     " Improved Incremental highlighing!
+    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+    let case = incsearch#detect_case(raw_pattern)
     let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
-    \   pattern, should_separete, d, [s:w.lnum, s:w.col])
+    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
         call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
+    endif
+endfunction
+
+" Caveat: It handle :h last-pattern, so be careful if you want to pass empty
+" string as a pattern
+function! s:move_cursor(pattern, flag, ...)
+    let offset = get(a:, 1, '')
+    if a:flag ==# 'n' " skip if stay mode
+        return
+    endif
+    call winrestview(s:w)
+    " pseud-move cursor position: this is restored afterward if called by
+    " <expr> mappings
+    if s:cli.is_expr
+        for _ in range(s:cli.vcount1)
+            " NOTE: This cannot handle {offset} for cursor position
+            call search(a:pattern, a:flag)
+        endfor
+    else
+        " More precise cursor position while searching
+        " Caveat:
+        "   This block contains `normal`, please make sure <expr> mappings
+        "   doesn't reach this block
+        let is_visual_mode = s:U.is_visual(mode(1))
+        let cmd = s:with_ignore_foldopen(
+        \   function('s:build_search_cmd'),
+        \   'n', a:pattern . offset, s:cli.base_key)
+        " NOTE:
+        " :silent!
+        "   Shut up errors! because this is just for the cursor emulation
+        "   while searching
+        silent! call s:execute_search(cmd)
+        if is_visual_mode
+            let w = winsaveview()
+            normal! gv
+            call winrestview(w)
+            call incsearch#highlight#emulate_visual_highlight()
+        endif
     endif
 endfunction
 
@@ -331,28 +349,29 @@ function! incsearch#stay(mode, ...)
         normal! gv
     endif
     let m = mode(1)
-    let cmd = incsearch#stay_expr(get(a:, 1, v:count1)) " arg: Please histadd for me!
+    let cmd = incsearch#stay_expr(get(a:, 1, v:count1), 0) " force non-expr state
     call winrestview(s:w)
 
     " Avoid using feedkeys() as much as possible because
     " feedkeys() cannot be tested and sometimes cause unexpected behavior
     " FIXME: redundant
-    let [_, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [_, offset] = s:cli_parse_pattern()
     if !empty(offset)
-        call feedkeys(cmd, 'n')
-    else
         " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
         " `feedkeys()` in that case
+        call feedkeys(cmd, 'n')
+    else
         " NOTE: Should I emulate warning? But 'search hit BOTTOM, continuing
         " at TOP' is not appropriage warning message if the cursor doesn't
         " move?
         call s:emulate_search_error(s:DIRECTION.forward)
         call s:silent_after_search(m)
-        call winrestview(s:w)
         if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
             normal! m`
         endif
-        silent! exec 'keepjumps' 'normal!' cmd
+        " :silent!
+        "   Shut up because error emulation has already done
+        silent! call s:execute_search(cmd)
     endif
 endfunction
 
@@ -360,11 +379,13 @@ endfunction
 function! incsearch#stay_expr(...)
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.is_expr = get(a:, 2, s:TRUE)
+    let s:cli.base_key = '/' " assume `/`
     let m = mode(1)
 
     let input = s:get_input('', m)
 
-    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, offset] = s:cli_parse_pattern()
 
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
@@ -375,7 +396,7 @@ function! incsearch#stay_expr(...)
         endif
     endif
 
-    if s:cli.flag ==# 'n' " stay TODO: better flag name
+    if s:cli.flag ==# 'n' " stay
         " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
         " FIXME: cannot set {offset} if in operator-pending mode because this
         " have to use feedkeys()
@@ -385,10 +406,14 @@ function! incsearch#stay_expr(...)
             call feedkeys(cmd, 'n')
             " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
             call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
+            call incsearch#auto_nohlsearch(2)
+        else
+            call incsearch#auto_nohlsearch(0)
         endif
         " }}}
         return s:U.is_visual(m) ? "\<ESC>gv" : "\<ESC>" " just exit
     else " exit stay mode while searching
+        call incsearch#auto_nohlsearch(1)
         return s:generate_command(m, input, '/') " assume '/'
     endif
 endfunction
@@ -397,7 +422,9 @@ function! s:search(search_key, ...)
     let m = mode(1)
     let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.base_key = a:search_key " `/` or `?`
     let input = s:get_input(a:search_key, m)
+    call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
     return s:generate_command(m, input, a:search_key)
 endfunction
 
@@ -453,6 +480,7 @@ endfunction
 function! s:search_for_non_expr(search_key, ...)
     let m = mode(1)
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.base_key = a:search_key " `/` or `?`
     " side effect: move cursor
     let input = s:get_input(a:search_key, m)
     let is_cancel = s:cli.exit_code()
@@ -460,17 +488,13 @@ function! s:search_for_non_expr(search_key, ...)
         return
     endif
 
-    let [pattern, offset] = incsearch#parse_pattern(s:cli.getline(), s:cli.get_prompt())
+    let [pattern, offset] = s:cli_parse_pattern()
     let should_execute = !empty(offset) || input ==# ''
     if should_execute
         " Execute with feedkeys() to work with
-        "  1. {offset}
-        "  2. empty input (use last search pattern)
-        "  FIXME: Pattern not found error will not occur
+        "  1. :h {offset}
+        "  2. empty input (:h last-pattern)
         "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
-        "  FIXME: if the offset is `/e`, `/b+` , etc... and currrent cursor
-        "  position matches the input pattern, the incremental highlight of
-        "  cursor position is wrong... but it's hard to fix
         let cmd = s:generate_command(m, input, a:search_key)
         call winrestview(s:w)
         call feedkeys(cmd, 'n')
@@ -524,15 +548,47 @@ function! s:search_for_non_expr(search_key, ...)
             normal! zv
         endif
     endif
+
+    call incsearch#auto_nohlsearch(1)
+endfunction
+
+" Make sure move cursor by search related action __after__ calling this
+" function because the first move event just set nested autocmd which
+" does :nohlsearch
+" @expr
+function! incsearch#auto_nohlsearch(nest)
+    " NOTE: see this value inside this function in order to toggle auto
+    " :nohlsearch feature easily with g:incsearch#auto_nohlsearch option
+    if !g:incsearch#auto_nohlsearch | return '' | endif
+    let cmd = s:U.is_visual(mode(1))
+    \   ? 'call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "n")
+    \     '
+    \   : 'call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "nohlsearch", "n")
+    \     '
+    " NOTE: :h autocmd-searchpat
+    "   You cannot implement this feature without feedkeys() bacause of
+    "   :h autocmd-searchpat , so there are some events which we cannot fire
+    "   like :h InsertEnter
+    augroup incsearch-auto-nohlsearch
+        autocmd!
+        execute join([
+        \   'autocmd CursorMoved *'
+        \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
+        \ , cmd
+        \ , '| autocmd! incsearch-auto-nohlsearch'
+        \ ], ' ')
+    augroup END
+    return ''
 endfunction
 
 "}}}
 
 " Helper: {{{
+" @return [pattern, offset]
 function! incsearch#parse_pattern(expr, search_key)
     " search_key : '/' or '?'
-    " expr       : /{pattern\/pattern}/{offset}
-    " expr       : /{pattern}/;/{newpattern} :h //;
+    " expr       : {pattern\/pattern}/{offset}
+    " expr       : {pattern}/;/{newpattern} :h //;
     " return     : [{pattern\/pattern}, {offset}]
     let very_magic = '\v'
     let pattern  = '(%(\\.|.){-})'
@@ -548,28 +604,45 @@ function! incsearch#parse_pattern(expr, search_key)
     return result
 endfunction
 
-function! incsearch#convert_with_case(pattern)
-    if &ignorecase == s:FALSE
-        return '\C' . a:pattern " noignorecase
-    endif
+" CommandLine Interface parse pattern wrapper
+function! s:cli_parse_pattern()
+    return incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+endfunction
 
+" CommandLine Interface parse pattern wrapper for just getting pattern
+function! s:cli_get_pattern()
+    let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
+    return pattern
+endfunction
+
+" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
+function! incsearch#detect_case(pattern)
+    " Explicit \c has highest priority
+    if a:pattern =~# s:non_escaped_backslash . 'c'
+        return '\c'
+    endif
+    if a:pattern =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
+        return '\C' " noignorecase or explicit \C
+    endif
     if &smartcase == s:FALSE
-        return '\c' . a:pattern " ignorecase & nosmartcase
+        return '\c' " ignorecase & nosmartcase
     endif
-
     " Find uppercase letter which isn't escaped
-    let very_magic = '\v'
-    let escaped_backslash = '%(^|[^\\])%(\\\\)*'
-    if a:pattern =~# very_magic . escaped_backslash . '[A-Z]'
-        return '\C' . a:pattern " smartcase with [A-Z]
+    if a:pattern =~# s:escaped_backslash . '[A-Z]'
+        return '\C' " smartcase with [A-Z]
     else
-        return '\c' . a:pattern " smartcase without [A-Z]
+        return '\c' " smartcase without [A-Z]
     endif
+endfunction
+
+function! incsearch#convert_with_case(pattern)
+    return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
 function! s:silent_after_search(...) " arg: mode(1)
     " :h function-search-undo
-    " Handle :set hlsearch
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:_silent_hlsearch()
         call s:_silent_searchforward()
@@ -577,6 +650,7 @@ function! s:silent_after_search(...) " arg: mode(1)
 endfunction
 
 function! s:_silent_hlsearch()
+    " Handle :set hlsearch
     call s:U.silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
 endfunction
 
@@ -602,7 +676,7 @@ function! s:emulate_search_error(direction)
     "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
     let w = winsaveview()
     " Get first error
-    silent! exec 'keepjumps' 'normal!' keyseq . "\<CR>"
+    silent! call s:execute_search(keyseq . "\<CR>")
     call winrestview(w)
     if g:incsearch#do_not_save_error_message_history
         if v:errmsg != ''
@@ -614,14 +688,16 @@ function! s:emulate_search_error(direction)
         " NOTE: show more than two errors e.g. `/\za`
         let last_error = v:errmsg
         try
-            " Show warning
-            exec 'keepjumps' 'normal!' keyseq . "\<CR>"
+            " Do not use silent! to show warning
+            call s:execute_search(keyseq . "\<CR>")
         catch /^Vim\%((\a\+)\)\=:E/
             let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
             call s:Error(first_error, 'echom')
             if last_error != '' && last_error !=# first_error
                 call s:Error(last_error, 'echom')
             endif
+        finally
+            call winrestview(w)
         endtry
         if v:errmsg == ''
             let v:errmsg = old_errmsg
@@ -655,6 +731,14 @@ function! s:with_ignore_foldopen(F, ...)
     finally
         let &foldopen = foldopen_save
     endtry
+endfunction
+
+" Try to avoid side-effect as much as possible except cursor movement
+function! s:execute_search(cmd)
+    " :nohlsearch
+    "   Please do not highlight at the first place if you set back
+    "   info! I'll handle it myself :h function-search-undo
+    execute 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 
 "}}}

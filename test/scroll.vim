@@ -31,6 +31,10 @@ function! s:suite.before_each()
     normal! gg0zt
 endfunction
 
+function! s:suite.after()
+    set wrapscan&
+endfunction
+
 
 function! s:suite.scroll_f_works()
     call s:assert.equals(s:get_pos_char(), 'p')
@@ -62,7 +66,7 @@ function! s:suite.wrapscan_scroll_reverse__move_cursor()
     call s:assert.equals(s:get_pos_char(), '6')
 endfunction
 
-function! s:suite.nowrapscan_scroll_reverse_doesnot_move_cursor_reversed_direction()
+function! s:suite.nowrapscan_scroll_reverse_move_cursor_to_the_last_pattern()
     set nowrapscan
     normal! G0
     call s:assert.equals(s:get_pos_char(), 'p')
@@ -73,5 +77,5 @@ function! s:suite.nowrapscan_scroll_reverse_doesnot_move_cursor_reversed_directi
     call s:assert.equals(s:get_pos_char(), '3')
     exec "normal ?pattern\\zs\\d\<C-j>\<CR>"
     call s:assert.not_equals(s:get_pos_char(), '4')
-    call s:assert.equals(s:get_pos_char(), '3')
+    call s:assert.equals(s:get_pos_char(), '1')
 endfunction
