@@ -249,7 +249,7 @@ function! s:on_char(cmdline)
     let pattern = raw_pattern
 
     " Improved Incremental cursor move!
-    call s:move_cursor(pattern, a:cmdline.flag, s:cli.base_key . offset)
+    call s:move_cursor(pattern, a:cmdline.flag, offset)
 
     " Improved Incremental highlighing!
     " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
@@ -289,7 +289,7 @@ function! s:move_cursor(pattern, flag, ...)
         let is_visual_mode = s:U.is_visual(mode(1))
         let cmd = s:with_ignore_foldopen(
         \   function('s:build_search_cmd'),
-        \   'n', a:pattern . offset, s:cli.base_key)
+        \   'n', a:pattern . s:cli.base_key . offset, s:cli.base_key)
         " NOTE:
         " :silent!
         "   Shut up errors! because this is just for the cursor emulation
