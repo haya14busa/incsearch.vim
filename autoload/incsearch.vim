@@ -46,7 +46,7 @@ let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direct
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
 let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
-
+let g:incsearch#async_search = get(g:, 'incsearch#async_search', s:TRUE) " TODO:
 
 let s:V = vital#of('incsearch')
 
@@ -308,6 +308,7 @@ endfunction
 " パターン
 function! s:inc.on_update(cmdline)
     if exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
+    \ || !g:incsearch#async_search
         return
     endif
     let s:old_time = reltime()
