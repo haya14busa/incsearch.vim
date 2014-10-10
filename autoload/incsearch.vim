@@ -312,10 +312,10 @@ function! s:inc.on_update(cmdline)
     endif
     let s:old_time = reltime()
 
-    let pattern = s:cli_get_pattern()
+    let [pattern, offset] = s:cli_parse_pattern()
     let mp = s:async_migemo_convert(pattern)
     if mp.state ==# 'done'
-        call s:move_cursor(mp.pattern, a:cmdline.flag) " TODO: offset
+        call s:move_cursor(mp.pattern, a:cmdline.flag, s:cli.base_key . offset)
         call incsearch#highlight#incremental_highlight(mp.pattern)
         redraw
     endif
