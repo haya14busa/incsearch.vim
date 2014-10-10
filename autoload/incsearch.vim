@@ -316,7 +316,7 @@ function! s:inc.on_update(cmdline)
     let [pattern, offset] = s:cli_parse_pattern()
     let mp = s:async_migemo_convert(pattern)
     if mp.state ==# 'done'
-        call s:move_cursor(mp.pattern, a:cmdline.flag, s:cli.base_key . offset)
+        call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
         call incsearch#highlight#incremental_highlight(mp.pattern)
         redraw
     endif
@@ -547,7 +547,7 @@ function! s:search_for_non_expr(search_key, ...)
             break
         endif
     endwhile
-    call s:move_cursor(pattern, s:key2flag(a:search_key), s:cli.base_key . offset)
+    call s:move_cursor(pattern, s:key2flag(a:search_key), offset)
     redraw
     let should_execute = !empty(offset) || input ==# ''
     if should_execute
