@@ -251,14 +251,16 @@ function! s:on_char(cmdline)
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
 
-    " Improved Incremental highlighing!
-    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
-    let case = incsearch#detect_case(raw_pattern)
-    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
-    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
-    " let pattern = incsearch#migemo#convert(s:inc.get_pattern())
-    call incsearch#highlight#incremental_highlight(
-    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+    if !exists('s:old_pattern_on_char') || pattern !=# s:old_pattern_on_char
+        " Improved Incremental highlighing!
+        " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+        let case = incsearch#detect_case(raw_pattern)
+        let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+        let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+        " let pattern = incsearch#migemo#convert(s:inc.get_pattern())
+        call incsearch#highlight#incremental_highlight(
+        \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+    endif
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -270,7 +272,7 @@ endfunction
 " Caveat: It handle :h last-pattern, so be careful if you want to pass empty
 " string as a pattern
 function! s:move_cursor(pattern, flag, ...)
-    let offset = get(a:, 1, '') " include `/` or `?`
+    let offset = get(a:, 1, '')
     if a:flag ==# 'n' " skip if stay mode
         return
     endif
@@ -307,13 +309,14 @@ endfunction
 
 " パターン
 function! s:inc.on_update(cmdline)
-    if exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
-    \ || !g:incsearch#async_search
+    if !g:incsearch#async_search
+    \ || exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
         return
     endif
     let s:old_time = reltime()
 
     let [pattern, offset] = s:cli_parse_pattern()
+    if empty(pattern) | return | endif
     let mp = s:async_migemo_convert(pattern)
     if mp.state ==# 'done'
         call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
