@@ -46,6 +46,7 @@ let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direct
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
 let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
+let g:incsearch#magic           = get(g: , 'incsearch#magic'           , '')
 
 
 let s:V = vital#of('incsearch')
@@ -123,6 +124,17 @@ function! s:inc.on_enter(cmdline)
     let c = hgm.cursor
     call s:hi.add(c.group, c.group, '\%#', c.priority)
     call incsearch#highlight#update()
+
+    " XXX: Manipulate search history for magic option
+    " In the first place, I want to omit magic flag when histadd(), but
+    " when returning cmd as expr mapping and feedkeys() cannot handle it, so
+    " remove no user intended magic flag at on_enter.
+    " Maybe I can also handle it with autocmd, should I use autocmd instead?
+    let hist = histget('/', -1)
+    if len(hist) > 2 && hist[:1] ==# s:magic()
+        call histdel('/', -1)
+        call histadd('/', hist[2:])
+    endif
 endfunction
 
 function! s:inc.on_leave(cmdline)
@@ -248,8 +260,7 @@ function! s:on_char(cmdline)
         return
     endif
 
-    " TODO: convert it if needed
-    let pattern = raw_pattern
+    let pattern = s:convert(raw_pattern)
 
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
@@ -368,7 +379,8 @@ function! incsearch#stay_expr(...)
 
     let input = s:get_input('', m)
 
-    let [pattern, offset] = s:cli_parse_pattern()
+    let [raw_pattern, offset] = s:cli_parse_pattern()
+    let pattern = s:convert(raw_pattern)
 
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
@@ -407,8 +419,10 @@ function! s:search(search_key, ...)
     let s:cli.is_expr = get(a:, 2, s:TRUE)
     let s:cli.base_key = a:search_key " `/` or `?`
     let input = s:get_input(a:search_key, m)
+    let [pattern, offset] = incsearch#parse_pattern(input, s:cli.base_key)
     call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
-    return s:generate_command(m, input, a:search_key)
+    return s:generate_command(
+    \   m, s:combine_pattern(s:convert(pattern), offset), a:search_key)
 endfunction
 
 function! s:get_input(search_key, mode)
@@ -467,9 +481,8 @@ function! s:set_search_related_stuff(cmd, ...)
     let should_set_jumplist = get(a:, 1, s:TRUE)
     let is_cancel = s:cli.exit_code()
     if is_cancel | return | endif
-    let [pattern, offset] = s:cli_parse_pattern()
-    let input = s:combine_pattern(pattern, offset)
-    let should_execute = !empty(offset) || empty(pattern)
+    let [raw_pattern, offset] = s:cli_parse_pattern()
+    let should_execute = !empty(offset) || empty(raw_pattern)
     if should_execute
         " Execute with feedkeys() to work with
         "  1. :h {offset} for `n` and `N`
@@ -482,6 +495,9 @@ function! s:set_search_related_stuff(cmd, ...)
         endif
     else
         " Add history if necessary
+        " Do not save converted pattern to history
+        let pattern = s:convert(raw_pattern)
+        let input = s:combine_pattern(raw_pattern, offset)
         call histadd(s:cli.base_key, input)
         let @/ = pattern
 
@@ -596,6 +612,11 @@ endfunction
 
 function! s:combine_pattern(pattern, offset)
     return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
+endfunction
+
+function! s:convert(pattern)
+    " TODO: convert pattern if required in addition to appending magic flag
+    return s:magic() . a:pattern
 endfunction
 
 " https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
@@ -724,6 +745,11 @@ function! s:execute_search(cmd)
     let keeppattern =
     \   (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
     execute keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
+endfunction
+
+function! s:magic()
+    let m = g:incsearch#magic
+    return (len(m) == 2 && m =~# '\\[mMvV]' ? m : '')
 endfunction
 
 "}}}

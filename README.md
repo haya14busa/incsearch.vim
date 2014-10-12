@@ -70,6 +70,16 @@ map g# <Plug>(incsearch-nohl-g#)
 let g:incsearch#consistent_n_direction = 1
 ```
 
+#### Improved 'magic' option
+- `:h 'magic'`
+- `:h g:incsearch#magic`
+
+You can set very magic option with no portability problem
+
+```vim
+let g:incsearch#magic = '\v'
+```
+
 ### Command Line Interface Keymappings
 incsearch.vim use custom command line interface, so it provides custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
