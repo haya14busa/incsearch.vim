@@ -12,7 +12,7 @@ endfunction
 let s:module = {
 \	"name" : "Incsearch",
 \	"highlights" : {
-\		"incserach" : "IncSearch"
+\		"incsearch" : "IncSearch"
 \	},
 \	"pattern" : "",
 \	"search_flag" : "",
@@ -30,7 +30,7 @@ endfunction
 
 function! s:module.search_hl_on(pattern)
 	call self.search_hl_off()
-	let self.search_hl_id = matchadd(self.highlights.incserach, a:pattern)
+	let self.search_hl_id = matchadd(self.highlights.incsearch, a:pattern)
 endfunction
 
 

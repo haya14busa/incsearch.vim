@@ -278,6 +278,54 @@ function! s:find(list, default, f)
   return a:default
 endfunction
 
+" Returns the index of the first element which satisfies the given expr.
+function! s:find_index(xs, f, ...)
+  let len = len(a:xs)
+  let start = a:0 > 0 ? (a:1 < 0 ? len + a:1 : a:1) : 0
+  let default = a:0 > 1 ? a:2 : -1
+  if start >=# len || start < 0
+    return default
+  endif
+  for i in range(start, len - 1)
+    if eval(substitute(a:f, 'v:val', string(a:xs[i]), 'g'))
+      return i
+    endif
+  endfor
+  return default
+endfunction
+
+" Returns the index of the last element which satisfies the given expr.
+function! s:find_last_index(xs, f, ...)
+  let len = len(a:xs)
+  let start = a:0 > 0 ? (a:1 < 0 ? len + a:1 : a:1) : len - 1
+  let default = a:0 > 1 ? a:2 : -1
+  if start >=# len || start < 0
+    return default
+  endif
+  for i in range(start, 0, -1)
+    if eval(substitute(a:f, 'v:val', string(a:xs[i]), 'g'))
+      return i
+    endif
+  endfor
+  return default
+endfunction
+
+" Similar to find_index but returns the list of indices satisfying the given expr.
+function! s:find_indices(xs, f, ...)
+  let len = len(a:xs)
+  let start = a:0 > 0 ? (a:1 < 0 ? len + a:1 : a:1) : 0
+  let result = []
+  if start >=# len || start < 0
+    return result
+  endif
+  for i in range(start, len - 1)
+    if eval(substitute(a:f, 'v:val', string(a:xs[i]), 'g'))
+      call add(result, i)
+    endif
+  endfor
+  return result
+endfunction
+
 " Return non-zero if a:list1 and a:list2 have any common item(s).
 " Return zero otherwise.
 function! s:has_common_items(list1, list2)
@@ -298,6 +346,71 @@ function! s:group_by(xs, f)
     endif
     unlet Val
   endfor
+  return result
+endfunction
+
+function! s:_default_compare(a, b)
+  return a:a <# a:b ? -1 : a:a ># a:b ? 1 : 0
+endfunction
+
+function! s:binary_search(list, value, ...)
+  let Predicate = a:0 >= 1 ? a:1 : 's:_default_compare'
+  let dic = a:0 >= 2 ? a:2 : {}
+  let start = 0
+  let end = len(a:list) - 1
+
+  while 1
+    if start > end
+      return -1
+    endif
+
+    let middle = (start + end) / 2
+
+    let compared = call(Predicate, [a:value, a:list[middle]], dic)
+
+    if compared < 0
+      let end = middle - 1
+    elseif compared > 0
+      let start = middle + 1
+    else
+      return middle
+    endif
+  endwhile
+endfunction
+
+function! s:permutations(list, ...)
+  if a:0 > 1
+    throw 'vital: Data.List: too many arguments'
+  endif
+  let r = a:0 == 1 ? a:1 : len(a:list)
+  if r > len(a:list)
+    return []
+  endif
+  let n = len(a:list)
+  let result = []
+  let indices = range(n)
+  let cycles = range(n, n - r + 1, -1)
+  call add(result, a:list[: r - 1])
+  let desc = range(r - 1, 0, -1)
+  while n != 0
+    let cont = 0
+    for i in desc
+      let cycles[i] -= 1
+      if cycles[i] == 0
+        let indices[i :] = indices[i + 1 :] + [indices[i]]
+        let cycles[i] = n - i
+      else
+        let j = cycles[i]
+        let [indices[i], indices[-j]] = [indices[-j], indices[i]]
+        call add(result, map(indices[: r - 1], 'a:list[v:val]'))
+        let cont = 1
+        break
+      endif
+    endfor
+    if cont == 0
+      break
+    endif
+  endwhile
   return result
 endfunction
 
