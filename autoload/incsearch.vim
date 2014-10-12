@@ -61,7 +61,7 @@ let s:cli = s:V.import('Over.Commandline').make_default("/")
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules
-call s:cli.connect("AsyncUpdate")
+" call s:cli.connect("AsyncUpdate")
 call s:cli.connect('BufferComplete')
 call s:cli.connect('Cancel')
 call s:cli.connect('CursorMove')
@@ -310,23 +310,23 @@ endfunction
 
 " パターン
 function! s:inc.on_update(cmdline)
-    if !g:incsearch#async_search
-    \ || exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
-        return
-    endif
-    let s:old_time = reltime()
-
-    let [pattern, offset] = s:cli_parse_pattern()
-    if empty(pattern) | return | endif
-    let mp = s:async_migemo_convert(pattern)
-    if mp.state ==# 'done'
-        call Plog(l:mp)
-        call Plog(a:cmdline.flag)
-        call Plog(offset)
-        call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
-        call incsearch#highlight#incremental_highlight(mp.pattern)
-        redraw
-    endif
+    " if !g:incsearch#async_search
+    " \ || exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
+    "     return
+    " endif
+    " let s:old_time = reltime()
+    "
+    " let [pattern, offset] = s:cli_parse_pattern()
+    " if empty(pattern) | return | endif
+    " let mp = s:async_migemo_convert(pattern)
+    " if mp.state ==# 'done'
+    "     call Plog(l:mp)
+    "     call Plog(a:cmdline.flag)
+    "     call Plog(offset)
+    "     call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
+    "     call incsearch#highlight#incremental_highlight(mp.pattern)
+    "     redraw
+    " endif
 endfunction
 
 function! s:open_cmigemo_process(pattern)
