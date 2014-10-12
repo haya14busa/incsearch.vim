@@ -718,7 +718,9 @@ function! s:execute_search(cmd)
     " :nohlsearch
     "   Please do not highlight at the first place if you set back
     "   info! I'll handle it myself :h function-search-undo
-    execute 'keepjumps' 'normal!' a:cmd | nohlsearch
+    let keeppattern =
+    \   (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
+    execute keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 
 "}}}
