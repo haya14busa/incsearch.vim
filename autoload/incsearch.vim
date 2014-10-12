@@ -61,6 +61,7 @@ let s:cli = s:V.import('Over.Commandline').make_default("/")
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules
+call s:cli.connect("AsyncUpdate")
 call s:cli.connect('BufferComplete')
 call s:cli.connect('Cancel')
 call s:cli.connect('CursorMove')
@@ -319,6 +320,9 @@ function! s:inc.on_update(cmdline)
     if empty(pattern) | return | endif
     let mp = s:async_migemo_convert(pattern)
     if mp.state ==# 'done'
+        call Plog(l:mp)
+        call Plog(a:cmdline.flag)
+        call Plog(offset)
         call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
         call incsearch#highlight#incremental_highlight(mp.pattern)
         redraw
@@ -520,6 +524,7 @@ function! s:build_search_cmd(mode, pattern, search_key)
     \      : s:U.is_visual(a:mode) ? 'gv'
     \      : ''
     let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
+    call Plog(s:cli.vcount1)
     " NOTE:
     "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
     "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
