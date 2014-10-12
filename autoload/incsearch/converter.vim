@@ -32,6 +32,9 @@ let s:TRUE = !0
 let s:FALSE = 0
 let s:escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*'
 
+let s:V = vital#of('incsearch')
+let s:L = s:V.import('Data.List')
+
 " Converter:
 
 " type: ['replace', 'append']
@@ -39,7 +42,8 @@ let s:escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*'
 " backslash: utility for flag
 " flag: can be used as a condition of convertion
 let s:converter = {
-\     'type': 'append'
+\     'name': ''
+\   , 'type': 'append'
 \   , 'break': s:FALSE
 \   , 'backslash' : s:escaped_backslash . '\zs\\'
 \   , 'flag' : ''
@@ -61,22 +65,33 @@ endfunction
 
 let s:converters = []
 
+function! incsearch#converter#define(converter)
+    let s:converters = s:L.uniq_by(s:converters + [a:converter], 'v:val.name')
+endfunction
+
 function! incsearch#converter#convert(pattern)
     " Remove flag first
-    let p = substitute(a:pattern, join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|'), '', 'g')
+    let plain_p = substitute(a:pattern, join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|'), '', 'g')
+    let p = plain_p
     if empty(p) | return '' | endif
     for converter in s:converters
         if !converter.condition(a:pattern) | continue | endif
         if converter.type == 'replace'
             let p = converter.convert(p)
         elseif converter.type == 'append'
-            let p = printf('\m\(%s\m\|%s\m\)', p, converter.convert(p))
+            let p = printf('\m\(%s\m\|%s\m\)', p, converter.convert(plain_p))
         endif
         if converter.break | break | endif
     endfor
     return empty(p) ? '' : incsearch#magic() . p
 endfunction
 
+
+" Default Converter:
+let g:incsearch#converter#fuzzy = get(g: , 'incsearch#converter#fuzzy' , s:TRUE)
+if g:incsearch#converter#fuzzy
+    call incsearch#converter#fuzzy#define()
+endif
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo

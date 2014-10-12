@@ -28,13 +28,11 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-let s:fuzzy_converter = incsearch#converter#make()
-let s:fuzzy_converter.flag = s:fuzzy_converter.backslash . 'f'
+let s:converter = incsearch#converter#make()
+let s:converter.name = 'fuzzy'
+let s:converter.flag = s:converter.backslash . 'f'
 
-" function! s:fuzzy_converter.condition(pattern)
-"     return s:TRUE
-" endfunction
-function! s:fuzzy_converter.convert(pattern)
+function! s:converter.convert(pattern)
     return s:make_fuzzy_pattern(substitute(a:pattern, self.flag, '', 'g'))
 endfunction
 
@@ -46,6 +44,10 @@ function! s:make_fuzzy_pattern(pattern)
     \       printf('%s\\[^%s]\\{-}', v:val, v:val)
     \   "), '') . chars[-1]
     return p
+endfunction
+
+function! incsearch#converter#fuzzy#define()
+    call incsearch#converter#define(s:converter)
 endfunction
 
 " Restore 'cpoptions' {{{
