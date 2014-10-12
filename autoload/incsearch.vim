@@ -351,7 +351,8 @@ function! incsearch#stay(mode, ...)
         normal! gv
     endif
     let cmd = incsearch#stay_expr(get(a:, 1, v:count1), s:FALSE) " force non-expr state
-    call s:set_search_related_stuff(cmd)
+    let should_set_jumplist = (s:cli.flag !=# 'n')
+    call s:set_search_related_stuff(cmd, should_set_jumplist)
 endfunction
 
 " @expr but sometimes called by non-<expr>
@@ -458,7 +459,9 @@ endfunction
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.
-function! s:set_search_related_stuff(cmd)
+function! s:set_search_related_stuff(cmd, ...)
+    " For stay motion
+    let should_set_jumplist = get(a:, 1, s:TRUE)
     let is_cancel = s:cli.exit_code()
     if is_cancel | return | endif
     let [pattern, offset] = s:cli_parse_pattern()
@@ -483,7 +486,9 @@ function! s:set_search_related_stuff(cmd)
         let target_view = winsaveview()
         call winrestview(s:w) " Get back start position temporarily for emulation
         " Set jump list
-        normal! m`
+        if should_set_jumplist
+            normal! m`
+        endif
         let d = (s:cli.base_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
         call s:emulate_search_error(d)
         call winrestview(target_view)
