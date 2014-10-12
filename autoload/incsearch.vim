@@ -169,14 +169,17 @@ function! s:on_searching(func, ...)
 endfunction
 
 function! s:on_char_pre(cmdline)
+    " NOTE:
+    " `:call a:cmdline.setchar('')` as soon as possible!
     if a:cmdline.is_input("<Over>(incsearch-next)")
+        call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' " exit stay mode
             let s:cli.flag = ''
         else
             let s:cli.vcount1 += 1
         endif
-        call a:cmdline.setchar('')
     elseif a:cmdline.is_input("<Over>(incsearch-prev)")
+        call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' " exit stay mode
             let s:cli.flag = ''
         endif
@@ -185,10 +188,10 @@ function! s:on_char_pre(cmdline)
             let pattern = s:cli_get_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
-        call a:cmdline.setchar('')
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
+        call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
         let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
@@ -197,10 +200,10 @@ function! s:on_char_pre(cmdline)
         let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
         let cnt = s:U.count_pattern(pattern, from, to)
         let s:cli.vcount1 += cnt
-        call a:cmdline.setchar('')
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \       && (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag ==# 'b')
+        call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n'
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
@@ -215,7 +218,6 @@ function! s:on_char_pre(cmdline)
         if s:cli.vcount1 < 1
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
-        call a:cmdline.setchar('')
     endif
 
     " Handle nowrapscan:
@@ -226,6 +228,7 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
+        call a:cmdline.setchar('')
         let pattern = s:cli_get_pattern()
         let [from, to] = [[s:w.lnum, s:w.col],
         \       s:cli.flag !=# 'b'
