@@ -134,7 +134,7 @@ function! s:inc.on_enter(cmdline)
     " remove no user intended magic flag at on_enter.
     " Maybe I can also handle it with autocmd, should I use autocmd instead?
     let hist = histget('/', -1)
-    if len(hist) > 2 && hist[:1] ==# s:magic()
+    if len(hist) > 2 && hist[:1] ==# incsearch#magic()
         call histdel('/', -1)
         call histadd('/', hist[2:])
     endif
@@ -258,7 +258,7 @@ endfunction
 function! s:on_char(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
-    let pattern = s:convert(raw_pattern)
+    let pattern = incsearch#converter#convert(raw_pattern)
     if pattern ==# ''
         call s:hi.disable_all()
         return
@@ -382,7 +382,7 @@ function! incsearch#stay_expr(...)
     let input = s:get_input('', m)
 
     let [raw_pattern, offset] = s:cli_parse_pattern()
-    let pattern = s:convert(raw_pattern)
+    let pattern = incsearch#converter#convert(raw_pattern)
 
     " execute histadd manually
     if s:cli.flag ==# 'n' && input !=# ''
@@ -424,7 +424,7 @@ function! s:search(search_key, ...)
     let [pattern, offset] = incsearch#parse_pattern(input, s:cli.base_key)
     call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
     return s:generate_command(
-    \   m, s:combine_pattern(s:convert(pattern), offset), a:search_key)
+    \   m, s:combine_pattern(incsearch#converter#convert(pattern), offset), a:search_key)
 endfunction
 
 function! s:get_input(search_key, mode)
@@ -498,7 +498,7 @@ function! s:set_search_related_stuff(cmd, ...)
     else
         " Add history if necessary
         " Do not save converted pattern to history
-        let pattern = s:convert(raw_pattern)
+        let pattern = incsearch#converter#convert(raw_pattern)
         let input = s:combine_pattern(raw_pattern, offset)
         call histadd(s:cli.base_key, input)
         let @/ = pattern
@@ -578,73 +578,6 @@ function! incsearch#auto_nohlsearch(nest)
     return ''
 endfunction
 
-" Converter:
-
-let s:converters = []
-
-function! s:convert(pattern)
-    " Remove flag first
-    let p = substitute(a:pattern, join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|'), '', 'g')
-    if empty(p) | return '' | endif
-    for converter in s:converters
-        if !converter.condition(a:pattern) | continue | endif
-        if converter.type == 'replace'
-            let p = converter.convert(p)
-        elseif converter.type == 'append'
-            let p = printf('\m\(%s\m\|%s\m\)', p, converter.convert(p))
-        endif
-        if converter.break | break | endif
-    endfor
-    return empty(p) ? '' : s:magic() . p
-endfunction
-
-" type: ['replace', 'append']
-" break: Boolean, break convert loop if true
-" backslash: utility for flag
-" flag: can be used as a condition of convertion
-let s:converter = {
-\     'type': 'append'
-\   , 'break': s:FALSE
-\   , 'backslash' : s:escaped_backslash . '\zs\\'
-\   , 'flag' : ''
-\ }
-
-" pattern which flags has already beeen replaced
-function! s:converter.convert(pattern)
-    return a:pattern
-endfunction
-
-" pattern as a raw input
-function! s:converter.condition(pattern)
-    return empty(self.flag) ? s:TRUE : a:pattern =~# self.flag
-endfunction
-
-function! s:make_converter()
-    return deepcopy(s:converter)
-endfunction
-
-let s:fuzzy_converter = s:make_converter()
-let s:fuzzy_converter.flag = s:fuzzy_converter.backslash . 'f'
-
-" function! s:fuzzy_converter.condition(pattern)
-"     return s:TRUE
-" endfunction
-function! s:fuzzy_converter.convert(pattern)
-    return s:make_fuzzy_pattern(substitute(a:pattern, self.flag, '', 'g'))
-endfunction
-
-function! s:make_fuzzy_pattern(pattern)
-    if empty(a:pattern) | return '' | endif
-    let chars = map(split(a:pattern, '\zs'), "escape(v:val, '\\')")
-    let p =  '\V' .
-    \   join(map(chars[0:-2], "
-    \       printf('%s\\[^%s]\\{-}', v:val, v:val)
-    \   "), '') . chars[-1]
-    return p
-endfunction
-
-let s:converters += [s:fuzzy_converter]
-
 "}}}
 
 " Helper: {{{
@@ -676,7 +609,7 @@ endfunction
 " CommandLine Interface parse pattern wrapper for just getting pattern
 function! s:cli_get_converted_pattern()
     let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
-    return s:convert(pattern)
+    return incsearch#converter#convert(pattern)
 endfunction
 
 function! s:combine_pattern(pattern, offset)
@@ -808,7 +741,7 @@ function! s:execute_search(cmd)
     execute keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 
-function! s:magic()
+function! incsearch#magic()
     let m = g:incsearch#magic
     return (len(m) == 2 && m =~# '\\[mMvV]' ? m : '')
 endfunction
