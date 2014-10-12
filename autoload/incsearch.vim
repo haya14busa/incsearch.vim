@@ -322,7 +322,8 @@ function! incsearch#forward(mode, ...)
     if s:U.is_visual(a:mode)
         normal! gv
     endif
-    call s:search_for_non_expr('/', get(a:, 1, v:count1))
+    let cmd = s:search('/', get(a:, 1, v:count1), s:FALSE)
+    call s:set_search_related_stuff(cmd)
 endfunction
 
 " @expr
@@ -334,7 +335,8 @@ function! incsearch#backward(mode, ...)
     if s:U.is_visual(a:mode)
         normal! gv
     endif
-    call s:search_for_non_expr('?', get(a:, 1, v:count1))
+    let cmd = s:search('?', get(a:, 1, v:count1), s:FALSE)
+    call s:set_search_related_stuff(cmd)
 endfunction
 
 " @expr
@@ -348,31 +350,8 @@ function! incsearch#stay(mode, ...)
     if s:U.is_visual(a:mode)
         normal! gv
     endif
-    let m = mode(1)
-    let cmd = incsearch#stay_expr(get(a:, 1, v:count1), 0) " force non-expr state
-    call winrestview(s:w)
-
-    " Avoid using feedkeys() as much as possible because
-    " feedkeys() cannot be tested and sometimes cause unexpected behavior
-    " FIXME: redundant
-    let [_, offset] = s:cli_parse_pattern()
-    if !empty(offset)
-        " XXX: `execute` cannot handle {offset} for `n` & `N`, so use
-        " `feedkeys()` in that case
-        call feedkeys(cmd, 'n')
-    else
-        " NOTE: Should I emulate warning? But 'search hit BOTTOM, continuing
-        " at TOP' is not appropriage warning message if the cursor doesn't
-        " move?
-        call s:emulate_search_error(s:DIRECTION.forward)
-        call s:silent_after_search(m)
-        if s:cli.flag !=# 'n' " if exit stay mode, set jumplist
-            normal! m`
-        endif
-        " :silent!
-        "   Shut up because error emulation has already done
-        silent! call s:execute_search(cmd)
-    endif
+    let cmd = incsearch#stay_expr(get(a:, 1, v:count1), s:FALSE) " force non-expr state
+    call s:set_search_related_stuff(cmd)
 endfunction
 
 " @expr but sometimes called by non-<expr>
@@ -476,32 +455,28 @@ function! s:build_search_cmd(mode, pattern, search_key)
     \   v:register, op, s:cli.vcount1, a:search_key, a:pattern, zv)
 endfunction
 
-" @normal, @visual: assume not operator-pending mode
-function! s:search_for_non_expr(search_key, ...)
-    " side effect: move cursor
-    let cmd = s:search(a:search_key,
-    \                  get(a:, 1, v:count1),
-    \                  s:FALSE) " Please consider as non-expr
-
+" Assume the cursor move is already done.
+" This function handle search related stuff which doesn't be set by :execute
+" in function like @/, hisory, jumplist, offset, error & warning emulation.
+function! s:set_search_related_stuff(cmd)
     let is_cancel = s:cli.exit_code()
     if is_cancel | return | endif
-
     let [pattern, offset] = s:cli_parse_pattern()
     let input = s:combine_pattern(pattern, offset)
     let should_execute = !empty(offset) || empty(pattern)
     if should_execute
         " Execute with feedkeys() to work with
-        "  1. :h {offset}
+        "  1. :h {offset} for `n` and `N`
         "  2. empty input (:h last-pattern)
         "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
         call winrestview(s:w)
-        call feedkeys(cmd, 'n')
+        call feedkeys(a:cmd, 'n')
         if g:incsearch#consistent_n_direction
             call s:_silent_searchforward(s:DIRECTION.forward)
         endif
     else
         " Add history if necessary
-        call histadd(a:search_key, input)
+        call histadd(s:cli.base_key, input)
         let @/ = pattern
 
         " Emulate errors, and handling `n` and `N` preparation {{{
@@ -509,7 +484,7 @@ function! s:search_for_non_expr(search_key, ...)
         call winrestview(s:w) " Get back start position temporarily for emulation
         " Set jump list
         normal! m`
-        let d = (a:search_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
+        let d = (s:cli.base_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
         call s:emulate_search_error(d)
         call winrestview(target_view)
         "}}}
