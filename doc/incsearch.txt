@@ -154,6 +154,29 @@ Additional usage~
 <
 	default: 0
 
+
+Improved 'magic' option~
+							    *g:incsearch#magic*
+	This is improved |'magic'| option. Also see: |/magic| 
+	By default 'magic' option, all you can set is 'magic' or 'nomagic',
+	and in addition, default option has porability problem. see: |'magic'|
+
+	In contrast to default 'magic' option, |g:incsearch#magic| enable
+	you to set 'very magic' |\v| and 'very nomagic' |\V| in adition to
+	'magic' |\m| and 'nomagic' |\M|.
+
+	This option doesn't cause porability problems, so you need not worry
+	about this problem. No other pattern related programs are affected by
+	this option.
+
+	Usage: >
+	    let g:incsearch#magic = '\v' " very magic
+	    let g:incsearch#magic = '\V' " very nomagic
+	    let g:incsearch#magic = '\m' " magic
+	    let g:incsearch#magic = '\M' " nomagic
+<
+	default: '\m'
+
 ------------------------------------------------------------------------------
 Command line interface~
 					*incsearch-commandline-interface*
