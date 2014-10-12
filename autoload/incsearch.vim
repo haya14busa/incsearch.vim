@@ -289,7 +289,7 @@ function! s:move_cursor(pattern, flag, ...)
         let is_visual_mode = s:U.is_visual(mode(1))
         let cmd = s:with_ignore_foldopen(
         \   function('s:build_search_cmd'),
-        \   'n', a:pattern . s:cli.base_key . offset, s:cli.base_key)
+        \   'n', s:combine_pattern(a:pattern, offset), s:cli.base_key)
         " NOTE:
         " :silent!
         "   Shut up errors! because this is just for the cursor emulation
@@ -420,8 +420,8 @@ endfunction
 
 function! s:search(search_key, ...)
     let m = mode(1)
-    let s:cli.is_expr = s:TRUE
     let s:cli.vcount1 = get(a:, 1, v:count1)
+    let s:cli.is_expr = get(a:, 2, s:TRUE)
     let s:cli.base_key = a:search_key " `/` or `?`
     let input = s:get_input(a:search_key, m)
     call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
@@ -478,24 +478,22 @@ endfunction
 
 " @normal, @visual: assume not operator-pending mode
 function! s:search_for_non_expr(search_key, ...)
-    let m = mode(1)
-    let s:cli.vcount1 = get(a:, 1, v:count1)
-    let s:cli.base_key = a:search_key " `/` or `?`
     " side effect: move cursor
-    let input = s:get_input(a:search_key, m)
+    let cmd = s:search(a:search_key,
+    \                  get(a:, 1, v:count1),
+    \                  s:FALSE) " Please consider as non-expr
+
     let is_cancel = s:cli.exit_code()
-    if is_cancel
-        return
-    endif
+    if is_cancel | return | endif
 
     let [pattern, offset] = s:cli_parse_pattern()
-    let should_execute = !empty(offset) || input ==# ''
+    let input = s:combine_pattern(pattern, offset)
+    let should_execute = !empty(offset) || empty(pattern)
     if should_execute
         " Execute with feedkeys() to work with
         "  1. :h {offset}
         "  2. empty input (:h last-pattern)
         "  NOTE: Don't use feedkeys() as much as possible to avoid flickering
-        let cmd = s:generate_command(m, input, a:search_key)
         call winrestview(s:w)
         call feedkeys(cmd, 'n')
         if g:incsearch#consistent_n_direction
@@ -541,15 +539,13 @@ function! s:search_for_non_expr(search_key, ...)
         endif
         "}}}
 
-        call s:silent_after_search(m)
+        call s:silent_after_search()
 
         " Open fold
         if &foldopen =~# '\vsearch|all'
             normal! zv
         endif
     endif
-
-    call incsearch#auto_nohlsearch(1)
 endfunction
 
 " Make sure move cursor by search related action __after__ calling this
@@ -613,6 +609,10 @@ endfunction
 function! s:cli_get_pattern()
     let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
     return pattern
+endfunction
+
+function! s:combine_pattern(pattern, offset)
+    return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
 endfunction
 
 " https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
