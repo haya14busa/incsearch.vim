@@ -175,7 +175,7 @@ Improved 'magic' option~
 	    let g:incsearch#magic = '\m' " magic
 	    let g:incsearch#magic = '\M' " nomagic
 <
-	default: '\m'
+	default: ''
 
 ------------------------------------------------------------------------------
 Command line interface~

@@ -1,4 +1,4 @@
-let s:suite = themis#suite('autonlsearch')
+let s:suite = themis#suite('magic_option')
 let s:assert = themis#helper('assert')
 
 " Helper:
@@ -41,37 +41,47 @@ endfunction
 
 function! s:suite.after()
     call s:reset_buffer()
-    let g:incsearch#magic = '\m'
+    let g:incsearch#magic = ''
 endfunction
 
 
 function! s:suite.can_set_very_magic()
     let g:incsearch#magic = '\v'
-    exec "normal" "/\\(\\)\<CR>"
+    let p = "\\(\\)"
+    exec "normal" printf("/%s\<CR>", p)
     call s:assert.equals(getline('.'), s:line_texts[1])
+    call s:assert.equals(@/, '\v' . p)
 endfunction
 
 function! s:suite.can_set_very_nomagic()
     let g:incsearch#magic = '\V'
-    exec "normal" "/\\($\\)dummy\<CR>"
+    let p = "\\($\\)dummy"
+    exec "normal" printf("/%s\<CR>", p)
     call s:assert.equals(getline('.'), s:line_texts[2])
+    call s:assert.equals(@/, '\V' . p)
 endfunction
 
 function! s:suite.can_set_magic()
     let g:incsearch#magic = '\m'
-    exec "normal" "/{\.\<CR>"
+    let p = "{."
+    exec "normal" printf("/%s\<CR>", p)
     call s:assert.equals(getline('.'), s:line_texts[3])
+    call s:assert.equals(@/, '\m' . p)
 endfunction
 
 function! s:suite.can_set_nomagic()
     let g:incsearch#magic = '\M'
-    exec "normal" "/X\.$\<CR>"
+    let p = "Z\\.$"
+    exec "normal" printf("/%s\<CR>", p)
     call s:assert.equals(getline('.'), s:line_texts[4])
+    call s:assert.equals(@/, '\M' . p)
 endfunction
 
 function! s:suite.cannot_set_other_char()
     " considered as '\m'
     let g:incsearch#magic = '\a'
-    exec "normal" "/{\.\<CR>"
+    let p = "{."
+    exec "normal" printf("/%s\<CR>", p)
     call s:assert.equals(getline('.'), s:line_texts[3])
+    call s:assert.equals(@/, p)
 endfunction
