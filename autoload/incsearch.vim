@@ -36,6 +36,9 @@ set cpo&vim
 let s:TRUE = !0
 let s:FALSE = 0
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
+" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
 
 " Option:
 let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap'      , s:FALSE)
@@ -197,7 +200,7 @@ function! s:on_char_pre(cmdline)
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
-            let pattern = s:cli_get_pattern()
+            let pattern = s:cli_get_converted_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -205,7 +208,7 @@ function! s:on_char_pre(cmdline)
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
-        let pattern = s:cli_get_pattern()
+        let pattern = s:cli_get_converted_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -220,7 +223,7 @@ function! s:on_char_pre(cmdline)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
         endif
-        let pattern = s:cli_get_pattern()
+        let pattern = s:cli_get_converted_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -241,7 +244,7 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
         call a:cmdline.setchar('')
-        let pattern = s:cli_get_pattern()
+        let pattern = s:cli_get_converted_pattern()
         let [from, to] = [[s:w.lnum, s:w.col],
         \       s:cli.flag !=# 'b'
         \       ? [line('$'), s:U.get_max_col('$')]
@@ -255,12 +258,11 @@ endfunction
 function! s:on_char(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
-    if raw_pattern ==# ''
+    let pattern = s:convert(raw_pattern)
+    if pattern ==# ''
         call s:hi.disable_all()
         return
     endif
-
-    let pattern = s:convert(raw_pattern)
 
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
@@ -576,6 +578,73 @@ function! incsearch#auto_nohlsearch(nest)
     return ''
 endfunction
 
+" Converter:
+
+let s:converters = []
+
+function! s:convert(pattern)
+    " Remove flag first
+    let p = substitute(a:pattern, join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|'), '', 'g')
+    if empty(p) | return '' | endif
+    for converter in s:converters
+        if !converter.condition(a:pattern) | continue | endif
+        if converter.type == 'replace'
+            let p = converter.convert(p)
+        elseif converter.type == 'append'
+            let p = printf('\m\(%s\m\|%s\m\)', p, converter.convert(p))
+        endif
+        if converter.break | break | endif
+    endfor
+    return empty(p) ? '' : s:magic() . p
+endfunction
+
+" type: ['replace', 'append']
+" break: Boolean, break convert loop if true
+" backslash: utility for flag
+" flag: can be used as a condition of convertion
+let s:converter = {
+\     'type': 'append'
+\   , 'break': s:FALSE
+\   , 'backslash' : s:escaped_backslash . '\zs\\'
+\   , 'flag' : ''
+\ }
+
+" pattern which flags has already beeen replaced
+function! s:converter.convert(pattern)
+    return a:pattern
+endfunction
+
+" pattern as a raw input
+function! s:converter.condition(pattern)
+    return empty(self.flag) ? s:TRUE : a:pattern =~# self.flag
+endfunction
+
+function! s:make_converter()
+    return deepcopy(s:converter)
+endfunction
+
+let s:fuzzy_converter = s:make_converter()
+let s:fuzzy_converter.flag = s:fuzzy_converter.backslash . 'f'
+
+" function! s:fuzzy_converter.condition(pattern)
+"     return s:TRUE
+" endfunction
+function! s:fuzzy_converter.convert(pattern)
+    return s:make_fuzzy_pattern(substitute(a:pattern, self.flag, '', 'g'))
+endfunction
+
+function! s:make_fuzzy_pattern(pattern)
+    if empty(a:pattern) | return '' | endif
+    let chars = map(split(a:pattern, '\zs'), "escape(v:val, '\\')")
+    let p =  '\V' .
+    \   join(map(chars[0:-2], "
+    \       printf('%s\\[^%s]\\{-}', v:val, v:val)
+    \   "), '') . chars[-1]
+    return p
+endfunction
+
+let s:converters += [s:fuzzy_converter]
+
 "}}}
 
 " Helper: {{{
@@ -605,23 +674,15 @@ function! s:cli_parse_pattern()
 endfunction
 
 " CommandLine Interface parse pattern wrapper for just getting pattern
-function! s:cli_get_pattern()
+function! s:cli_get_converted_pattern()
     let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
-    return pattern
+    return s:convert(pattern)
 endfunction
 
 function! s:combine_pattern(pattern, offset)
     return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
 endfunction
 
-function! s:convert(pattern)
-    " TODO: convert pattern if required in addition to appending magic flag
-    return s:magic() . a:pattern
-endfunction
-
-" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
-let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
 function! incsearch#detect_case(pattern)
     " Explicit \c has highest priority
     if a:pattern =~# s:non_escaped_backslash . 'c'
