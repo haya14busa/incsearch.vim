@@ -41,8 +41,10 @@ function! s:make_fuzzy_pattern(pattern)
     let chars = map(split(a:pattern, '\zs'), "escape(v:val, '\\')")
     let p =  '\V' .
     \   join(map(chars[0:-2], "
-    \       printf('%s\\[^%s]\\{-}', v:val, v:val)
-    \   "), '') . chars[-1]
+    \       printf('%s\\[^%s]\\{-}',
+    \           incsearch#converter#smartsign#char(v:val),
+    \           v:val)
+    \   "), '') . incsearch#converter#smartsign#char(chars[-1])
     return p
 endfunction
 
