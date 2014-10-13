@@ -31,13 +31,18 @@ set cpo&vim
 let s:TRUE = !0
 let s:FALSE = 0
 
+let s:has_migemo = has('migemo')
+let s:has_cmigemo = executable('cmigemo')
+
 let s:converter = incsearch#converter#make()
 let s:converter.name = 'migemo'
-let s:converter.async = s:TRUE " TODO: ?
+let s:converter.async = s:has_migemo ? s:FALSE : s:TRUE
 let s:converter.flag = s:converter.backslash . '#m'
 
 function! incsearch#converter#migemo#define()
-    call incsearch#converter#define(s:converter)
+    if s:has_migemo || s:has_cmigemo
+        call incsearch#converter#define(s:converter)
+    endif
 endfunction
 
 function! s:converter.condition(pattern, context)
@@ -46,7 +51,9 @@ function! s:converter.condition(pattern, context)
 endfunction
 
 function! s:converter.convert(pattern, context)
-    return s:async_migemo_convert(a:pattern).pattern
+    return s:has_migemo ? migemo('pattern')
+    \    : s:has_cmigemo ? s:async_migemo_convert(a:pattern).pattern
+    \    : a:pattern
 endfunction
 
 let s:migemo_memo = {}
@@ -70,12 +77,61 @@ function! s:async_migemo_convert(pattern)
     endif
 endfunction
 
-let s:dict = incsearch#migemo#dict()
 function! s:open_cmigemo_process(pattern)
     let s:cmigemo_response = '' " reset
+    let s:migemodict = incsearch#converter#migemo#dict()
     let s:cmigemo_process = vimproc#popen2(
-    \   printf('cmigemo -v -w "%s" -d "%s"', escape(a:pattern, '"\'), s:dict))
+    \   printf('cmigemo -v -w "%s" -d "%s"', escape(a:pattern, '"\'), s:migemodict))
 endfunction
+
+function! incsearch#converter#migemo#dict()
+    if exists('s:migemodict')
+        return s:migemodict
+    endif
+    let s:migemodict = s:SearchDict()
+    return s:migemodict
+endfunction
+
+function! s:SearchDict2(name)
+  let path = $VIM . ',' . &runtimepath
+  let dict = globpath(path, "dict/".a:name)
+  if dict == ''
+    let dict = globpath(path, a:name)
+  endif
+  if dict == ''
+    for path in [
+          \ '/usr/local/share/migemo/',
+          \ '/usr/local/share/cmigemo/',
+          \ '/usr/local/share/',
+          \ '/usr/share/cmigemo/',
+          \ '/usr/share/',
+          \ ]
+      let path = path . a:name
+      if filereadable(path)
+        let dict = path
+        break
+      endif
+    endfor
+  endif
+  let dict = matchstr(dict, "^[^\<NL>]*")
+  return dict
+endfunction
+
+function! s:SearchDict()
+  for path in [
+        \ 'migemo/'.&encoding.'/migemo-dict',
+        \ &encoding.'/migemo-dict',
+        \ 'migemo-dict',
+        \ ]
+    let dict = s:SearchDict2(path)
+    if dict != ''
+      return dict
+    endif
+  endfor
+  echoerr 'a dictionary for migemo is not found'
+  echoerr 'your encoding is '.&encoding
+endfunction
+
 
 if expand("%:p") ==# expand("<sfile>:p")
     call incsearch#converter#migemo#define()
