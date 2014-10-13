@@ -51,6 +51,7 @@ let g:incsearch#do_not_save_error_message_history =
 let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
 let g:incsearch#magic           = get(g: , 'incsearch#magic'           , '')
 
+let g:incsearch#async_search = get(g:, 'incsearch#async_search', s:TRUE) " TODO:
 
 let s:V = vital#of('incsearch')
 
@@ -65,6 +66,7 @@ let s:cli = s:V.import('Over.Commandline').make_default("/")
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules
+call s:cli.connect("AsyncUpdate")
 call s:cli.connect('BufferComplete')
 call s:cli.connect('Cancel')
 call s:cli.connect('CursorMove')
@@ -119,6 +121,9 @@ endfunction
 let s:inc = {
 \   "name" : "incsearch",
 \}
+
+" Memorize last pattern or something for on_xxx
+let s:handler = {}
 
 function! s:inc.on_enter(cmdline)
     nohlsearch " disable previous highlight
@@ -255,10 +260,17 @@ function! s:on_char_pre(cmdline)
     endif
 endfunction
 
+let s:handler.on_char = {
+\   'last_raw_pattern': ''
+\ , 'last_pattern': ''
+\ , 'last_offset': ''
+\ }
 function! s:on_char(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
-    let pattern = incsearch#converter#convert(raw_pattern)
+    let context = s:handler.on_char.last_raw_pattern ==# raw_pattern ?
+    \   {} : {'skip_async': s:TRUE}
+    let pattern = incsearch#converter#convert(raw_pattern, context)
     if pattern ==# ''
         call s:hi.disable_all()
         return
@@ -267,19 +279,27 @@ function! s:on_char(cmdline)
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
 
-    " Improved Incremental highlighing!
-    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
-    let case = incsearch#detect_case(raw_pattern)
-    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
-    let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
-    call incsearch#highlight#incremental_highlight(
-    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+    if pattern !=# s:handler.on_char.last_pattern
+        " Improved Incremental highlighing!
+        " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+        let case = incsearch#detect_case(raw_pattern)
+        let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+        let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+        call incsearch#highlight#incremental_highlight(
+        \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+    endif
 
     " pseudo-normal-zz after scroll
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
         call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
+
+    let s:handler.on_char = {
+    \   'last_raw_pattern': raw_pattern
+    \ , 'last_pattern': pattern
+    \ , 'last_offset': offset
+    \ }
 endfunction
 
 " Caveat: It handle :h last-pattern, so be careful if you want to pass empty
@@ -318,6 +338,36 @@ function! s:move_cursor(pattern, flag, ...)
             call incsearch#highlight#emulate_visual_highlight()
         endif
     endif
+endfunction
+
+" パターン
+let s:handler.on_update = {
+\   'last_pattern': ''
+\ }
+function! s:on_update(cmdline)
+    let [raw_pattern, offset] = s:cli_parse_pattern()
+    let pattern = incsearch#converter#convert(raw_pattern)
+    if pattern ==# s:handler.on_update.last_pattern
+        return
+    endif
+    if empty(pattern) | call s:hi.disable_all() | return | endif
+    let case = incsearch#detect_case(raw_pattern)
+    call s:move_cursor(pattern, a:cmdline.flag, offset)
+    " TODO more hilight handling and DRY
+    call incsearch#highlight#incremental_highlight(case . pattern)
+    redraw
+    let s:handler.on_update.last_pattern = pattern
+endfunction
+
+let s:old_time = reltime()
+function! s:inc.on_update(cmdline)
+    if !g:incsearch#async_search
+    \ || str2float(reltimestr(reltime(s:old_time))) * 1000 < 200
+    \ || getchar(1)
+        return
+    endif
+    let s:old_time = reltime()
+    call s:on_searching(function('s:on_update'), a:cmdline)
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
@@ -427,14 +477,18 @@ function! s:search(search_key, ...)
     \   m, s:combine_pattern(incsearch#converter#convert(pattern), offset), a:search_key)
 endfunction
 
+function! s:key2flag(key)
+    return   a:key ==# '/' ? ''
+    \      : a:key ==# '?' ? 'b'
+    \      : a:key ==# ''  ? 'n'
+    \      : ''
+endfunction
+
 function! s:get_input(search_key, mode)
     " if search_key is empty, it means `stay` & do not move cursor
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
-    let s:cli.flag = a:search_key ==# '/' ? ''
-    \              : a:search_key ==# '?' ? 'b'
-    \              : a:search_key ==# ''  ? 'n'
-    \              : ''
+    let s:cli.flag = s:key2flag(a:search_key)
 
     " Handle visual mode highlight
     if s:U.is_visual(a:mode)

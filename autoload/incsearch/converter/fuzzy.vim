@@ -32,7 +32,7 @@ let s:converter = incsearch#converter#make()
 let s:converter.name = 'fuzzy'
 let s:converter.flag = s:converter.backslash . 'f'
 
-function! s:converter.convert(pattern)
+function! s:converter.convert(pattern, ...)
     return s:make_fuzzy_pattern(substitute(a:pattern, self.flag, '', 'g'))
 endfunction
 

@@ -47,15 +47,16 @@ let s:converter = {
 \   , 'break': s:FALSE
 \   , 'backslash' : s:escaped_backslash . '\zs\\'
 \   , 'flag' : ''
+\   , 'async' : s:FALSE
 \ }
 
 " pattern which flags has already beeen replaced
-function! s:converter.convert(pattern)
+function! s:converter.convert(pattern, ...) " args: context
     return a:pattern
 endfunction
 
 " pattern as a raw input
-function! s:converter.condition(pattern)
+function! s:converter.condition(pattern, ...)
     return empty(self.flag) ? s:TRUE : a:pattern =~# self.flag
 endfunction
 
@@ -66,20 +67,34 @@ endfunction
 let s:converters = []
 
 function! incsearch#converter#define(converter)
-    let s:converters = s:L.uniq_by(s:converters + [a:converter], 'v:val.name')
+    let s:converters = s:L.uniq_by([a:converter] + s:converters, 'v:val.name')
 endfunction
 
-function! incsearch#converter#convert(pattern)
+let s:context = {
+\   'skip_async': s:FALSE
+\ }
+
+function! incsearch#converter#convert(pattern, ...)
+    let context = extend(copy(s:context), get(a:, 1, {}))
     " Remove flag first
-    let plain_p = substitute(a:pattern, join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|'), '', 'g')
+    " FIXME: Repeated \flag\flag will not be substituted
+    let plain_p = substitute(a:pattern,
+    \   '\%(' . join(filter(map(copy(s:converters), 'v:val.flag'), '!empty(v:val)'), '\|') . '\)',
+    \   '', 'g')
     let p = plain_p
     if empty(p) | return '' | endif
-    for converter in s:converters
-        if !converter.condition(a:pattern) | continue | endif
+    " for converter in s:converters
+    for converter in filter(copy(s:converters), "
+    \      (!v:val.async || !context.skip_async)
+    \   && v:val.condition(a:pattern, context)
+    \ ")
         if converter.type == 'replace'
-            let p = converter.convert(p)
+            let p = converter.convert(p, context)
         elseif converter.type == 'append'
-            let p = printf('\m\(%s\m\|%s\m\)', p, converter.convert(plain_p))
+            let c = converter.convert(plain_p, context)
+            if !empty(c) && c !=# plain_p
+                let p = printf('\m\(%s\m\|%s\m\)', p, c)
+            endif
         endif
         if converter.break | break | endif
     endfor
@@ -96,6 +111,7 @@ endif
 if g:incsearch#converter#smartsign
     call incsearch#converter#smartsign#define()
 endif
+call incsearch#converter#migemo#define()
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
