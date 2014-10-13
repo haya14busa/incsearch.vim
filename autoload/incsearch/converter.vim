@@ -86,12 +86,12 @@ function! incsearch#converter#convert(pattern, ...)
     " for converter in s:converters
     for converter in filter(copy(s:converters), "
     \      (!v:val.async || !context.skip_async)
-    \   && v:val.condition(a:pattern, context)
+    \   && v:val.condition(a:pattern)
     \ ")
         if converter.type == 'replace'
-            let p = converter.convert(p, context)
+            let p = converter.convert(p)
         elseif converter.type == 'append'
-            let c = converter.convert(plain_p, context)
+            let c = converter.convert(plain_p)
             if !empty(c) && c !=# plain_p
                 let p = printf('\m\(%s\m\|%s\m\)', p, c)
             endif

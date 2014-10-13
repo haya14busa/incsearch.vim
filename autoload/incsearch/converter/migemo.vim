@@ -45,12 +45,12 @@ function! incsearch#converter#migemo#define()
     endif
 endfunction
 
-function! s:converter.condition(pattern, context)
+function! s:converter.condition(pattern)
     return a:pattern =~# self.flag &&
     \   s:async_migemo_convert(a:pattern).state ==# 'done'
 endfunction
 
-function! s:converter.convert(pattern, context)
+function! s:converter.convert(pattern)
     return s:has_migemo ? migemo('pattern')
     \    : s:has_cmigemo ? s:async_migemo_convert(a:pattern).pattern
     \    : a:pattern
