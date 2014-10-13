@@ -67,7 +67,7 @@ endfunction
 " echo (match("`1234567890-=[];'\\,./", p) != -1) == 1
 " echo (match('~!@#$%^&*()_+{}:"|<>\', p) != -1) == 1
 " echo (match("`1234%67890-=[];'\\,./", p) != -1) == 1
-function! s:converter.convert(pattern)
+function! s:converter.convert(pattern, context)
     return '\V' . substitute(a:pattern, s:signs, '\=
     \                        incsearch#converter#smartsign#char(submatch(0))', 'g')
 endfunction

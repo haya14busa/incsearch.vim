@@ -104,6 +104,7 @@ endfunction
 " Return the number of matched patterns in the current buffer or the specified
 " region with `from` and `to` positions
 " parameter: pattern, from, to
+" Should I count with :h :subsitute with 'n' flag?
 function! s:count_pattern(pattern, ...)
     let w = winsaveview()
     let [from, to] = s:sort_pos([

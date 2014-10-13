@@ -30,7 +30,6 @@ set cpo&vim
 
 let s:V = vital#of('vital') " TODO: use incsearch
 let s:P = s:V.import('Process') " h: vital-process.txt
-let s:PM = s:V.import('ProcessManager')
 
 function! incsearch#migemo#convert(pattern)
     if !exists('s:migemodict')

@@ -66,7 +66,7 @@ let s:cli = s:V.import('Over.Commandline').make_default("/")
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules
-" call s:cli.connect("AsyncUpdate")
+call s:cli.connect("AsyncUpdate")
 call s:cli.connect('BufferComplete')
 call s:cli.connect('Cancel')
 call s:cli.connect('CursorMove')
@@ -121,6 +121,9 @@ endfunction
 let s:inc = {
 \   "name" : "incsearch",
 \}
+
+" Memorize last pattern or something for on_xxx
+let s:handler = {}
 
 function! s:inc.on_enter(cmdline)
     nohlsearch " disable previous highlight
@@ -257,10 +260,17 @@ function! s:on_char_pre(cmdline)
     endif
 endfunction
 
+let s:handler.on_char = {
+\   'last_raw_pattern': ''
+\ , 'last_pattern': ''
+\ , 'last_offset': ''
+\ }
 function! s:on_char(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
-    let pattern = incsearch#converter#convert(raw_pattern)
+    let context = s:handler.on_char.last_raw_pattern ==# raw_pattern ?
+    \   {} : {'skip_async': s:TRUE}
+    let pattern = incsearch#converter#convert(raw_pattern, context)
     if pattern ==# ''
         call s:hi.disable_all()
         return
@@ -269,13 +279,12 @@ function! s:on_char(cmdline)
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
 
-    if !exists('s:old_pattern_on_char') || pattern !=# s:old_pattern_on_char
+    if pattern !=# s:handler.on_char.last_pattern
         " Improved Incremental highlighing!
         " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
         let case = incsearch#detect_case(raw_pattern)
         let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
         let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
-        " let pattern = incsearch#migemo#convert(s:inc.get_pattern())
         call incsearch#highlight#incremental_highlight(
         \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
     endif
@@ -285,6 +294,12 @@ function! s:on_char(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
         call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
     endif
+
+    let s:handler.on_char = {
+    \   'last_raw_pattern': raw_pattern
+    \ , 'last_pattern': pattern
+    \ , 'last_offset': offset
+    \ }
 endfunction
 
 " Caveat: It handle :h last-pattern, so be careful if you want to pass empty
@@ -326,52 +341,33 @@ function! s:move_cursor(pattern, flag, ...)
 endfunction
 
 " パターン
+let s:handler.on_update = {
+\   'last_pattern': ''
+\ }
+function! s:on_update(cmdline)
+    let [raw_pattern, offset] = s:cli_parse_pattern()
+    let pattern = incsearch#converter#convert(raw_pattern)
+    if pattern ==# s:handler.on_update.last_pattern
+        return
+    endif
+    if empty(pattern) | call s:hi.disable_all() | return | endif
+    let case = incsearch#detect_case(raw_pattern)
+    call s:move_cursor(pattern, a:cmdline.flag, offset)
+    " TODO more hilight handling and DRY
+    call incsearch#highlight#incremental_highlight(case . pattern)
+    redraw
+    let s:handler.on_update.last_pattern = pattern
+endfunction
+
+let s:old_time = reltime()
 function! s:inc.on_update(cmdline)
-    " if !g:incsearch#async_search
-    " \ || exists('s:old_time') && str2float(reltimestr(reltime(s:old_time))) * 10000 < 2000
-    "     return
-    " endif
-    " let s:old_time = reltime()
-    "
-    " let [pattern, offset] = s:cli_parse_pattern()
-    " if empty(pattern) | return | endif
-    " let mp = s:async_migemo_convert(pattern)
-    " if mp.state ==# 'done'
-    "     call Plog(l:mp)
-    "     call Plog(a:cmdline.flag)
-    "     call Plog(offset)
-    "     call s:move_cursor(mp.pattern, a:cmdline.flag, offset)
-    "     call incsearch#highlight#incremental_highlight(mp.pattern)
-    "     redraw
-    " endif
-endfunction
-
-function! s:open_cmigemo_process(pattern)
-    let dict = incsearch#migemo#dict()
-    let s:cmigemo_response = ''
-    let p = escape(a:pattern, '"')
-    let s:cmigemo_process = vimproc#popen2('cmigemo -v -w "'. p .'" -d "'. dict .'"')
-endfunction
-
-let s:migemo_memo = {}
-function! s:async_migemo_convert(pattern)
-    if a:pattern ==# ''
-        return {'state': 'done', 'pattern': ''}
+    if !g:incsearch#async_search
+    \ || str2float(reltimestr(reltime(s:old_time))) * 1000 < 200
+    \ || getchar(1)
+        return
     endif
-    if has_key(s:migemo_memo, a:pattern)
-        return {'state': 'done', 'pattern': s:migemo_memo[a:pattern]}
-    endif
-    if !exists('s:old_pattern') || a:pattern !=# s:old_pattern || !exists('s:cmigemo_process')
-        call s:open_cmigemo_process(a:pattern)
-    endif
-    let s:old_pattern = a:pattern
-    if s:cmigemo_process.stdout.eof
-        let s:migemo_memo[a:pattern] = s:cmigemo_response
-        return {'state': 'done', 'pattern': s:cmigemo_response}
-    else
-        let s:cmigemo_response .= s:cmigemo_process.stdout.read()
-        return {'state': 'yet', 'pattern': s:cmigemo_response}
-    endif
+    let s:old_time = reltime()
+    call s:on_searching(function('s:on_update'), a:cmdline)
 endfunction
 
 function! s:inc.on_char_pre(cmdline)
@@ -524,7 +520,6 @@ function! s:build_search_cmd(mode, pattern, search_key)
     \      : s:U.is_visual(a:mode) ? 'gv'
     \      : ''
     let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
-    call Plog(s:cli.vcount1)
     " NOTE:
     "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
     "   <Esc>? <Esc> exists for flexible v:count with using s:cli.vcount1,
@@ -543,17 +538,6 @@ function! s:set_search_related_stuff(cmd, ...)
     let is_cancel = s:cli.exit_code()
     if is_cancel | return | endif
     let [raw_pattern, offset] = s:cli_parse_pattern()
-    " let [pattern, offset] = s:cli_parse_pattern()
-    " " let pattern = incsearch#migemo#convert(pattern)
-    " while 1
-    "     let mp = s:async_migemo_convert(pattern)
-    "     if mp.state ==# 'done'
-    "         let pattern = mp.pattern
-    "         break
-    "     endif
-    " endwhile
-    " call s:move_cursor(pattern, s:key2flag(a:search_key), offset)
-    " redraw
     let should_execute = !empty(offset) || empty(raw_pattern)
     if should_execute
         " Execute with feedkeys() to work with
