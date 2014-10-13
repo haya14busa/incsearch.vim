@@ -33,6 +33,17 @@ let s:FALSE = 0
 
 let s:has_migemo = has('migemo')
 let s:has_cmigemo = executable('cmigemo')
+function! s:_has_vimproc()
+    try
+        call vimproc#version()
+        let ret = 1
+    catch
+        let ret = 0
+    endtry
+    return ret
+endfunction
+let s:has_vimproc = s:_has_vimproc()
+let s:is_meet_requirement = s:has_migemo || (s:has_vimproc && s:has_cmigemo)
 
 let s:converter = incsearch#converter#make()
 let s:converter.name = 'migemo'
@@ -40,7 +51,7 @@ let s:converter.async = s:has_migemo ? s:FALSE : s:TRUE
 let s:converter.flag = s:converter.backslash . '#m'
 
 function! incsearch#converter#migemo#define()
-    if s:has_migemo || s:has_cmigemo
+    if s:is_meet_requirement
         call incsearch#converter#define(s:converter)
     endif
 endfunction
