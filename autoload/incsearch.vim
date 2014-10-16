@@ -165,6 +165,7 @@ function! s:on_searching(func, ...)
     catch /E869:/ " E869: (NFA) Unknown operator '\@m
     catch /E870:/ " E870: (NFA regexp) Error reading repetition limits
     catch /E871:/ " E871: (NFA regexp) Can't have a multi follow a multi !
+    catch /E874:/ " E874: (NFA) Could not pop the stack ! (with \&)
     catch /E877:/ " E877: (NFA regexp) Invalid character class: 109
     catch /E888:/ " E888: (NFA regexp) cannot repeat (with /\ze*)
         call s:hi.disable_all()
