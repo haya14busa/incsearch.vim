@@ -48,8 +48,8 @@ function! incsearch#highlight#update()
 endfunction
 
 function! s:init_hl()
-    hi link IncSearchMatch IncSearch
-    hi link IncSearchMatchReverse Search
+    hi link IncSearchMatch Search
+    hi link IncSearchMatchReverse IncSearch
     hi link IncSearchCursor Cursor
     hi link IncSearchOnCursor IncSearch
     hi IncSearchUnderline term=underline cterm=underline gui=underline
