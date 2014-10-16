@@ -31,6 +31,7 @@ set cpo&vim
 let s:TRUE = !0
 let s:FALSE = 0
 let s:escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
 
 let s:V = vital#of('incsearch')
 let s:L = s:V.import('Data.List')
@@ -45,7 +46,7 @@ let s:converter = {
 \     'name': ''
 \   , 'type': 'append'
 \   , 'break': s:FALSE
-\   , 'backslash' : s:escaped_backslash . '\zs\\'
+\   , 'backslash' : s:non_escaped_backslash
 \   , 'flag' : ''
 \   , 'async' : s:FALSE
 \ }
