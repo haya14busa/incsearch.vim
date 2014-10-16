@@ -160,6 +160,7 @@ call s:reset()
 function! s:on_searching(func, ...)
     try
         return call(a:func, a:000)
+    catch /E16:/  " E16: Invalid range  (with /\_[a- )
     catch /E33:/  " E33: No previous substitute regular expression
     catch /E53:/  " E53: Unmatched %(
     catch /E54:/
@@ -167,13 +168,17 @@ function! s:on_searching(func, ...)
     catch /E66:/  " E66: \z( not allowed here
     catch /E67:/  " E67: \z1 et al. not allowed here
     catch /E69:/  " E69: Missing ] after \%[
+    catch /E70:/  " E70: Empty \%[]
     catch /E554:/
     catch /E678:/ " E678: Invalid character after \%[dxouU]
     catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
     catch /E866:/ " E866: (NFA regexp) Misplaced @
     catch /E867:/ " E867: (NFA) Unknown operator
+    catch /E869:/ " E869: (NFA) Unknown operator '\@m
     catch /E870:/ " E870: (NFA regexp) Error reading repetition limits
     catch /E871:/ " E871: (NFA regexp) Can't have a multi follow a multi !
+    catch /E877:/ " E877: (NFA regexp) Invalid character class: 109
+    catch /E888:/ " E888: (NFA regexp) cannot repeat (with /\ze*)
         call s:hi.disable_all()
     catch
         echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
