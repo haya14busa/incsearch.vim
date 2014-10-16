@@ -106,13 +106,18 @@ endfunction
 " Default Converter:
 let g:incsearch#converter#fuzzy     = get(g: , 'incsearch#converter#fuzzy'     , s:FALSE)
 let g:incsearch#converter#smartsign = get(g: , 'incsearch#converter#smartsign' , s:FALSE)
+let g:incsearch#converter#spell     = get(g: , 'incsearch#converter#spell'     , s:FALSE)
 if g:incsearch#converter#fuzzy
     call incsearch#converter#fuzzy#define()
 endif
 if g:incsearch#converter#smartsign
     call incsearch#converter#smartsign#define()
 endif
+" TODO:
 call incsearch#converter#migemo#define()
+if g:incsearch#converter#spell
+    call incsearch#converter#spell#define()
+endif
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo
