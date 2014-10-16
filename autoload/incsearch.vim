@@ -743,13 +743,12 @@ function! s:with_ignore_foldopen(F, ...)
 endfunction
 
 " Try to avoid side-effect as much as possible except cursor movement
+let s:keeppattern = (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
 function! s:execute_search(cmd)
     " :nohlsearch
     "   Please do not highlight at the first place if you set back
     "   info! I'll handle it myself :h function-search-undo
-    let keeppattern =
-    \   (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
-    execute keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
+    execute s:keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 
 function! s:magic()
