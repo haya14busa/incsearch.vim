@@ -122,9 +122,6 @@ let s:inc = {
 \   "name" : "incsearch",
 \}
 
-" Memorize last pattern or something for on_xxx
-let s:handler = {}
-
 function! s:inc.on_enter(cmdline)
     nohlsearch " disable previous highlight
     let s:w = winsaveview()
@@ -161,6 +158,17 @@ endfunction
 function! s:reset()
     " Current commandline is called by <expr> mapping
     let s:cli.is_expr = s:FALSE
+
+    " Memorize last pattern or something for on_xxx
+    let s:handler = {}
+    let s:handler.on_char = {
+    \   'last_raw_pattern': ''
+    \ , 'last_pattern': ''
+    \ , 'last_offset': ''
+    \ }
+    let s:handler.on_update = {
+    \   'last_pattern': ''
+    \ }
 endfunction
 call s:reset()
 
@@ -260,11 +268,6 @@ function! s:on_char_pre(cmdline)
     endif
 endfunction
 
-let s:handler.on_char = {
-\   'last_raw_pattern': ''
-\ , 'last_pattern': ''
-\ , 'last_offset': ''
-\ }
 function! s:on_char(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
@@ -341,9 +344,6 @@ function! s:move_cursor(pattern, flag, ...)
 endfunction
 
 " パターン
-let s:handler.on_update = {
-\   'last_pattern': ''
-\ }
 function! s:on_update(cmdline)
     let [raw_pattern, offset] = s:cli_parse_pattern()
     let pattern = incsearch#converter#convert(raw_pattern)
