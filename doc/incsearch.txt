@@ -332,6 +332,14 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
+0.9.6	2014-10-18
+	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|
+	2. Improve highlight option to see the cursor position clearly
+	    - ref: |incsearch-highlight-group|
+	3. Fix to use |keeppattern|, handle |jumplist| for stay search, and
+	   catch some errors while searching.
+	4. vim.org debut, yeah!
+
 0.9.5	2014-10-10
 	1. Implement automatic |:nohlsearch| feature.
 	    - |:nohlsearch| will be called when cursor move after search
