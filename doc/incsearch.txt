@@ -332,6 +332,16 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
+Version 1.0 Roadmap~
+
+1.0.0	1. Pattern converter feature
+	    - https://github.com/haya14busa/incsearch.vim/tree/converter
+	    - Implement fuzzy-search, migemo, spellcheck and other feature
+	    - Make public pattern converter API for customization
+	    - Write test for converer feature
+	2. More configurable options
+	    - e.g. option for prompt format including right prompt feature
+
 0.9.6	2014-10-18
 	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|
 	2. Improve highlight option to see the cursor position clearly
