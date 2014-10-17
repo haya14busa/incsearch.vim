@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.5
+Version : 0.9.6
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -331,6 +331,24 @@ KNOWN ISSUES						*incsearch-issues*
 
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
+
+Version 1.0 Roadmap~
+
+1.0.0	1. Pattern converter feature
+	    - https://github.com/haya14busa/incsearch.vim/tree/converter
+	    - Implement fuzzy-search, migemo, spellcheck and other feature
+	    - Make public pattern converter API for customization
+	    - Write test for converer feature
+	2. More configurable options
+	    - e.g. option for prompt format including right prompt feature
+
+0.9.6	2014-10-18
+	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|
+	2. Improve highlight option to see the cursor position clearly
+	    - ref: |incsearch-highlight-group|
+	3. Fix to use |keeppattern|, handle |jumplist| for stay search, and
+	   catch some errors while searching.
+	4. vim.org debut, yeah!
 
 0.9.5	2014-10-10
 	1. Implement automatic |:nohlsearch| feature.
