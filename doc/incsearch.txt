@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.5
+Version : 0.9.6
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -153,6 +153,29 @@ Additional usage~
 	    let g:incsearch#do_not_save_error_message_history = 1
 <
 	default: 0
+
+
+Improved 'magic' option~
+							    *g:incsearch#magic*
+	This is improved |'magic'| option. Also see: |/magic|
+	By default 'magic' option, all you can set is 'magic' or 'nomagic',
+	and in addition, default option has porability problem. see: |'magic'|
+
+	In contrast to default 'magic' option, |g:incsearch#magic| enable
+	you to set 'very magic' |\v| and 'very nomagic' |\V| in adition to
+	'magic' |\m| and 'nomagic' |\M|.
+
+	This option doesn't cause porability problems, so you need not worry
+	about this problem. No other pattern related programs are affected by
+	this option.
+
+	Usage: >
+	    let g:incsearch#magic = '\v' " very magic
+	    let g:incsearch#magic = '\V' " very nomagic
+	    let g:incsearch#magic = '\m' " magic
+	    let g:incsearch#magic = '\M' " nomagic
+<
+	default: ''
 
 ------------------------------------------------------------------------------
 Command line interface~
@@ -308,6 +331,24 @@ KNOWN ISSUES						*incsearch-issues*
 
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
+
+Version 1.0 Roadmap~
+
+1.0.0	1. Pattern converter feature
+	    - https://github.com/haya14busa/incsearch.vim/tree/converter
+	    - Implement fuzzy-search, migemo, spellcheck and other feature
+	    - Make public pattern converter API for customization
+	    - Write test for converer feature
+	2. More configurable options
+	    - e.g. option for prompt format including right prompt feature
+
+0.9.6	2014-10-18
+	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|
+	2. Improve highlight option to see the cursor position clearly
+	    - ref: |incsearch-highlight-group|
+	3. Fix to use |keeppattern|, handle |jumplist| for stay search, and
+	   catch some errors while searching.
+	4. vim.org debut, yeah!
 
 0.9.5	2014-10-10
 	1. Implement automatic |:nohlsearch| feature.
