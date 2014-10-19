@@ -53,7 +53,7 @@ INSTALL						    *incsearch-install*
 
 		1. Add the following configuration to your vimrc.
 >
-		NeoBundle 'haya14busa/incsearch'
+		NeoBundle 'haya14busa/incsearch.vim'
 <
 		2. Install with |:NeoBundleInstall|.
 
@@ -61,7 +61,7 @@ INSTALL						    *incsearch-install*
 
 		1. Add the following configuration sample to your vimrc.
 >
-		NeoBundleLazy 'haya14busa/incsearch', {
+		NeoBundleLazy 'haya14busa/incsearch.vim', {
 		\   'autoload' : {
 		\     'mappings' : ['<Plug>(incsearch-']
 		\   }
