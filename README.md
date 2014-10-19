@@ -33,6 +33,22 @@ Usage
 
 See `:h incsearch.txt` for detail
 
+### Installation
+
+[Neobundle](https://github.com/Shougo/neobundle.vim) / [Vundle](https://github.com/gmarik/Vundle.vim) / [vim-plug](https://github.com/junegunn/vim-plug)
+
+```vim
+NeoBundle 'haya14busa/incsearch.vim'
+Plugin 'haya14busa/incsearch.vim'
+Plug 'haya14busa/incsearch.vim'
+```
+
+[pathogen](https://github.com/tpope/vim-pathogen)
+
+```
+git clone https://github.com/haya14busa/incsearch.vim ~/.vim/bundle/incsearch.vim
+```
+
 ### Basic usage
 ```vim
 map /  <Plug>(incsearch-forward)
