@@ -73,8 +73,8 @@ function! s:suite.incremental_separate_highlight()
     call s:assert.not_equals(index(groups, 'IncSearchOnCursor'), -1)
     call s:assert.not_equals(index(groups, 'IncSearchMatchReverse'), -1)
     call s:assert.equals(index(patterns, '\vpattern_'), -1)
-    call s:assert.not_equals(index(patterns, '\v(%>2l|%2l%>2c)\M\(\vpattern_\M\)'), -1)
-    call s:assert.not_equals(index(patterns, '\v(%<2l|%2l%<2c)\M\(\vpattern_\M\)'), -1)
+    call s:assert.not_equals(index(patterns, '\v(%>2l|%2l%>2c)\m\(\vpattern_\m\)'), -1)
+    call s:assert.not_equals(index(patterns, '\v(%<2l|%2l%<2c)\m\(\vpattern_\m\)'), -1)
     " Make sure all patterns valid by calling with search() and see
     " it won't throw any errors
     for p in patterns
