@@ -342,6 +342,10 @@ Version 1.0 Roadmap~
 	2. More configurable options
 	    - e.g. option for prompt format including right prompt feature
 
+0.9.7	2014-10-21
+	1. Minor update. Fix <C-c> interruption, use |\m| instead of |\M|, doc
+	   fix.
+
 0.9.6	2014-10-18
 	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|
 	2. Improve highlight option to see the cursor position clearly
