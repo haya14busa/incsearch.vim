@@ -236,7 +236,7 @@ function! incsearch#highlight#incremental_highlight(pattern, ...)
     let start_pos = get(a:, 3, getpos('.')[1:2])
     let hgm = incsearch#highlight#hgm()
     let [m, r, o, c] = [hgm.match, hgm.match_reverse, hgm.on_cursor, hgm.cursor]
-    let on_cursor_pattern = '\M\%#\(' . a:pattern . '\M\)'
+    let on_cursor_pattern = '\m\%#\(' . a:pattern . '\m\)'
     if ! should_separate_highlight
         call s:hi.add(m.group, m.group, a:pattern, m.priority)
     else
@@ -255,12 +255,12 @@ endfunction
 
 function! incsearch#highlight#forward_pattern(pattern, from_pos)
     let [line, col] = a:from_pos
-    return printf('\v(%%>%dl|%%%dl%%>%dc)\M\(%s\M\)', line, line, col, a:pattern)
+    return printf('\v(%%>%dl|%%%dl%%>%dc)\m\(%s\m\)', line, line, col, a:pattern)
 endfunction
 
 function! incsearch#highlight#backward_pattern(pattern, from_pos)
     let [line, col] = a:from_pos
-    return printf('\v(%%<%dl|%%%dl%%<%dc)\M\(%s\M\)', line, line, col, a:pattern)
+    return printf('\v(%%<%dl|%%%dl%%<%dc)\m\(%s\m\)', line, line, col, a:pattern)
 endfunction
 
 

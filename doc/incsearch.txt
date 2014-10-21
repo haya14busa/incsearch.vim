@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.6
+Version : 0.9.7
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -341,6 +341,10 @@ Version 1.0 Roadmap~
 	    - Write test for converer feature
 	2. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+0.9.7	2014-10-21
+	1. Minor update. Fix <C-c> interruption, use |\m| instead of |\M|, doc
+	   fix.
 
 0.9.6	2014-10-18
 	1. Implement improved 'magic' option feature. See: |g:incsearch#magic|

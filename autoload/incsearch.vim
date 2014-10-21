@@ -42,10 +42,11 @@ let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap' 
 let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
 let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
-" This changes emulation way slightly
+" This changes error and warning emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
 let g:incsearch#auto_nohlsearch = get(g: , 'incsearch#auto_nohlsearch' , s:FALSE)
+" assert g:incsearch#magic =~# \\[mMvV]
 let g:incsearch#magic           = get(g: , 'incsearch#magic'           , '')
 
 
@@ -272,14 +273,14 @@ function! s:on_char(cmdline)
     call s:move_cursor(pattern, a:cmdline.flag, offset)
 
     " Improved Incremental highlighing!
-    " matchadd() doesn't handle 'ignorecase' nor 'smartcase'
+    " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
     let case = incsearch#detect_case(raw_pattern)
     let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
     \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
 
-    " pseudo-normal-zz after scroll
+    " functional `normal! zz` after scroll for <expr> mappings
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
         call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
@@ -336,6 +337,7 @@ call s:cli.connect(s:inc)
 "}}}
 
 " Main: {{{
+" TODO: make publick API to which you can pass `context` (or option)
 " @expr: called by <expr> mappings
 
 function! incsearch#forward(mode, ...)
