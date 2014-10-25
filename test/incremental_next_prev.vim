@@ -45,7 +45,6 @@ function! s:suite.after()
 endfunction
 
 function! s:suite.inc_next_forward()
-    call s:assert.equals(s:get_pos_char(), 0)
     exec "normal" "/pattern\\zs\\d\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[2])
     :1
@@ -64,7 +63,6 @@ function! s:suite.inc_next_backward()
 endfunction
 
 function! s:suite.inc_prev_forward()
-    call s:assert.equals(s:get_pos_char(), 0)
     exec "normal" "/pattern\\zs\\d\<Tab>\<S-Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[1])
     :1
@@ -83,7 +81,6 @@ function! s:suite.inc_prev_backward()
 endfunction
 
 function! s:suite.inc_next_stay()
-    call s:assert.equals(s:get_pos_char(), 0)
     exec "normal" "g/pattern\\zs\\d\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[1])
     :1
@@ -92,7 +89,29 @@ function! s:suite.inc_next_stay()
 endfunction
 
 function! s:suite.inc_prev_stay()
-    call s:assert.equals(s:get_pos_char(), 0)
     exec "normal" "g/pattern\\zs\\d\<Tab>\<Tab>\<S-Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[1])
+endfunction
+
+" h: last-pattern
+" NOTE: incsearch.vim works interactibely
+function! s:suite.inc_last_pattern()
+    let @/ = "pattern\\zs\\d"
+    exec "normal" "/\<Tab>\<Tab>\<CR>"
+    call s:assert.equals(getline('.'), s:line_texts[3])
+endfunction
+
+function! s:suite.inc_last_pattern_offset()
+    let @/ = "pattern\\d"
+    exec "normal" "//e\<Tab>\<Tab>\<CR>"
+    call s:assert.equals(getline('.'), s:line_texts[3])
+    call s:assert.equals(s:get_pos_char(), 3)
+endfunction
+
+function! s:suite.inc_last_pattern_reset()
+    call s:assert.equals(getline('.'), s:line_texts[0])
+    let @/ = ""
+    Throws /Vim(normal):E35: No previous regular expression/
+    \   :exec "normal" "/\<Tab>\<Tab>\<CR>"
+    call s:assert.equals(getline('.'), s:line_texts[0])
 endfunction
