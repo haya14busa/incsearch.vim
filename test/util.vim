@@ -1,6 +1,10 @@
 let s:suite = themis#suite('util')
 let s:assert = themis#helper('assert')
 
+function! s:suite.after_each()
+    set ignorecase& smartcase&
+endfunction
+
 function! s:suite.parse_pattern()
     call s:assert.equals(
     \   incsearch#parse_pattern('pattern/e', '/'),  ['pattern', 'e'])
@@ -32,7 +36,6 @@ function! s:suite.convert_with_case()
     set ignorecase smartcase
     call s:assert.equals(incsearch#convert_with_case('pattern'), '\cpattern')
     call s:assert.equals(incsearch#convert_with_case('PatterN'), '\CPatterN')
-    set ignorecase& smartcase&
 endfunction
 
 function! s:suite.convert_with_case_ignore_uppercase_escaped_letters()
@@ -48,7 +51,6 @@ function! s:suite.convert_with_case_ignore_uppercase_escaped_letters()
     set ignorecase smartcase
     call s:assert.equals(incsearch#convert_with_case('\Vpattern'), '\c\Vpattern')
     call s:assert.equals(incsearch#convert_with_case('\VPatterN'), '\C\VPatterN')
-    set ignorecase& smartcase&
 endfunction
 
 function! s:suite.convert_with_case_explicit_flag()
@@ -72,5 +74,14 @@ function! s:suite.convert_with_case_explicit_flag()
     call s:assert.equals(incsearch#convert_with_case('\Cpattern'), '\C\Cpattern')
     call s:assert.equals(incsearch#convert_with_case('\CPatterN'), '\C\CPatterN')
     call s:assert.equals(incsearch#convert_with_case('\cPatterN'), '\c\cPatterN')
-    set ignorecase& smartcase&
+endfunction
+
+function! s:suite.detect_case()
+    set ignorecase smartcase
+    call s:assert.equals(incsearch#detect_case('\%Cpattern'), '\c')
+    call s:assert.equals(incsearch#detect_case('\%Vpattern'), '\c')
+    call s:assert.equals(incsearch#detect_case('\%Upattern'), '\c')
+    call s:assert.equals(incsearch#detect_case('\%Apattern'), '\C')
+    call s:assert.equals(incsearch#detect_case('\%V\%Vpattern'), '\c')
+    call s:assert.equals(incsearch#detect_case('\V\Vpattern'), '\c')
 endfunction

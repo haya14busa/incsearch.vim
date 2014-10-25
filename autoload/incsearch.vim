@@ -190,6 +190,20 @@ endfunction
 function! s:on_char_pre(cmdline)
     " NOTE:
     " `:call a:cmdline.setchar('')` as soon as possible!
+    let [pattern, offset] = s:cli_parse_pattern()
+
+    " Interactive :h last-pattern if pattern is empty
+    if ( a:cmdline.is_input("<Over>(incsearch-next)")
+    \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+    \ ) && empty(pattern)
+        call a:cmdline.setchar('')
+        call a:cmdline.setline(@/ . s:cli.base_key . offset)
+        " Just insert last-pattern and do not count up, but the incsearch-prev
+        " should move the cursor to reversed directly, so do not return if the
+        " command is prev
+        if a:cmdline.is_input("<Over>(incsearch-next)") | return | endif
+    endif
+
     if a:cmdline.is_input("<Over>(incsearch-next)")
         call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' " exit stay mode
@@ -204,7 +218,6 @@ function! s:on_char_pre(cmdline)
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
-            let pattern = s:cli_get_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -212,7 +225,6 @@ function! s:on_char_pre(cmdline)
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
-        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -227,7 +239,6 @@ function! s:on_char_pre(cmdline)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
         endif
-        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -248,7 +259,6 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
         call a:cmdline.setchar('')
-        let pattern = s:cli_get_pattern()
         let [from, to] = [[s:w.lnum, s:w.col],
         \       s:cli.flag !=# 'b'
         \       ? [line('$'), s:U.get_max_col('$')]
@@ -627,22 +637,30 @@ function! s:convert(pattern)
     return s:magic() . a:pattern
 endfunction
 
-" https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+" based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+" improve to work with repetitive espaced slash like \V\V
+" XXX: Maybe it should use \@1<= ( :h /\@<= ) but this doesn't work in old vim
+" and i cannot find the version which this regex is introduced. It handle
+" repetitive escaped backslash like `\V\V` unlike `\zs`, so it cannot avoid
+" using \@<=
 let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
+" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 function! incsearch#detect_case(pattern)
+    " Ignore \%C, \%U, \%V for smartcase detection
+    let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')
     " Explicit \c has highest priority
-    if a:pattern =~# s:non_escaped_backslash . 'c'
+    if p =~# s:non_escaped_backslash . 'c'
         return '\c'
     endif
-    if a:pattern =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
+    if p =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
         return '\C' " noignorecase or explicit \C
     endif
     if &smartcase == s:FALSE
         return '\c' " ignorecase & nosmartcase
     endif
     " Find uppercase letter which isn't escaped
-    if a:pattern =~# s:escaped_backslash . '[A-Z]'
+    if p =~# s:escaped_backslash . '[A-Z]'
         return '\C' " smartcase with [A-Z]
     else
         return '\c' " smartcase without [A-Z]
