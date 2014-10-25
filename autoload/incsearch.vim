@@ -190,6 +190,20 @@ endfunction
 function! s:on_char_pre(cmdline)
     " NOTE:
     " `:call a:cmdline.setchar('')` as soon as possible!
+    let [pattern, offset] = s:cli_parse_pattern()
+
+    " Interactive :h last-pattern if pattern is empty
+    if ( a:cmdline.is_input("<Over>(incsearch-next)")
+    \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+    \ ) && empty(pattern)
+        call a:cmdline.setchar('')
+        call a:cmdline.setline(@/ . s:cli.base_key . offset)
+        " Just insert last-pattern and do not count up, but the incsearch-prev
+        " should move the cursor to reversed directly, so do not return if the
+        " command is prev
+        if a:cmdline.is_input("<Over>(incsearch-next)") | return | endif
+    endif
+
     if a:cmdline.is_input("<Over>(incsearch-next)")
         call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' " exit stay mode
@@ -204,7 +218,6 @@ function! s:on_char_pre(cmdline)
         endif
         let s:cli.vcount1 -= 1
         if s:cli.vcount1 < 1
-            let pattern = s:cli_get_pattern()
             let s:cli.vcount1 += s:U.count_pattern(pattern)
         endif
     elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -212,7 +225,6 @@ function! s:on_char_pre(cmdline)
     \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
         call a:cmdline.setchar('')
         if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
-        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -227,7 +239,6 @@ function! s:on_char_pre(cmdline)
             let s:cli.flag = ''
             let s:cli.vcount1 -= 1
         endif
-        let pattern = s:cli_get_pattern()
         let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
         let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
         \          ? s:U.get_max_col(pos_expr) : 1
@@ -248,7 +259,6 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
     \ )
         call a:cmdline.setchar('')
-        let pattern = s:cli_get_pattern()
         let [from, to] = [[s:w.lnum, s:w.col],
         \       s:cli.flag !=# 'b'
         \       ? [line('$'), s:U.get_max_col('$')]
