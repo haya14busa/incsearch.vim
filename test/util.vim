@@ -82,4 +82,6 @@ function! s:suite.detect_case()
     call s:assert.equals(incsearch#detect_case('\%Vpattern'), '\c')
     call s:assert.equals(incsearch#detect_case('\%Upattern'), '\c')
     call s:assert.equals(incsearch#detect_case('\%Apattern'), '\C')
+    call s:assert.equals(incsearch#detect_case('\%V\%Vpattern'), '\c')
+    call s:assert.equals(incsearch#detect_case('\V\Vpattern'), '\c')
 endfunction
