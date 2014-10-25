@@ -640,7 +640,8 @@ endfunction
 " based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
 " improve to work with repetitive espaced slash like \V\V
 let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 function! incsearch#detect_case(pattern)
     " Ignore \%C, \%U, \%V for smartcase detection
     let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')
