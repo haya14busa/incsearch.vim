@@ -36,8 +36,8 @@ function! s:module.on_char_pre(cmdline)
 		\	|| s:is_match_mode != s:_should_match_cmdline(a:cmdline)
 			let cmdline = '^' . a:cmdline.getline()
 			let s:is_match_mode = s:_should_match_cmdline(a:cmdline)
-			let s:cmdhist = s:is_match_mode ?
-			\	filter(self.histories(), 'v:val =~ cmdline') : self.histories()
+			let s:cmdhist = [a:cmdline.getline()] + (s:is_match_mode ?
+			\	filter(self.histories(), 'v:val =~ cmdline') : self.histories())
 		endif
 	endif
 	call a:cmdline.setchar("")
