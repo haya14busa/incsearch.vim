@@ -43,7 +43,7 @@ CONTENTS				*incsearch-contents*
 INTRODUCTION					    *incsearch-introduction*
 
 	*incsearch.vim* provide incremental highlighting for __ALL__ pattern
-	matches unlike default |'incsearch'|.
+	matches unlike default 'incsearch'.
 	You can use incsearch.vim as improved |/| & |?|.
 
 ==============================================================================
@@ -108,7 +108,7 @@ Additional usage~
 	    nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>
 <
 	If you set |g:incsearch#auto_nohlsearch| to 1 (default: 0) and use
-	above mappings, |'hlsearch'| will be __automatically__ turned off
+	above mappings, 'hlsearch' will be __automatically__ turned off
 	after the cursor move. Example:
 >
 	    set hlsearch
@@ -157,9 +157,9 @@ Additional usage~
 
 Improved 'magic' option~
 							    *g:incsearch#magic*
-	This is improved |'magic'| option. Also see: |/magic|
+	This is improved 'magic' option. Also see: |/magic|
 	By default 'magic' option, all you can set is 'magic' or 'nomagic',
-	and in addition, default option has porability problem. see: |'magic'|
+	and in addition, default option has porability problem. see: 'magic'
 
 	In contrast to default 'magic' option, |g:incsearch#magic| enable
 	you to set 'very magic' |\v| and 'very nomagic' |\V| in adition to
@@ -360,14 +360,14 @@ Version 1.0 Roadmap~
 	      execution
 	    - See: |g:incsearch#auto_nohlsearch|
 	2. Fix case handling with explicit |\C| flag
-	3. Fix |'hlsearch'| handling
-	4. Fix |'nowrapscan'| handling
+	3. Fix 'hlsearch' handling
+	4. Fix 'nowrapscan' handling
 	5. CI with |vimlint.txt|
 
 0.9.4	2014-10-01
 	1. Improve cursor position while incremental searching
 	    - Now you can see cursor position working with |{offset}| unlike
-	      default |'incsearch'|
+	      default 'incsearch'
 	2. Fix and improve visual selection while incremental searching
 	3. Fix to ignore search related errors while searching
 	4. Handle unfolding after search execution
