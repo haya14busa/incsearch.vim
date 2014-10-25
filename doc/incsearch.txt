@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.7
+Version : 0.9.8
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -343,6 +343,13 @@ Version 1.0 Roadmap~
 	    - Write test for converer feature
 	2. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+0.9.8	2014-10-25
+	1. Handle |last-pattern| incrementally. See: |<Over>(incsearch-next)|
+	2. Now |c_Ctrl-p| and |c_Ctrl-n| works by default and fix history
+	   behavior to be compatible with default one
+	3. Fix 'smartcase' flag detection to work with like |\%V| and
+	   repetitive escaped uppercase character like `\V\V`
 
 0.9.7	2014-10-21
 	1. Minor update. Fix <C-c> interruption, use |\m| instead of |\M|, doc
