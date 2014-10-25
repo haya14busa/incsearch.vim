@@ -639,8 +639,13 @@ endfunction
 
 " based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
 " improve to work with repetitive espaced slash like \V\V
+" XXX: Maybe it should use \@1<= ( :h /\@<= ) but this doesn't work in old vim
+" and i cannot find the version which this regex is introduced. It handle
+" repetitive escaped backslash like `\V\V` unlike `\zs`, so it cannot avoid
+" using \@<=
 let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 function! incsearch#detect_case(pattern)
     " Ignore \%C, \%U, \%V for smartcase detection
     let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')
