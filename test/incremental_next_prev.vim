@@ -98,14 +98,14 @@ endfunction
 function! s:suite.inc_last_pattern()
     let @/ = "pattern\\zs\\d"
     exec "normal" "/\<Tab>\<Tab>\<CR>"
-    call s:assert.equals(getline('.'), s:line_texts[3])
+    call s:assert.equals(getline('.'), s:line_texts[2])
 endfunction
 
 function! s:suite.inc_last_pattern_offset()
     let @/ = "pattern\\d"
     exec "normal" "//e\<Tab>\<Tab>\<CR>"
-    call s:assert.equals(getline('.'), s:line_texts[3])
-    call s:assert.equals(s:get_pos_char(), 3)
+    call s:assert.equals(getline('.'), s:line_texts[2])
+    call s:assert.equals(s:get_pos_char(), 2)
 endfunction
 
 function! s:suite.inc_last_pattern_reset()
