@@ -641,18 +641,20 @@ endfunction
 let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
 let s:non_escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\\'
 function! incsearch#detect_case(pattern)
+    " Ignore \%C, \%U, \%V for smartcase detection
+    let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')
     " Explicit \c has highest priority
-    if a:pattern =~# s:non_escaped_backslash . 'c'
+    if p =~# s:non_escaped_backslash . 'c'
         return '\c'
     endif
-    if a:pattern =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
+    if p =~# s:non_escaped_backslash . 'C' || &ignorecase == s:FALSE
         return '\C' " noignorecase or explicit \C
     endif
     if &smartcase == s:FALSE
         return '\c' " ignorecase & nosmartcase
     endif
     " Find uppercase letter which isn't escaped
-    if a:pattern =~# s:escaped_backslash . '[A-Z]'
+    if p =~# s:escaped_backslash . '[A-Z]'
         return '\C' " smartcase with [A-Z]
     else
         return '\c' " smartcase without [A-Z]
