@@ -125,6 +125,7 @@ function! s:count_pattern(pattern, ...)
     return cnt
 endfunction
 
+" NOTE: support vmap?
 function! s:silent_feedkeys(expr, name, ...)
     " Ref:
     " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6
