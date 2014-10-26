@@ -77,10 +77,14 @@ noremap <Plug>(_incsearch-#)  #
 noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
 
+function! s:is_visual(mode)
+    return a:mode =~# "[vV\<C-v>]"
+endfunction
+
 " for normal and visual mode
 function! s:mode_wrap(cmd)
     let m = mode(1)
-    let esc = m ==# 'no' ? '' : "\<ESC>"
+    let esc = s:is_visual(m) ? "\<ESC>" : ''
     return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
     \             a:cmd, strtrans(m), v:count1)
 endfunction
