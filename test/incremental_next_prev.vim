@@ -99,6 +99,7 @@ function! s:suite.inc_last_pattern()
     let @/ = "pattern\\zs\\d"
     exec "normal" "/\<Tab>\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[2])
+    call s:assert.equals(@/, "pattern\\zs\\d")
 endfunction
 
 function! s:suite.inc_last_pattern_offset()
@@ -106,6 +107,7 @@ function! s:suite.inc_last_pattern_offset()
     exec "normal" "//e\<Tab>\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[2])
     call s:assert.equals(s:get_pos_char(), 2)
+    call s:assert.equals(@/, "pattern\\d")
 endfunction
 
 function! s:suite.inc_last_pattern_reset()
