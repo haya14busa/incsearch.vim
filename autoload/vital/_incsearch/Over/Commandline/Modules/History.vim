@@ -8,7 +8,7 @@ let s:module = {
 \}
 
 function! s:module.histories()
-	return map(range(&history), 'histget(self.mode, v:val * -1)')
+	return map(range(1, &history), 'histget(self.mode, v:val * -1)')
 endfunction
 
 function! s:_should_match_cmdline(cmdline)
