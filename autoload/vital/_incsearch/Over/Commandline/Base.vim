@@ -366,7 +366,7 @@ function! s:base._input(input, ...)
 		let key = a:input
 	endif
 
-	for char in s:_split_keys(key)
+	for char in s:String.split_by_keys(key)
 		let self.variables.input_key = char
 		let self.variables.char = char
 		call self.setchar(self.variables.char)
@@ -445,7 +445,7 @@ endfunction
 
 
 function! s:_unmap(mapping, key)
-	let keys = s:_split_keys(a:key)
+	let keys = s:String.split_by_keys(a:key)
 	if len(keys) > 1
 		return join(map(keys, 's:_unmap(a:mapping, v:val)'), '')
 	endif
@@ -491,16 +491,6 @@ function! s:getchar(...)
 		endif
 	endwhile
 endfunction
-
-
-function! s:_split_keystring(str, ...)
-	return split(a:str, "\\m\\%(" . get(a:, 1, '') . "\x80\xfc.\\%(\x80..\\|.\\)\\zs\\|\x80..\\zs\\|.\\zs\\)")
-endfunction
-
-function! s:_split_keys(str)
-	return s:_split_keystring(a:str, "\\%(\<Plug>\\|<Over>\\)(.\\{-})\\zs\\|")
-endfunction
-
 
 
 let &cpo = s:save_cpo

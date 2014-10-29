@@ -197,7 +197,8 @@ function! s:on_char_pre(cmdline)
     \ || a:cmdline.is_input("<Over>(incsearch-prev)")
     \ ) && empty(pattern)
         call a:cmdline.setchar('')
-        call a:cmdline.setline(@/ . (empty(offset) ? '' : s:cli.base_key) . offset)
+        " Use history instead of @/ to work with magic option and converter
+        call a:cmdline.setline(histget('/', -1) . (empty(offset) ? '' : s:cli.base_key) . offset)
         " Just insert last-pattern and do not count up, but the incsearch-prev
         " should move the cursor to reversed directly, so do not return if the
         " command is prev

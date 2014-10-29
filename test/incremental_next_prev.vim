@@ -96,14 +96,17 @@ endfunction
 " h: last-pattern
 " NOTE: incsearch.vim works interactibely
 function! s:suite.inc_last_pattern()
-    let @/ = "pattern\\zs\\d"
+    " let @/ = "pattern\\zs\\d"
+    call histadd('/', "pattern\\zs\\d")
     exec "normal" "/\<Tab>\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[2])
     call s:assert.equals(@/, "pattern\\zs\\d")
 endfunction
 
+
 function! s:suite.inc_last_pattern_offset()
-    let @/ = "pattern\\d"
+    " let @/ = "pattern\\d"
+    call histadd('/', "pattern\\d")
     exec "normal" "//e\<Tab>\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[2])
     call s:assert.equals(s:get_pos_char(), 2)
@@ -112,8 +115,10 @@ endfunction
 
 function! s:suite.inc_last_pattern_reset()
     call s:assert.equals(getline('.'), s:line_texts[0])
-    let @/ = ""
+    let @/ = ''
+    call histdel('/')
     Throws /Vim(normal):E35: No previous regular expression/
     \   :exec "normal" "/\<Tab>\<Tab>\<CR>"
     call s:assert.equals(getline('.'), s:line_texts[0])
 endfunction
+
