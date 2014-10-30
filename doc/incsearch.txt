@@ -211,7 +211,7 @@ Command line interface~
 >
 		augroup incsearch-keymap
 		    autocmd!
-		    autocmd VimEnter call s:incsearch_keymap()
+		    autocmd VimEnter * call s:incsearch_keymap()
 		augroup END
 		function! s:incsearch_keymap()
 		    IncSearchNoreMap <Right> <Over>(incsearch-next)
@@ -247,7 +247,7 @@ Buffer completion			*incsearch-<Over>(buffer-complete)*
 	Example: >
 		augroup incsearch-keymap
 		    autocmd!
-		    autocmd VimEnter call s:incsearch_keymap()
+		    autocmd VimEnter * call s:incsearch_keymap()
 		augroup END
 		function! s:incsearch_keymap()
 		    IncSearchNoreMap <Tab> <Over>(buffer-complete)
