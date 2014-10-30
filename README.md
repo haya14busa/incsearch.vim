@@ -104,7 +104,7 @@ in your vimrc, please call it by `VimEnter`.
 ```vim
 augroup incsearch-keymap
     autocmd!
-    autocmd VimEnter call s:incsearch_keymap()
+    autocmd VimEnter * call s:incsearch_keymap()
 augroup END
 function! s:incsearch_keymap()
     IncSearchNoreMap <C-f> <Right>
