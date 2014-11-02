@@ -44,7 +44,7 @@ function! s:suite.after()
     unmap /
     unmap ?
     unmap g/
-    call s:reset_buffer()
+    :1,$ delete
     set incsearch&
 endfunction
 

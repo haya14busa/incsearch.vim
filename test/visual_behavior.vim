@@ -1,10 +1,6 @@
 let s:suite = themis#suite('visual_behaviors')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -18,18 +14,36 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:reset_buffer()
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = [
+    \     '1pattern 2pattern'
+    \   , '3pattern 4pattern'
+    \ ]
+    call s:reset_buffer()
+endfunction
+
 function! s:suite.before_each()
-    normal! ggdG
-    call s:add_lines([
-    \   '1pattern 2pattern'
-    \ , '3pattern 4pattern'
-    \ ])
-    normal! Gdd
-    normal! gg0zt
+    :1
+    call setreg(v:register, '')
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
 endfunction
 
 function! s:suite.forward()
-    call setreg(v:register, '')
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "v/2pattern\<CR>y"
     call s:assert.equals(getreg(), "1pattern 2")
@@ -46,7 +60,6 @@ endfunction
 
 function! s:suite.backward()
     normal! G$
-    call setreg(v:register, '')
     exec "normal" "v?3pattern?e\<CR>" | normal! y
     call s:assert.equals(getreg(), 'n 4pattern')
     normal! G$
@@ -58,7 +71,6 @@ function! s:suite.backward()
 endfunction
 
 function! s:suite.stay()
-    call setreg(v:register, '')
     call s:assert.equals(getreg(), '')
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "vg/2pattern\<CR>" | normal! y
