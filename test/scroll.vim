@@ -33,7 +33,8 @@ function! s:suite.before()
 endfunction
 
 function! s:suite.before_each()
-    :1 | normal! zt
+    :1
+    normal! zt
     set wrapscan&
 endfunction
 

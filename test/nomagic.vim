@@ -19,21 +19,33 @@ function! s:get_pos_char()
 endfunction
 
 function! s:reset_buffer()
-    normal! ggdG
-    call s:add_lines(['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e'])
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
     normal! Gddgg0zt
 endfunction
 
-function! s:suite.before_each()
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = ['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e']
     call s:reset_buffer()
+endfunction
+
+function! s:suite.before_each()
+    :1
+    normal! zt
     set nomagic
-    call s:assert.equals(s:get_pos_char(), '1')
-    call s:assert.equals(&magic, 0)
 endfunction
 
 function! s:suite.after()
-    set magic
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
+    set magic&
 endfunction
+
 
 function! s:suite.works_with_nomagic()
     exec "normal" "/\\dpattern\<CR>"
