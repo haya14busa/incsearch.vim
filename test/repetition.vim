@@ -1,10 +1,6 @@
 let s:suite = themis#suite('repetition')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -18,8 +14,24 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+endfunction
+
+function! s:suite.before_each()
+    :1,$ delete
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
+endfunction
+
 function! s:suite.repetition_forward()
-    normal! ggdG
     call s:add_line('1pattern 2pattern 3pattern 4pattern')
     normal! gg0
     call s:assert.equals(s:get_pos_char(), '1')
@@ -98,7 +110,6 @@ function! s:suite.repetition_forward_change()
 endfunction
 
 function! s:suite.repetition_backward_change()
-    normal! ggdG
     call s:add_line('1pattern 2pattern 3pattern 4pattern')
     normal! gg$
     call s:assert.equals(s:get_pos_char(), 'n')

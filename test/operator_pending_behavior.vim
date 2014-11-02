@@ -23,11 +23,30 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
-function! s:suite.before_each()
+function! s:reset_buffer()
     normal! ggdG
-    call s:add_lines(['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e'])
+    call s:add_lines(copy(s:line_texts))
     normal! Gddgg0zt
+endfunction
+
+function! s:suite.before_each()
+    call s:reset_buffer()
+    :1
     call s:assert.equals(s:get_pos_char(), '1')
+endfunction
+
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = ['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e']
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
 endfunction
 
 function! s:suite.force_exclusive()
@@ -36,7 +55,7 @@ function! s:suite.force_exclusive()
     "   - http://lingr.com/room/vim/archives/2014/09/22#message-20239719
     "   - https://groups.google.com/forum/#!topic/vim_dev/MNtX3jHkNWw
     "   - https://groups.google.com/forum/#!msg/vim_dev/lR5rONDwgs8/iLsVCrxo_WsJ
-    normal! ggdGgg0
+    :1,$ delete
     call s:add_line('1pattern 2pattern 3pattern 4pattern 5pattern')
     normal! gg0
     call s:assert.equals(getline('.'), '1pattern 2pattern 3pattern 4pattern 5pattern')
@@ -63,7 +82,6 @@ function! s:suite.operator_c()
 endfunction
 
 function! s:suite.stay_cancell_operator_c()
-    normal! gg
     call s:assert.equals(getline('.'), '1pattern_a')
     exec "normal" "cg/_a\<CR>e\<Esc>"
     call s:assert.not_equals(getline('.'), 'e_a')
@@ -71,14 +89,12 @@ function! s:suite.stay_cancell_operator_c()
 endfunction
 
 function! s:suite.exit_stay_works_with_operator_c()
-    normal! gg
     call s:assert.equals(getline('.'), '1pattern_a')
     exec "normal" "cg/_a\<Tab>\<CR>e\<Esc>"
     call s:assert.equals(getline('.'), 'e_a')
 endfunction
 
 function! s:suite.another_search_offset()
-    normal! gg
     call s:assert.equals(getline('.'), '1pattern_a')
     exec "normal" "c/b/;/pattern_/e\<CR>vim\<Esc>"
     call s:assert.equals(getline('.'), 'vimc')
