@@ -70,7 +70,8 @@ call s:cli.connect('Delete')
 call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
 call s:cli.connect('Exit')
-call s:cli.connect('InsertRegister')
+let s:InsertRegister = s:modules.get('InsertRegister').make()
+call s:cli.connect(s:InsertRegister)
 call s:cli.connect('Paste')
 " XXX: better handling.
 if expand("%:p") !=# expand("<sfile>:p")
@@ -276,6 +277,17 @@ function! s:on_char(cmdline)
     if raw_pattern ==# ''
         call s:hi.disable_all()
         return
+    endif
+
+    " For InsertRegister
+    if a:cmdline.get_tap_key() ==# "\<C-r>"
+        let p = a:cmdline.getpos()
+        " Remove `"`
+        let raw_pattern = raw_pattern[:p-1] . raw_pattern[p+1:]
+        let w = winsaveview()
+        call cursor(line('.'), col('.') + len(raw_pattern))
+        call s:InsertRegister.reset()
+        call winrestview(w)
     endif
 
     let pattern = s:convert(raw_pattern)
