@@ -28,8 +28,8 @@ function! s:suite.before()
     map ?  <Plug>(incsearch-backward)
     map g/ <Plug>(incsearch-stay)
     " Explicitly map default `n` and `N`
-    unmap n
-    unmap N
+    noremap n  n
+    noremap N  N
     let s:line_texts = ['1pattern 2pattern 3pattern 4pattern']
     call s:reset_buffer()
 endfunction
