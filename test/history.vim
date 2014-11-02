@@ -1,17 +1,24 @@
 let s:suite = themis#suite('history')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+function! s:suite.before()
+    :1,$ delete
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    set history=5
+endfunction
 
 function! s:suite.before_each()
-    set history=5
     " call histdel('search') " Segmentation fault (core dumped)
     silent! exec "normal" "/\<Space>\<CR>"
 endfunction
 
-function! s:suite.before()
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    set history&
     :1,$ delete
 endfunction
 
