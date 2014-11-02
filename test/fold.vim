@@ -11,23 +11,44 @@ function! s:add_lines(lines)
     endfor
 endfunction
 
-function! s:suite.before_each()
-    normal! ggdG
-    call s:add_lines([
-    \  '1',
-    \  '2',
-    \  '3',
-    \  '4fold {{{',
-    \  '5    inner fold {{{',
-    \  '6        destination',
-    \  '7    }}}',
-    \  '8}}}',
-    \ ])
+function! s:reset_buffer()
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
+function! s:suite.before()
     set foldmethod=marker
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = [
+    \    '1'
+    \  , '2'
+    \  , '3'
+    \  , '4fold {{{'
+    \  , '5    inner fold {{{'
+    \  , '6        destination'
+    \  , '7    }}}'
+    \  , '8}}}'
+    \ ]
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.before_each()
+    :1
     normal! zM
-    normal! gg0zt
     call s:assert.equals(foldclosed(6), 4)
 endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
+    set foldmethod&
+endfunction
+
 
 function! s:suite.unfold_after_search_forward_backward()
     exec "normal" "/destination\<CR>"

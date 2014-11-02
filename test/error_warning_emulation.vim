@@ -3,10 +3,6 @@ scriptencoding utf-8
 let s:suite = themis#suite('error_warning_emulation')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -24,7 +20,31 @@ endfunction
 " :h v:errmsg
 " :h v:warningmsg
 
+function! s:reset_buffer()
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = ['1pattern', '2pattern', '3pattern', '4pattern']
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
+    set wrapscan&
+endfunction
+
+
 function! s:suite.before_each()
+    :1
     set wrapscan&
 endfunction
 
@@ -33,8 +53,6 @@ function! s:suite.after_each()
 endfunction
 
 function! s:suite.error_forward_backward()
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
     for keyseq in ['/', '?']
         normal! gg0
         let v:errmsg = 'old errormsg'
@@ -64,9 +82,6 @@ function! s:suite.error_forward_backward()
 endfunction
 
 function! s:suite.error_stay()
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:errmsg = 'old errormsg'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j
@@ -115,9 +130,6 @@ endfunction
 
 function! s:suite.nowrapscan_forward_error()
     set nowrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:errmsg = 'old errormsg'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j
@@ -132,9 +144,7 @@ endfunction
 
 function! s:suite.nowrapscan_backward_error()
     set nowrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! Gdd0
+    normal! G
     let v:errmsg = 'old errormsg'
     call s:assert.equals(s:get_pos_char(), '4')
     normal! k
@@ -149,9 +159,6 @@ endfunction
 
 function! s:suite.nowrapscan_stay_error()
     set nowrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:errmsg = 'old errormsg'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j
@@ -169,9 +176,6 @@ endfunction
 
 function! s:suite.warning_forward()
     set wrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:warningmsg = 'old warning'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j
@@ -186,9 +190,7 @@ endfunction
 
 function! s:suite.warning_backward()
     set wrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! G0dd0
+    normal! G
     let v:warningmsg = 'old warning'
     call s:assert.equals(s:get_pos_char(), '4')
     normal! k
@@ -204,9 +206,6 @@ endfunction
 function! s:suite.do_not_show_search_hit_TOP_or_BOTTOM_warning_with_stay()
     let g:incsearch#do_not_save_error_message_history = 1
     set wrapscan
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:warningmsg = 'old warning'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j
@@ -225,9 +224,6 @@ function! s:suite.handle_shortmess()
     set shortmess+=s
     set wrapscan
     call s:assert.match(&shortmess, 's')
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
     let v:warningmsg = 'old warning'
     call s:assert.equals(s:get_pos_char(), '1')
     normal! j

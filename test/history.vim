@@ -8,7 +8,11 @@ map g/ <Plug>(incsearch-stay)
 function! s:suite.before_each()
     set history=5
     " call histdel('search') " Segmentation fault (core dumped)
-    exec "normal" "/ \<CR>"
+    silent! exec "normal" "/\<Space>\<CR>"
+endfunction
+
+function! s:suite.before()
+    :1,$ delete
 endfunction
 
 function! s:suite.commandline_history_forward()
