@@ -49,12 +49,19 @@ function! s:suite.after()
     unmap /
     unmap ?
     unmap g/
+    " :unmap workaround
     noremap n  n
     noremap N  N
     noremap *  *
     noremap #  #
     noremap g* g*
     noremap g# g#
+    unmap n
+    unmap N
+    unmap *
+    unmap #
+    unmap g*
+    unmap g#
 endfunction
 
 function! s:suite.function_works()
