@@ -48,6 +48,16 @@ function! s:emacs.keymapping(cmdline)
 \			"noremap" : 1,
 \			"lock" : 1,
 \		},
+\		"\<A-b>" : {
+\			"key" : "\<S-Left>",
+\			"noremap" : 1,
+\			"lock" : 1,
+\		},
+\		"\<A-f>" : {
+\			"key" : "\<S-Right>",
+\			"noremap" : 1,
+\			"lock" : 1,
+\		},
 \	}
 endfunction
 
