@@ -179,6 +179,7 @@ function! s:on_searching(func, ...)
     catch /E55:/
     catch /E66:/  " E66: \z( not allowed here
     catch /E67:/  " E67: \z1 et al. not allowed here
+    catch /E68:/  " E68: Invalid character after \z (with /\za & re=1)
     catch /E69:/  " E69: Missing ] after \%[
     catch /E70:/  " E70: Empty \%[]
     catch /E554:/
