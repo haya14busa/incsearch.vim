@@ -171,10 +171,23 @@ function! s:suite.nowrapscan_stay_error()
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
 endfunction
 
-function! s:suite.handle_multi_after_zs_and_ze()
+function! s:suite.E888__multi_after_zs_and_ze()
     " Vim will crash with version 7.4 under 421
     " http://ftp.vim.org/vim/patches/7.4/7.4.421
-    exec "normal" "/emacs\\ze*vim\<CR>"
+    if v:version == 704 && !has('patch421')
+        " Vim will clash!
+        " exec "normal" "/emacs\\ze*vim\<CR>"
+    elseif v:version == 704 && has('patch421')
+        set regexpengine=2
+        let v:errmsg = ''
+        exec "normal" "/emacs\\ze*vim\<CR>"
+        " call s:assert.equals(v:errmsg, 'E888: (NFA regexp) cannot repeat \ze')
+        call s:assert.match(v:errmsg, 'E888: (NFA regexp) cannot repeat')
+        let v:errmsg = ''
+        set regexpengine&
+    elseif v:version == 703
+        exec "normal" "/emacs\\ze*vim\<CR>"
+    endif
 endfunction
 
 " Warning
