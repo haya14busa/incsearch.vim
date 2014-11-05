@@ -171,6 +171,11 @@ function! s:suite.nowrapscan_stay_error()
     call s:assert.equals(v:errmsg, 'E385: search hit BOTTOM without match for: aaa')
 endfunction
 
+function! s:suite.handle_multi_after_zs_and_ze()
+    " Vim will crash
+    " http://ftp.vim.org/vim/patches/7.4/7.4.421
+    exec "normal" "/emacs\\ze*vim\<CR>"
+endfunction
 
 " Warning
 
