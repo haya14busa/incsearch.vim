@@ -172,7 +172,7 @@ function! s:suite.nowrapscan_stay_error()
 endfunction
 
 function! s:suite.handle_multi_after_zs_and_ze()
-    " Vim will crash
+    " Vim will crash with version 7.4 under 421
     " http://ftp.vim.org/vim/patches/7.4/7.4.421
     exec "normal" "/emacs\\ze*vim\<CR>"
 endfunction
