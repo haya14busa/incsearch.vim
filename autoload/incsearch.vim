@@ -37,6 +37,16 @@ let s:TRUE = !0
 let s:FALSE = 0
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
+" based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
+" improve to work with repetitive espaced slash like \V\V
+" XXX: Maybe it should use \@1<= ( :h /\@<= ) but this doesn't work in old vim
+" and i cannot find the version which this regex is introduced. It handle
+" repetitive escaped backslash like `\V\V` unlike `\zs`, so it cannot avoid
+" using \@<=
+let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
+" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
+
 " Option:
 let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap'      , s:FALSE)
 let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
@@ -70,7 +80,8 @@ call s:cli.connect('Delete')
 call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
 call s:cli.connect('Exit')
-call s:cli.connect('InsertRegister')
+let s:InsertRegister = s:modules.get('InsertRegister').make()
+call s:cli.connect(s:InsertRegister)
 call s:cli.connect('Paste')
 " XXX: better handling.
 if expand("%:p") !=# expand("<sfile>:p")
@@ -168,6 +179,7 @@ function! s:on_searching(func, ...)
     catch /E55:/
     catch /E66:/  " E66: \z( not allowed here
     catch /E67:/  " E67: \z1 et al. not allowed here
+    catch /E68:/  " E68: Invalid character after \z (with /\za & re=1)
     catch /E69:/  " E69: Missing ] after \%[
     catch /E70:/  " E70: Empty \%[]
     catch /E554:/
@@ -276,6 +288,17 @@ function! s:on_char(cmdline)
     if raw_pattern ==# ''
         call s:hi.disable_all()
         return
+    endif
+
+    " For InsertRegister
+    if a:cmdline.get_tap_key() ==# "\<C-r>"
+        let p = a:cmdline.getpos()
+        " Remove `"`
+        let raw_pattern = raw_pattern[:p-1] . raw_pattern[p+1:]
+        let w = winsaveview()
+        call cursor(line('.'), col('.') + len(raw_pattern))
+        call s:InsertRegister.reset()
+        call winrestview(w)
     endif
 
     let pattern = s:convert(raw_pattern)
@@ -620,7 +643,15 @@ endfunction
 
 " CommandLine Interface parse pattern wrapper
 function! s:cli_parse_pattern()
-    return incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+    if v:version == 704 && !has('patch421')
+        " Ignore \ze* which clash vim 7.4 without 421 patch
+        " Assume `\m`
+        let [p, o] = incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+        let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
+        return [p, o]
+    else
+        return incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+    endif
 endfunction
 
 " CommandLine Interface parse pattern wrapper for just getting pattern
@@ -638,15 +669,6 @@ function! s:convert(pattern)
     return s:magic() . a:pattern
 endfunction
 
-" based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
-" improve to work with repetitive espaced slash like \V\V
-" XXX: Maybe it should use \@1<= ( :h /\@<= ) but this doesn't work in old vim
-" and i cannot find the version which this regex is introduced. It handle
-" repetitive escaped backslash like `\V\V` unlike `\zs`, so it cannot avoid
-" using \@<=
-let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
-let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 function! incsearch#detect_case(pattern)
     " Ignore \%C, \%U, \%V for smartcase detection
     let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')

@@ -1,10 +1,6 @@
 let s:suite = themis#suite('jumplist')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -18,10 +14,33 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
-function! s:suite.forward()
+function! s:reset_buffer()
     normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! gg0
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = ['1pattern', '2pattern', '3pattern', '4pattern']
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.before_each()
+    :1
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$delete
+endfunction
+
+
+function! s:suite.forward()
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "/2pattern\<CR>"
     call s:assert.equals(s:get_pos_char(), '2')
@@ -38,9 +57,7 @@ function! s:suite.forward()
 endfunction
 
 function! s:suite.backward()
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! Gdd0
+    :$
     call s:assert.equals(s:get_pos_char(), '4')
     exec "normal" "?3pattern\<CR>"
     call s:assert.equals(s:get_pos_char(), '3')
@@ -53,9 +70,6 @@ function! s:suite.backward()
 endfunction
 
 function! s:suite.stay_does_not_update_jumplist()
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! Gddgg0
     normal! m`
     call s:assert.equals(s:get_pos_char(), '1')
     keepjumps normal! 3j
@@ -72,10 +86,7 @@ function! s:suite.stay_does_not_update_jumplist()
 endfunction
 
 function! s:suite.stay_offset()
-    call s:assert.skip("because you cannot set {offset} infor with Vim script unless excuting search command")
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! Gddgg0
+    call s:assert.skip("because you cannot set {offset} information with Vim script unless excuting search command")
     call s:assert.equals(s:get_pos_char(), '1')
     normal! m`
     keepjumps normal! j
@@ -87,9 +98,6 @@ function! s:suite.stay_offset()
 endfunction
 
 function! s:suite.exit_stay_does_update_jumplist()
-    normal! ggdG
-    call s:add_lines(['1pattern', '2pattern', '3pattern', '4pattern'])
-    normal! Gddgg0
     normal! m`
     call s:assert.equals(s:get_pos_char(), '1')
     keepjumps normal! 3j

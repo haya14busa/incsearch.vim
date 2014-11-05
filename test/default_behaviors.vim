@@ -6,10 +6,10 @@ map ?  <Plug>(incsearch-backward)
 map g/ <Plug>(incsearch-stay)
 
 " Helper:
-function! AddLine(str)
+function! s:add_line(str)
     put! =a:str
 endfunction
-function! AddLines(lines)
+function! s:add_lines(lines)
     for line in reverse(a:lines)
         put! =line
     endfor
@@ -45,19 +45,39 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:reset_buffer()
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
 function! s:suite.before()
-    normal! ggdGgg
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = [
+    \     'pattern1 pattern2 pattern3'
+    \   , 'pattern4 pattern5 pattern6'
+    \ ]
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.before_each()
+    :1
 endfunction
 
 function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
     set wrapscan&
 endfunction
+
 
 " Main:
 
 function! s:suite.forward()
-    call AddLines(['pattern1 pattern2 pattern3',
-                \  'pattern4 pattern5 pattern6'])
     set nowrapscan
     call s:assert.eq_with_default('/','/','pat')
     call s:assert.eq_with_default('/','/','pattern\d')
@@ -81,8 +101,6 @@ function! s:suite.forward()
 endfunction
 
 function! s:suite.backward()
-    call AddLines(['pattern1 pattern2 pattern3',
-                \  'pattern4 pattern5 pattern6'])
     set nowrapscan
     normal! G$
     call s:assert.eq_with_default('?','?','pattern3')
@@ -108,8 +126,6 @@ function! s:suite.backward()
 endfunction
 
 function! s:suite.stay()
-    call AddLines(['pattern1 pattern2 pattern3',
-                \  'pattern4 pattern5 pattern6'])
     set nowrapscan
     normal! gg0
     " let c = getcurpos()
@@ -141,8 +157,6 @@ function! s:suite.stay()
 endfunction
 
 function! s:suite.offset()
-    call AddLines(['pattern1 pattern2 pattern3',
-                \  'pattern4 pattern5 pattern6'])
     normal! gg0
     call s:assert.eq_with_default('/','/','pattern1/e')
     call s:assert.equals(s:get_pos_char(), '1')

@@ -1,16 +1,8 @@
 let s:suite = themis#suite('n_and_N')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-" Explicitly map default `n` and `N`
-noremap n n
-noremap N N
-
 " see: v:searchforward
 let s:DIRECTION = { 'backward': 0, 'forward': 1}
-
 
 " Helper:
 function! s:add_line(str)
@@ -25,10 +17,39 @@ function! s:get_pos_char()
     return getline('.')[col('.')-1]
 endfunction
 
+function! s:reset_buffer()
+    :1,$ delete
+    call s:add_lines(copy(s:line_texts))
+    normal! Gddgg0zt
+endfunction
+
+function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    " Explicitly map default `n` and `N`
+    " unmap workaround
+    noremap n  n
+    noremap N  N
+    unmap n
+    unmap N
+    let s:line_texts = ['1pattern 2pattern 3pattern 4pattern']
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.before_each()
+    :1
+endfunction
+
+function! s:suite.after()
+    unmap /
+    unmap ?
+    unmap g/
+    :1,$ delete
+    let g:incsearch#consistent_n_direction = 0
+endfunction
+
 function! s:suite.after_forward()
-    normal! ggdG
-    call s:add_line('1pattern 2pattern 3pattern 4pattern')
-    normal! gg0
     let v:searchforward = s:DIRECTION.backward
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "/\\dpattern\<CR>"
@@ -44,9 +65,7 @@ function! s:suite.after_backward()
     " NOTE: Use feedkeys() to manipulate v:searchforward but it seems to work
     " fine with this test, so it's possible that :h function-search-undo
     " doesn't work with Ex-mode?
-    normal! ggdG
-    call s:add_line('1pattern 2pattern 3pattern 4pattern')
-    normal! gg$
+    normal! $
     let v:searchforward = s:DIRECTION.forward
     call s:assert.equals(s:get_pos_char(), 'n')
     exec "normal" "?\\dpattern\<CR>"
@@ -61,10 +80,7 @@ function! s:suite.after_backward()
 endfunction
 
 function! s:suite.after_stay()
-    normal! ggdG
-    call s:add_line('1pattern 2pattern 3pattern 4pattern')
     let v:searchforward = s:DIRECTION.backward
-    normal! gg0
     call s:assert.equals(s:get_pos_char(), '1')
     exec "normal" "g/\\dpattern\<CR>"
     call s:assert.equals(s:get_pos_char(), '1')
@@ -81,9 +97,7 @@ endfunction
 
 function! s:suite.consistent_n_and_N_direction()
     let g:incsearch#consistent_n_direction = 1
-    normal! ggdG
-    call s:add_line('1pattern 2pattern 3pattern 4pattern')
-    normal! gg$
+    normal! $
     let v:searchforward = s:DIRECTION.forward
     call s:assert.equals(s:get_pos_char(), 'n')
     exec "normal" "?\\dpattern\<CR>"
@@ -94,7 +108,7 @@ function! s:suite.consistent_n_and_N_direction()
     normal! n
     call s:assert.equals(s:get_pos_char(), '4')
 
-    normal! ggdG
+    :1,$ delete
     call s:add_line('1pattern1 2pattern2 3pattern3 4pattern4')
     normal! gg$
     let v:searchforward = s:DIRECTION.forward

@@ -31,11 +31,25 @@ let s:module = {
 \}
 
 
-function! s:module.on_enter(...)
+
+function! s:module.reset()
 	let self.cword = expand("<cword>")
 	let self.cWORD = expand("<cWORD>")
 	let self.cfile = expand("<cfile>")
+endfunction
+
+function! s:module.on_enter(...)
+	call self.reset()
 " 	let self.prefix_key = ""
+endfunction
+
+
+function! s:get_cmdline_cword(backword, cword)
+	let backword = matchstr(a:backword, '.\{-}\zs\w\+$')
+	if &incsearch == 0 || a:cword == "" || a:backword == "" || stridx(a:cword, backword) != 0
+		return a:cword
+	endif
+	return a:cword[len(backword) : ]
 endfunction
 
 
@@ -57,7 +71,7 @@ function! s:module.on_char_pre(cmdline)
 		elseif char == "="
 			call a:cmdline.setchar(s:input(a:cmdline))
 		elseif char == "\<C-w>"
-			call a:cmdline.setchar(self.cword)
+			call a:cmdline.setchar(s:get_cmdline_cword(a:cmdline.backward(), self.cword))
 		elseif char == "\<C-a>"
 			call a:cmdline.setchar(self.cWORD)
 		elseif char == "\<C-f>"

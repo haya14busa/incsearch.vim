@@ -1,10 +1,6 @@
 let s:suite = themis#suite('highlight')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -19,17 +15,26 @@ function! s:get_pos_char()
 endfunction
 
 function! s:reset_buffer()
-    normal! ggdG
-    call s:add_lines(['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e'])
+    :1,$ delete
+    call s:add_lines(s:line_texts)
     normal! Gddgg0zt
 endfunction
 
 function! s:suite.before()
     set wrapscan&
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
+    let s:line_texts = ['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e']
+    call s:reset_buffer()
+endfunction
+
+function! s:suite.after()
+    :1,$ delete
 endfunction
 
 function! s:suite.before_each()
-    call s:reset_buffer()
+    :1
     call s:assert.equals(s:get_pos_char(), '1')
     call clearmatches()
     call s:assert.equals(getmatches(), [])
@@ -84,7 +89,6 @@ function! s:suite.incremental_separate_highlight()
 endfunction
 
 function! s:suite.forward_pattern()
-    call s:reset_buffer() " XXX:
     let U = incsearch#util#import()
     let L = vital#of('incsearch').import('Data.List')
     let from = [3,3]

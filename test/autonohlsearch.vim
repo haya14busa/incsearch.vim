@@ -1,10 +1,6 @@
 let s:suite = themis#suite('autonlsearch')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
 " Helper:
 function! s:add_line(str)
     put! =a:str
@@ -19,7 +15,7 @@ function! s:get_pos_char()
 endfunction
 
 function! s:reset_buffer()
-    normal! ggdG
+    :1,$ delete
     call s:add_lines(['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e'])
     normal! G
     call s:add_lines(range(100))
@@ -27,23 +23,39 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before()
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    map g/ <Plug>(incsearch-stay)
     map n  <Plug>(incsearch-nohl-n)
     map N  <Plug>(incsearch-nohl-N)
     map *  <Plug>(incsearch-nohl-*)
     map #  <Plug>(incsearch-nohl-#)
     map g* <Plug>(incsearch-nohl-g*)
     map g# <Plug>(incsearch-nohl-g#)
+    call s:reset_buffer()
 endfunction
 
 function! s:suite.before_each()
-    call s:reset_buffer()
+    :1
+    normal! zt
     silent! autocmd! incsearch-auto-nohlsearch
     let g:incsearch#auto_nohlsearch = 1
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
 endfunction
 
 function! s:suite.after()
+    :1,$ delete
     let g:incsearch#auto_nohlsearch = 0
+    unmap /
+    unmap ?
+    unmap g/
+    " :unmap workaround
+    noremap n  n
+    noremap N  N
+    noremap *  *
+    noremap #  #
+    noremap g* g*
+    noremap g# g#
     unmap n
     unmap N
     unmap *

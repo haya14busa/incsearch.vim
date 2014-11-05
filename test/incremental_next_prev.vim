@@ -114,6 +114,7 @@ function! s:suite.inc_last_pattern_offset()
 endfunction
 
 function! s:suite.inc_last_pattern_reset()
+    call s:assert.skip("Skip because Segmentation fault occurs with histdel()")
     call s:assert.equals(getline('.'), s:line_texts[0])
     let @/ = ''
     call histdel('/')
