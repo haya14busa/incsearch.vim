@@ -604,10 +604,12 @@ function! incsearch#auto_nohlsearch(nest)
     \     '
     " NOTE: :h autocmd-searchpat
     "   You cannot implement this feature without feedkeys() bacause of
-    "   :h autocmd-searchpat , so there are some events which we cannot fire
-    "   like :h InsertEnter
+    "   :h autocmd-searchpat
     augroup incsearch-auto-nohlsearch
         autocmd!
+        " side-effect: InsertLeave & InsertEnter are called with i_CTRL-\_CTRL-O
+        autocmd InsertEnter * call feedkeys("\<C-\>\<C-o>:nohlsearch\<CR>", "n")
+        \   | autocmd! incsearch-auto-nohlsearch
         execute join([
         \   'autocmd CursorMoved *'
         \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
