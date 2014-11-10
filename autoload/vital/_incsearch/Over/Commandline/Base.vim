@@ -7,6 +7,7 @@ function! s:_vital_loaded(V)
 	let s:V = a:V
 	let s:String  = s:V.import("Over.String")
 	let s:Signals = s:V.import("Over.Signals")
+	let s:Input = s:V.import("Over.Input")
 	let s:Module = s:V.import("Over.Commandline.Modules")
 	let s:base.variables.modules = s:Signals.make()
 	function! s:base.variables.modules.get_slot(val)
@@ -19,6 +20,7 @@ function! s:_vital_depends()
 	return [
 \		"Over.String",
 \		"Over.Signals",
+\		"Over.Input",
 \		"Over.Commandline.Modules",
 \	]
 endfunction
@@ -387,7 +389,7 @@ function! s:base._update()
 " 	call self.draw()
 
 	call self.callevent("on_update")
-	call self._input(s:getchar())
+	call self._input(s:Input.getchar())
 	if self._is_exit()
 		return -1
 	endif
@@ -472,24 +474,6 @@ function! s:base._get_keymapping()
 		endif
 	endfor
 	return extend(extend(result, self.variables.keymapping), self.keymapping())
-endfunction
-
-
-function! s:getchar(...)
-	let mode = get(a:, 1, 0)
-	while 1
-		" Workaround for https://github.com/osyo-manga/vital-over/issues/53
-		try
-			let char = call("getchar", a:000)
-		catch /^Vim:Interrupt$/
-			let char = 3 " <C-c>
-		endtry
-		" Workaround for the <expr> mappings
-		if string(char) !=# "\x80\xfd`"
-			return mode == 1 ? !!char
-\				 : type(char) == type(0) ? nr2char(char) : char
-		endif
-	endwhile
 endfunction
 
 
