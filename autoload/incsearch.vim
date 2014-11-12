@@ -52,6 +52,7 @@ let g:incsearch#emacs_like_keymap      = get(g: , 'incsearch#emacs_like_keymap' 
 let g:incsearch#highlight              = get(g: , 'incsearch#highlight'              , {})
 let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
+let g:incsearch#vim_cmdline_keymap     = get(g: , 'incsearch#vim_cmdline_keymap'     , s:TRUE)
 " This changes error and warning emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
@@ -90,8 +91,12 @@ endif
 call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:cli.connect(s:modules.get('History').make('/'))
 call s:cli.connect(s:modules.get('NoInsert').make_special_chars())
+let s:KeyMapping = s:modules.get('KeyMapping')
 if g:incsearch#emacs_like_keymap
-    call s:cli.connect(s:modules.get('KeyMapping').make_emacs())
+    call s:cli.connect(s:KeyMapping.make_emacs())
+endif
+if g:incsearch#vim_cmdline_keymap
+    call s:cli.connect(s:KeyMapping.make_vim_cmdline_mapping())
 endif
 
 

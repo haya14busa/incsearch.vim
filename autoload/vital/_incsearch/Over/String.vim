@@ -110,7 +110,6 @@ function! s:make(...)
 endfunction
 
 
-
 function! s:_split(str, pat)
 	let pat = (exists("+regexpengine") ? '\%#=2' : '') . a:pat
 	let list = split(a:str,  pat . '\zs')
@@ -261,6 +260,17 @@ else
 		return s:_split_keystring(a:str, s:special_keys)
 	endfunction
 endif
+
+
+function! s:index(haystack, needle, ...)
+	let start = get(a:, 1, 0)
+	let ignorecase = get(a:, 2, &ignorecase)
+	if ignorecase
+		return stridx(tolower(a:haystack), tolower(a:needle), start)
+	else
+		return stridx(a:haystack, a:needle, start)
+	endif
+endfunction
 
 
 let &cpo = s:save_cpo
