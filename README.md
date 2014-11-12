@@ -25,8 +25,8 @@ It supports all modes (normal, visual, operator-pending mode), dot-repeat `.`,
 incsearch.vim aims to be simple, but at the same time, it offers useful features.
 
 #### Incremental regular expression editing
-You can see all matched patterns by given regular expression all at once while
-incremental searching.
+You can see all patterns that the given regular expression matches all at once
+while incremental searching.
 
 Usage
 -----
@@ -65,7 +65,7 @@ map g/ <Plug>(incsearch-stay)
 ![](https://cloud.githubusercontent.com/assets/3797062/4518938/f3c11110-4ca6-11e4-88c6-708f510a0c3c.gif)
 
 Farewell, `nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>`!
-This feature turns 'hlsearch' off automatically after searching related motions.
+This feature turns 'hlsearch' off automatically after searching-related motions.
 
 ```vim
 " :h g:incsearch#auto_nohlsearch
@@ -99,7 +99,7 @@ let g:incsearch#magic = '\v'
 ### Command Line Interface Keymappings
 incsearch.vim uses a custom command line interface, so it provides a custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
-in your vimrc, please call it by `VimEnter`.
+in your vimrc, please call it on `VimEnter`.
 
 ```vim
 augroup incsearch-keymap
@@ -210,8 +210,8 @@ haya14busa (https://github.com/haya14busa)
 Special thanks
 --------------
 osyo-manga(https://github.com/osyo-manga), the author of
-https://github.com/osyo-manga/vital-over which is a custom command line library
-and incsearch.vim heavily depends on.
+the custom command line library, https://github.com/osyo-manga/vital-over,
+which incsearch.vim heavily depends on.
 
 License
 -------
