@@ -7,31 +7,31 @@ incsearch.vim: Improved incremental searching
 
 Introduction
 ------------
-incsearch.vim incrementally highlight __ALL__ pattern matches unlike default
+incsearch.vim incrementally highlights __ALL__ pattern matches unlike default
 'incsearch'.
 
 Concepts
 --------
 
 ### 1. Simple
-incsearch.vim provide simple improved incremental searching.
+incsearch.vim provides simple improved incremental searching.
 
 ### 2. Comfortable
-You can use it comfortably like default search(`/`, `?`).
-It supports all mode (normal, visual, operator-pending mode), dot-repeat `.`,
+You can use it comfortably like the default search(`/`, `?`).
+It supports all modes (normal, visual, operator-pending mode), dot-repeat `.`,
 `{offset}` flags, and so on.
 
 ### 3. Useful
-incsearch.vim aims to be simple, but at the same time, it offers useful feature.
+incsearch.vim aims to be simple, but at the same time, it offers useful features.
 
 #### Incremental regular expression editing
-You can see all matched pattern by given regular expression at all once while
+You can see all matched patterns by given regular expression all at once while
 incremental searching.
 
 Usage
 -----
 
-See `:h incsearch.txt` for detail
+See `:h incsearch.txt` for detail.
 
 ### Installation
 
@@ -90,14 +90,14 @@ let g:incsearch#consistent_n_direction = 1
 - `:h 'magic'`
 - `:h g:incsearch#magic`
 
-You can set very magic option with no portability problem
+You can set very magic option with no portability problem.
 
 ```vim
 let g:incsearch#magic = '\v'
 ```
 
 ### Command Line Interface Keymappings
-incsearch.vim use custom command line interface, so it provides custom
+incsearch.vim uses a custom command line interface, so it provides a custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
 in your vimrc, please call it by `VimEnter`.
 
@@ -179,7 +179,7 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 
 #### custom highlight
 
-Change cursor color to red
+Change the cursor color to red
 
 ```vim
 highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
@@ -210,7 +210,7 @@ haya14busa (https://github.com/haya14busa)
 Special thanks
 --------------
 osyo-manga(https://github.com/osyo-manga), the author of
-https://github.com/osyo-manga/vital-over which is custom command line library
+https://github.com/osyo-manga/vital-over which is a custom command line library
 and incsearch.vim heavily depends on.
 
 License
