@@ -147,6 +147,11 @@ function! s:inc.on_enter(cmdline)
         call histdel('/', -1)
         call histadd('/', hist[2:])
     endif
+
+    " NOTE: for Vim which doesn't have keeppattern to handle cancel
+    if !s:has_keeppattern
+        let s:cli.last_pattern = @/
+    endif
 endfunction
 
 function! s:inc.on_leave(cmdline)
@@ -529,6 +534,9 @@ function! s:set_search_related_stuff(cmd, ...)
         " Restore cursor position and return
         " NOTE: Should I request on_cancel event to vital-over and use it?
         call winrestview(s:w)
+        if !s:has_keeppattern " Restore pattern
+            let @/ = s:cli.last_pattern
+        endif
         return
     endif
     let [raw_pattern, offset] = s:cli_parse_pattern()
@@ -795,7 +803,8 @@ function! s:with_ignore_foldopen(F, ...)
 endfunction
 
 " Try to avoid side-effect as much as possible except cursor movement
-let s:keeppattern = (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
+let s:has_keeppattern = v:version > 704 || v:version == 704 && has('patch083')
+let s:keeppattern = (s:has_keeppattern ? 'keeppattern' : '')
 function! s:execute_search(cmd)
     " :nohlsearch
     "   Please do not highlight at the first place if you set back
