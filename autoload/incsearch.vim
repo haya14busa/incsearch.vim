@@ -437,7 +437,10 @@ function! incsearch#stay_expr(...)
         " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
         " FIXME: cannot set {offset} if in operator-pending mode because this
         " have to use feedkeys()
-        if !empty(offset) && mode(1) !=# 'no'
+        let is_cancel = s:cli.exit_code()
+        if is_cancel
+            " do nothing
+        elseif !empty(offset) && mode(1) !=# 'no'
             let cmd = s:with_ignore_foldopen(
             \   function('s:generate_command'), m, input, '/')
             call feedkeys(cmd, 'n')
