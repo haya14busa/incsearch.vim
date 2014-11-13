@@ -220,6 +220,10 @@ Command line interface~
 		    IncSearchNoreMap <Up>    <Over>(incsearch-scroll-b)
 		endfunction
 <
+						*g:incsearch#vim_cmdline_keymap*
+	Apply vim default |:cnoremap| and |:cmap| mappings to custom command line
+	interface of |incsearch.vim|. default: 1
+
 						*g:incsearch#emacs_like_keymap*
 	It enables Emacs-like keymappings if you set
 	|g:incsearch#emacs_like_keymap| to 1. default: 0
