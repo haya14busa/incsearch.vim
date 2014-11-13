@@ -37,6 +37,7 @@ endfunction
 
 function! s:suite.after()
     :1,$ delete
+    let @/ = ''
 endfunction
 
 function! s:suite.cancel_forward_does_not_move_cursor()
@@ -107,3 +108,32 @@ function! s:suite.cancel_stay_visual()
     call s:assert.equals(s:get_pos_char(), 'p')
     call s:assert.equals(mode(1), 'v')
 endfunction
+
+function! s:suite.cancel_will_not_change_last_pattern()
+    let @/ = 'vim'
+    for key_seq in ['/', '?', 'g/']
+        exec "normal"  key_seq . "pattern\<Tab>\<C-c>"
+    endfor
+    call s:assert.equals(@/, 'vim')
+endfunction
+
+function! s:suite.highlight_will_not_remain()
+    for key_seq in ['/', '?', 'g/']
+        exec "normal"  key_seq . "pattern\<Tab>\<C-c>"
+        call s:assert.equals(getmatches(), [])
+    endfor
+endfunction
+
+function! s:suite.default_highlight_will_not_remain()
+    if !exists('v:hlsearch')
+        call s:assert.skip("Skip because vim version are too low to test it")
+    endif
+    set hlsearch | nohlsearch
+    let v:hlsearch = 0
+    for key_seq in ['/', '?', 'g/']
+        exec "normal"  key_seq . "pattern\<Tab>\<C-c>"
+        call s:assert.equals(v:hlsearch, 0)
+    endfor
+    set hlsearch&
+endfunction
+
