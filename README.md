@@ -99,7 +99,9 @@ let g:incsearch#magic = '\v'
 ### Command Line Interface Keymappings
 incsearch.vim uses a custom command line interface, so it provides a custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
-in your vimrc, please call it on `VimEnter`.
+in your vimrc, please call it on `VimEnter`. The mappings defined with this
+command have higher priority than vim default command line mappings if
+`g:incsearch#vim_cmdline_keymap` option is 1 (default: 1).
 
 ```vim
 augroup incsearch-keymap
@@ -107,33 +109,10 @@ augroup incsearch-keymap
     autocmd VimEnter * call s:incsearch_keymap()
 augroup END
 function! s:incsearch_keymap()
-    IncSearchNoreMap <C-f> <Right>
-    IncSearchNoreMap <C-b> <Left>
+    IncSearchNoreMap <C-f> <Over>(incsearch-scroll-f)
+    IncSearchNoreMap <C-b> <Over>(incsearch-scroll-b)
 endfunction
 ```
-
-#### Emacs-like keymappings
-
-If you want to set emacs-like keymappings, just set `g:incsearch#emacs_like_keymap`
-to 1 and basic emacs-like keymappings will be set.
-
-```vim
-let g:incsearch#emacs_like_keymap = 1
-```
-
-#### Emacs-like keymapping table
-
-| {lhs}    | {rhs}      |
-|--------- |----------- |
-| `<C-f>`  | `<Right>`  |
-| `<C-b>`  | `<Left>`   |
-| `<C-n>`  | `<Down>`   |
-| `<C-p>`  | `<Up>`     |
-| `<C-a>`  | `<Home>`   |
-| `<C-e>`  | `<End>`    |
-| `<C-d>`  | `<Del>`    |
-| `<A-d>`  | `<C-w>`    |
-
 
 ### Emacs-like incsearch: move the cursor while incremental searching
 
@@ -164,44 +143,6 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 | ------------------------- | ----------------------------------  |
 | `<Over>(buffer-complete)` | buffer completion. default: `<C-l>` |
 
-
-### Highlight
-
-#### highlight group
-
-| highlight group         | description                                                         |
-| -------------------     | -----------------------------------------------------------         |
-| `IncSearchMatch`        | For all matched pattern. default: `Search`                          |
-| `IncSearchMatchReverse` | For all matched pattern in reverse direction.  default: `IncSearch` |
-| `IncSearchOnCursor`     | For the matched pattern on the cursor. default: `IncSearch`         |
-| `IncSearchCursor`       | For cursor position. default: `Cursor`                              |
-| `IncSearchUnderline`    | It's not used by default. Just for the customization                |
-
-#### custom highlight
-
-Change the cursor color to red
-
-```vim
-highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
-```
-
-Or use the `g:incsearch#highlight` option like this.
-
-```vim
-let g:incsearch#highlight = {
-\   'match' : {
-\     'group' : 'IncSearchUnderline',
-\     'priority' : '10'
-\   },
-\   'on_cursor' : {
-\     'priority' : '100'
-\   },
-\   'cursor' : {
-\     'group' : 'ErrorMsg',
-\     'priority' : '1000'
-\   }
-\ }
-```
 
 Author
 ------
@@ -244,4 +185,4 @@ Links
 
 ### VimConf2014
 - [/-improved](https://docs.google.com/presentation/d/1ie2VCSt9onXmoY3v_zxJdMjYJSbAelVR-QExdUQK-Tw/pub?start=false&loop=false&delayms=3000&slide=id.g4e7add63c_05) at [VimConf 2014](http://vimconf.vim-jp.org/2014/)
-  - I talked in Japanese but wrote slide in (poor) English ;)
+  - I talked in Japanese but wrote slide in English ;)
