@@ -522,7 +522,12 @@ function! s:set_search_related_stuff(cmd, ...)
     " For stay motion
     let should_set_jumplist = get(a:, 1, s:TRUE)
     let is_cancel = s:cli.exit_code()
-    if is_cancel | return | endif
+    if is_cancel
+        " Restore cursor position and return
+        " NOTE: Should I request on_cancel event to vital-over and use it?
+        call winrestview(s:w)
+        return
+    endif
     let [raw_pattern, offset] = s:cli_parse_pattern()
     let should_execute = !empty(offset) || empty(raw_pattern)
     if should_execute
