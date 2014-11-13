@@ -26,6 +26,7 @@
 " @vimlint(EVL103, 1, a:cmdline)
 " @vimlint(EVL102, 1, v:errmsg)
 " @vimlint(EVL102, 1, v:warningmsg)
+" @vimlint(EVL102, 1, v:searchforward)
 "=============================================================================
 scriptencoding utf-8
 " Saving 'cpoptions' {{{
