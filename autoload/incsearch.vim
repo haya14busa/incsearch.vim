@@ -809,9 +809,13 @@ if s:has_keeppattern
     endfunction
 else
     function! s:execute_search(...)
-        if !s:has_keeppattern | let p = @/ | endif
+        " keeppattern emulation
+        let p = @/
         let r = call(function('s:_execute_search'), a:000)
-        if !s:has_keeppattern | let @/ = p | endif
+        " NOTE: `let @/ = p` reset v:searchforward
+        let d = v:searchforward
+        let @/ = p
+        let v:searchforward = d
         return r
     endfunction
 endif
