@@ -437,7 +437,10 @@ function! incsearch#stay_expr(...)
         " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
         " FIXME: cannot set {offset} if in operator-pending mode because this
         " have to use feedkeys()
-        if !empty(offset) && mode(1) !=# 'no'
+        let is_cancel = s:cli.exit_code()
+        if is_cancel
+            " do nothing
+        elseif !empty(offset) && mode(1) !=# 'no'
             let cmd = s:with_ignore_foldopen(
             \   function('s:generate_command'), m, input, '/')
             call feedkeys(cmd, 'n')
@@ -522,7 +525,12 @@ function! s:set_search_related_stuff(cmd, ...)
     " For stay motion
     let should_set_jumplist = get(a:, 1, s:TRUE)
     let is_cancel = s:cli.exit_code()
-    if is_cancel | return | endif
+    if is_cancel
+        " Restore cursor position and return
+        " NOTE: Should I request on_cancel event to vital-over and use it?
+        call winrestview(s:w)
+        return
+    endif
     let [raw_pattern, offset] = s:cli_parse_pattern()
     let should_execute = !empty(offset) || empty(raw_pattern)
     if should_execute
@@ -787,13 +795,30 @@ function! s:with_ignore_foldopen(F, ...)
 endfunction
 
 " Try to avoid side-effect as much as possible except cursor movement
-let s:keeppattern = (v:version > 704 || v:version == 704 && has('patch083') ? 'keeppattern' : '')
-function! s:execute_search(cmd)
+let s:has_keeppattern = v:version > 704 || v:version == 704 && has('patch083')
+let s:keeppattern = (s:has_keeppattern ? 'keeppattern' : '')
+function! s:_execute_search(cmd)
     " :nohlsearch
     "   Please do not highlight at the first place if you set back
     "   info! I'll handle it myself :h function-search-undo
     execute s:keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
+if s:has_keeppattern
+    function! s:execute_search(...)
+        return call(function('s:_execute_search'), a:000)
+    endfunction
+else
+    function! s:execute_search(...)
+        " keeppattern emulation
+        let p = @/
+        let r = call(function('s:_execute_search'), a:000)
+        " NOTE: `let @/ = p` reset v:searchforward
+        let d = v:searchforward
+        let @/ = p
+        let v:searchforward = d
+        return r
+    endfunction
+endif
 
 function! s:magic()
     let m = g:incsearch#magic
