@@ -110,11 +110,12 @@ function! s:suite.cancel_stay_visual()
 endfunction
 
 function! s:suite.cancel_will_not_change_last_pattern()
-    let @/ = 'vim'
     for key_seq in ['/', '?', 'g/']
+        let p = 'vim: ' . key_seq
+        let @/ = p
         exec "normal"  key_seq . "pattern\<Tab>\<C-c>"
+        call s:assert.equals(@/, p)
     endfor
-    call s:assert.equals(@/, 'vim')
 endfunction
 
 function! s:suite.highlight_will_not_remain()
