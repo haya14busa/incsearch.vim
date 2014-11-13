@@ -75,6 +75,45 @@ function! s:suite.function_works()
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
 endfunction
 
+function! s:suite.nolsearch_with_cursormove_0()
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+    call incsearch#auto_nohlsearch(0)
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+endfunction
+
+function! s:suite.nolsearch_with_cursormove_1()
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+    call incsearch#auto_nohlsearch(1)
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+endfunction
+
+function! s:suite.nolsearch_with_cursormove_2()
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+    call incsearch#auto_nohlsearch(2)
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+    doautocmd CursorMoved
+    call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+endfunction
+
+" This breaks dot repeat ><
+" function! s:suite.nolsearch_with_insert_enter()
+"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+"     call incsearch#auto_nohlsearch(10)
+"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+"     doautocmd InsertEnter
+"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+" endfunction
+
 function! s:suite.work_with_search()
     for key in ['/', '?', 'g/']
         silent! autocmd! incsearch-auto-nohlsearch
