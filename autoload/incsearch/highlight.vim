@@ -237,7 +237,11 @@ function! incsearch#highlight#incremental_highlight(pattern, ...)
     let hgm = incsearch#highlight#hgm()
     let [m, r, o, c] = [hgm.match, hgm.match_reverse, hgm.on_cursor, hgm.cursor]
     let on_cursor_pattern = '\m\%#\(' . a:pattern . '\m\)'
-    if ! should_separate_highlight
+
+    if '' =~# a:pattern
+        " Do not highlight for patterns which match everything
+        call s:hi.delete_all()
+    elseif ! should_separate_highlight
         call s:hi.add(m.group, m.group, a:pattern, m.priority)
     else
         let [p1, p2] = (direction == s:DIRECTION.forward)
