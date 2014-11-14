@@ -13,7 +13,7 @@ function! s:backward_word(str, ...)
 	\   '\%(' . 'z[se]' .
 	\   '\|' . '[iIkKfFpPsSdDxXoOwWhHaAlLuUetrbncCZmMvV]' .
 	\   '\|' . '%[dxouUCVlcv]' .
-	\   '\|' . "%'[a-Z]" .
+	\   '\|' . "%'[a-zA-Z]" .
 	\   '\|' . '%#=\d' .
 	\   '\|' . 'z\=\d' .
 	\   '\)'
