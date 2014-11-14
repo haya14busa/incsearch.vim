@@ -54,6 +54,7 @@ let g:incsearch#highlight              = get(g: , 'incsearch#highlight'         
 let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'     , s:FALSE)
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
 let g:incsearch#vim_cmdline_keymap     = get(g: , 'incsearch#vim_cmdline_keymap'     , s:TRUE)
+let g:incsearch#smart_backward_word    = get(g: , 'incsearch#smart_backward_word'    , s:TRUE)
 " This changes error and warning emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
@@ -99,6 +100,9 @@ endif
 if g:incsearch#vim_cmdline_keymap
     call s:cli.connect(s:KeyMapping.make_vim_cmdline_mapping())
 endif
+if g:incsearch#smart_backward_word
+    call s:cli.connect('IgnoreRegexpBackwardWord')
+endif
 
 
 function! s:cli.keymapping()
@@ -134,6 +138,13 @@ endfunction
 let s:inc = {
 \   "name" : "incsearch",
 \}
+
+
+function! s:inc.backward_word(...)
+    let expr = self.backward()
+    " expr から 要らない正規表現フラッグ取り除く
+    return call(function('s:cli.backward_word'), [expr], self)
+endfunction
 
 function! s:inc.on_enter(cmdline)
     nohlsearch " disable previous highlight
