@@ -18,7 +18,7 @@ endfunction
 
 
 function! s:escape_key(key)
-	execute 'let result = "' . substitute(escape(a:key, '\'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
+	execute 'let result = "' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
 	return result
 endfunction
 
