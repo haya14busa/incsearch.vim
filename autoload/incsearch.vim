@@ -82,7 +82,21 @@ call s:cli.connect('CursorMove')
 call s:cli.connect('Delete')
 call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
-call s:cli.connect('Exit')
+" NOTE: see s:cli.keymapping()
+" call s:cli.connect('Exit')
+let s:myexit = {
+\   "name" : "IncsearchExit",
+\   "exit_code" : 0
+\}
+function! s:myexit.on_char_pre(cmdline)
+    if   a:cmdline.is_input("\<CR>")
+    \ || a:cmdline.is_input("\<NL>")
+        call a:cmdline.setchar("")
+        call a:cmdline.exit(self.exit_code)
+    endif
+endfunction
+call s:cli.connect(s:myexit)
+
 let s:InsertRegister = s:modules.get('InsertRegister').make()
 call s:cli.connect(s:InsertRegister)
 call s:cli.connect('Paste')
@@ -106,12 +120,15 @@ endif
 
 
 function! s:cli.keymapping()
+    " NOTE:
+    " 'lock' doesn't be remapped if it is in the multi {rhs} mapping
+    " workaround: use s:myexit module and do not use `lock` fetaure
+    " \       "\<CR>"   : {
+    " \           "key" : "<Over>(exit)",
+    " \           "noremap" : 1,
+    " \           "lock" : 1,
+    " \       },
     return extend({
-\       "\<CR>"   : {
-\           "key" : "<Over>(exit)",
-\           "noremap" : 1,
-\           "lock" : 1,
-\       },
 \       "\<Tab>"   : {
 \           "key" : "<Over>(incsearch-next)",
 \           "noremap" : 1,
@@ -176,6 +193,13 @@ function! s:inc.on_leave(cmdline)
         echo ''
     else
         echo s:cli.get_prompt() . s:cli.getline()
+    endif
+    " NOTE:
+    "   push rest of keymappings with feedkeys()
+    "   FIXME: assume 'noremap' but it should take care wheter or not the
+    "   mappings should be remapped or not
+    if a:cmdline.input_key_stack_string() != ''
+        call feedkeys(a:cmdline.input_key_stack_string(), 'n')
     endif
 endfunction
 
