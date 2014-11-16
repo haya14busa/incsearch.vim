@@ -22,10 +22,24 @@ endfunction
 
 
 function! s:input(cmdline)
+	let CR_index = index(a:cmdline.input_key_stack(), "\<CR>")
+	if CR_index != -1
+		let input = a:cmdline.input_key_stack_string()
+		let input = input[ : CR_index-1]
+		call a:cmdline.set_input_key_stack(a:cmdline.input_key_stack()[CR_index+1 : ])
+		return eval(input)
+	endif
+
+	let input_text = ""
+	if !empty(a:cmdline.input_key_stack())
+		let input_text = a:cmdline.input_key_stack_string()
+		call a:cmdline.set_input_key_stack([])
+	endif
+
 	call a:cmdline.hl_cursor_on()
 	try
 		redraw
-		let input = input("=", "", "expression")
+		let input = input("=", input_text, "expression")
 		if !empty(input)
 			let input = s:to_string(eval(input))
 		endif
