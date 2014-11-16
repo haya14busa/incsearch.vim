@@ -177,6 +177,13 @@ function! s:inc.on_leave(cmdline)
     else
         echo s:cli.get_prompt() . s:cli.getline()
     endif
+    " NOTE:
+    "   push rest of keymappings with feedkeys()
+    "   FIXME: assume 'noremap' but it should take care wheter or not the
+    "   mappings should be remapped or not
+    if a:cmdline.input_key_stack_string() != ''
+        call feedkeys(a:cmdline.input_key_stack_string(), 'n')
+    endif
 endfunction
 
 function! s:reset()
