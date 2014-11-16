@@ -40,12 +40,8 @@ let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
 " based on: https://github.com/deris/vim-magicalize/blob/433e38c1e83b1bdea4f83ab99dc19d070932380c/autoload/magicalize.vim#L52-L53
 " improve to work with repetitive espaced slash like \V\V
-" XXX: Maybe it should use \@1<= ( :h /\@<= ) but this doesn't work in old vim
-" and i cannot find the version which this regex is introduced. It handle
-" repetitive escaped backslash like `\V\V` unlike `\zs`, so it cannot avoid
-" using \@<=
+" NOTE: \@1<= doesn't work to detect \v\v\v\v
 let s:escaped_backslash     = '\m\%(^\|[^\\]\)\%(\\\\\)*'
-" let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@1<=\\'
 let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 
 " Option:
@@ -84,18 +80,18 @@ call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
 " NOTE: see s:cli.keymapping()
 " call s:cli.connect('Exit')
-let s:myexit = {
+let s:incsearch_exit = {
 \   "name" : "IncsearchExit",
 \   "exit_code" : 0
 \}
-function! s:myexit.on_char_pre(cmdline)
+function! s:incsearch_exit.on_char_pre(cmdline)
     if   a:cmdline.is_input("\<CR>")
     \ || a:cmdline.is_input("\<NL>")
         call a:cmdline.setchar("")
         call a:cmdline.exit(self.exit_code)
     endif
 endfunction
-call s:cli.connect(s:myexit)
+call s:cli.connect(s:incsearch_exit)
 
 let s:InsertRegister = s:modules.get('InsertRegister').make()
 call s:cli.connect(s:InsertRegister)
@@ -107,22 +103,57 @@ endif
 call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:cli.connect(s:modules.get('History').make('/'))
 call s:cli.connect(s:modules.get('NoInsert').make_special_chars())
+
+" Dynamic Module Loading Management
 let s:KeyMapping = s:modules.get('KeyMapping')
-if g:incsearch#emacs_like_keymap
-    call s:cli.connect(s:KeyMapping.make_emacs())
-endif
-if g:incsearch#vim_cmdline_keymap
-    call s:cli.connect(s:KeyMapping.make_vim_cmdline_mapping())
-endif
-if g:incsearch#smart_backward_word
-    call s:cli.connect('IgnoreRegexpBackwardWord')
-endif
+let s:emacs_like = s:KeyMapping.make_emacs()
+let s:vim_cmap = s:KeyMapping.make_vim_cmdline_mapping()
+let s:smartbackword = s:modules.get('IgnoreRegexpBackwardWord').make()
+function! s:emacs_like.__condition()
+    return g:incsearch#emacs_like_keymap
+endfunction
+function! s:vim_cmap.__condition()
+    return g:incsearch#vim_cmdline_keymap
+endfunction
+function! s:smartbackword.__condition()
+    return g:incsearch#smart_backward_word
+endfunction
+let s:module_management =  {
+\   'name' : 'IncsearchModuleManagement',
+\   'modules' : [
+\       s:emacs_like, s:vim_cmap, s:smartbackword
+\   ]
+\}
+let s:backward_word = s:cli.backward_word
+function! s:module_management.on_enter(cmdline)
+    for module in self.modules
+        if has_key(module, '__condition') && ! module.__condition()
+            call a:cmdline.disconnect(module.name)
+            if module.name ==# 'IgnoreRegexpBackwardWord'
+                function! a:cmdline.backward_word(...)
+                    return call(s:backward_word, a:000, self)
+                endfunction
+            endif
+        elseif empty(a:cmdline.get_module(module.name))
+            call a:cmdline.connect(module)
+            if has_key(module, 'on_enter')
+                call module.on_enter(a:cmdline)
+            endif
+        endif
+    endfor
+endfunction
+function! s:module_management.priority(event)
+    " NOTE: to overwrite backward_word() with default function
+    return a:event ==# 'on_enter' ? 5 : 0
+endfunction
+call s:cli.connect(s:module_management)
+unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword s:incsearch_exit
 
 
 function! s:cli.keymapping()
     " NOTE:
     " 'lock' doesn't be remapped if it is in the multi {rhs} mapping
-    " workaround: use s:myexit module and do not use `lock` fetaure
+    " workaround: use s:incsearch_exit module and do not use `lock` fetaure
     " \       "\<CR>"   : {
     " \           "key" : "<Over>(exit)",
     " \           "noremap" : 1,
@@ -412,7 +443,7 @@ call s:cli.connect(s:inc)
 "}}}
 
 " Main: {{{
-" TODO: make publick API to which you can pass `context` (or option)
+" TODO: make public API to which you can pass `context` (or option)
 " @expr: called by <expr> mappings
 
 function! incsearch#forward(mode, ...)
