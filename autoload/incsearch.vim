@@ -187,13 +187,6 @@ let s:inc = {
 \   "name" : "incsearch",
 \}
 
-
-function! s:inc.backward_word(...)
-    let expr = self.backward()
-    " expr から 要らない正規表現フラッグ取り除く
-    return call(function('s:cli.backward_word'), [expr], self)
-endfunction
-
 function! s:inc.on_enter(cmdline)
     nohlsearch " disable previous highlight
     let s:w = winsaveview()
