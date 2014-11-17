@@ -77,12 +77,12 @@ noremap <Plug>(_incsearch-#)  #
 noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
 
-function! s:is_visual(mode)
+function! s:is_visual(mode) abort
     return a:mode =~# "[vV\<C-v>]"
 endfunction
 
 " for normal and visual mode
-function! s:mode_wrap(cmd)
+function! s:mode_wrap(cmd) abort
     let m = mode(1)
     let esc = s:is_visual(m) ? "\<ESC>" : ''
     return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
@@ -92,14 +92,14 @@ endfunction
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
 
-function! s:key_mapping(lhs, rhs, noremap)
+function! s:key_mapping(lhs, rhs, noremap) abort
     let g:incsearch_cli_key_mappings[a:lhs] = {
 \       "key" : a:rhs,
 \       "noremap" : a:noremap,
 \   }
 endfunction
 
-function! s:as_keymapping(key)
+function! s:as_keymapping(key) abort
     execute 'let result = "' . substitute(a:key, '\(<.\{-}>\)', '\\\1', 'g') . '"'
     return result
 endfunction

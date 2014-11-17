@@ -84,7 +84,7 @@ let s:incsearch_exit = {
 \   "name" : "IncsearchExit",
 \   "exit_code" : 0
 \}
-function! s:incsearch_exit.on_char_pre(cmdline)
+function! s:incsearch_exit.on_char_pre(cmdline) abort
     if   a:cmdline.is_input("\<CR>")
     \ || a:cmdline.is_input("\<NL>")
         call a:cmdline.setchar("")
@@ -109,13 +109,13 @@ let s:KeyMapping = s:modules.get('KeyMapping')
 let s:emacs_like = s:KeyMapping.make_emacs()
 let s:vim_cmap = s:KeyMapping.make_vim_cmdline_mapping()
 let s:smartbackword = s:modules.get('IgnoreRegexpBackwardWord').make()
-function! s:emacs_like.__condition()
+function! s:emacs_like.__condition() abort
     return g:incsearch#emacs_like_keymap
 endfunction
-function! s:vim_cmap.__condition()
+function! s:vim_cmap.__condition() abort
     return g:incsearch#vim_cmdline_keymap
 endfunction
-function! s:smartbackword.__condition()
+function! s:smartbackword.__condition() abort
     return g:incsearch#smart_backward_word
 endfunction
 let s:module_management =  {
@@ -125,12 +125,12 @@ let s:module_management =  {
 \   ]
 \}
 let s:backward_word = s:cli.backward_word
-function! s:module_management.on_enter(cmdline)
+function! s:module_management.on_enter(cmdline) abort
     for module in self.modules
         if has_key(module, '__condition') && ! module.__condition()
             call a:cmdline.disconnect(module.name)
             if module.name ==# 'IgnoreRegexpBackwardWord'
-                function! a:cmdline.backward_word(...)
+                function! a:cmdline.backward_word(...) abort
                     return call(s:backward_word, a:000, self)
                 endfunction
             endif
@@ -142,7 +142,7 @@ function! s:module_management.on_enter(cmdline)
         endif
     endfor
 endfunction
-function! s:module_management.priority(event)
+function! s:module_management.priority(event) abort
     " NOTE: to overwrite backward_word() with default function
     return a:event ==# 'on_enter' ? 5 : 0
 endfunction
@@ -150,7 +150,7 @@ call s:cli.connect(s:module_management)
 unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword s:incsearch_exit
 
 
-function! s:cli.keymapping()
+function! s:cli.keymapping() abort
     " NOTE:
     " 'lock' doesn't be remapped if it is in the multi {rhs} mapping
     " workaround: use s:incsearch_exit module and do not use `lock` fetaure
@@ -187,7 +187,7 @@ let s:inc = {
 \   "name" : "incsearch",
 \}
 
-function! s:inc.on_enter(cmdline)
+function! s:inc.on_enter(cmdline) abort
     nohlsearch " disable previous highlight
     let s:w = winsaveview()
     let hgm = incsearch#highlight#hgm()
@@ -207,7 +207,7 @@ function! s:inc.on_enter(cmdline)
     endif
 endfunction
 
-function! s:inc.on_leave(cmdline)
+function! s:inc.on_leave(cmdline) abort
     call s:reset()
     call s:hi.disable_all()
     call s:hi.delete_all()
@@ -227,14 +227,14 @@ function! s:inc.on_leave(cmdline)
     endif
 endfunction
 
-function! s:reset()
+function! s:reset() abort
     " Current commandline is called by <expr> mapping
     let s:cli.is_expr = s:FALSE
 endfunction
 call s:reset()
 
 " Avoid search-related error while incremental searching
-function! s:on_searching(func, ...)
+function! s:on_searching(func, ...) abort
     try
         return call(a:func, a:000)
     catch /E16:/  " E16: Invalid range  (with /\_[a- )
@@ -264,7 +264,7 @@ function! s:on_searching(func, ...)
     endtry
 endfunction
 
-function! s:on_char_pre(cmdline)
+function! s:on_char_pre(cmdline) abort
     " NOTE:
     " `:call a:cmdline.setchar('')` as soon as possible!
     let [pattern, offset] = s:cli_parse_pattern()
@@ -347,7 +347,7 @@ function! s:on_char_pre(cmdline)
     endif
 endfunction
 
-function! s:on_char(cmdline)
+function! s:on_char(cmdline) abort
     let [raw_pattern, offset] = s:cli_parse_pattern()
 
     if raw_pattern ==# ''
@@ -388,7 +388,7 @@ endfunction
 
 " Caveat: It handle :h last-pattern, so be careful if you want to pass empty
 " string as a pattern
-function! s:move_cursor(pattern, flag, ...)
+function! s:move_cursor(pattern, flag, ...) abort
     let offset = get(a:, 1, '')
     if a:flag ==# 'n' " skip if stay mode
         return
@@ -424,11 +424,11 @@ function! s:move_cursor(pattern, flag, ...)
     endif
 endfunction
 
-function! s:inc.on_char_pre(cmdline)
+function! s:inc.on_char_pre(cmdline) abort
     call s:on_searching(function('s:on_char_pre'), a:cmdline)
 endfunction
 
-function! s:inc.on_char(cmdline)
+function! s:inc.on_char(cmdline) abort
     call s:on_searching(function('s:on_char'), a:cmdline)
 endfunction
 
@@ -439,7 +439,7 @@ call s:cli.connect(s:inc)
 " TODO: make public API to which you can pass `context` (or option)
 " @expr: called by <expr> mappings
 
-function! incsearch#forward(mode, ...)
+function! incsearch#forward(mode, ...) abort
     if s:U.is_visual(a:mode)
         normal! gv
     endif
@@ -448,11 +448,11 @@ function! incsearch#forward(mode, ...)
 endfunction
 
 " @expr
-function! incsearch#forward_expr()
+function! incsearch#forward_expr() abort
     return s:search('/')
 endfunction
 
-function! incsearch#backward(mode, ...)
+function! incsearch#backward(mode, ...) abort
     if s:U.is_visual(a:mode)
         normal! gv
     endif
@@ -461,13 +461,13 @@ function! incsearch#backward(mode, ...)
 endfunction
 
 " @expr
-function! incsearch#backward_expr()
+function! incsearch#backward_expr() abort
     return s:search('?')
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
-function! incsearch#stay(mode, ...)
+function! incsearch#stay(mode, ...) abort
     if s:U.is_visual(a:mode)
         normal! gv
     endif
@@ -477,7 +477,7 @@ function! incsearch#stay(mode, ...)
 endfunction
 
 " @expr but sometimes called by non-<expr>
-function! incsearch#stay_expr(...)
+function! incsearch#stay_expr(...) abort
     " return: command which is excutable with expr-mappings or `exec 'normal!'`
     let s:cli.vcount1 = get(a:, 1, v:count1)
     let s:cli.is_expr = get(a:, 2, s:TRUE)
@@ -523,7 +523,7 @@ function! incsearch#stay_expr(...)
     endif
 endfunction
 
-function! s:search(search_key, ...)
+function! s:search(search_key, ...) abort
     let m = mode(1)
     let s:cli.vcount1 = get(a:, 1, v:count1)
     let s:cli.is_expr = get(a:, 2, s:TRUE)
@@ -535,7 +535,7 @@ function! s:search(search_key, ...)
     \   m, s:combine_pattern(s:convert(pattern), offset), a:search_key)
 endfunction
 
-function! s:get_input(search_key, mode)
+function! s:get_input(search_key, mode) abort
     " if search_key is empty, it means `stay` & do not move cursor
     let prompt = a:search_key ==# '' ? '/' : a:search_key
     call s:cli.set_prompt(prompt)
@@ -560,7 +560,7 @@ function! s:get_input(search_key, mode)
     return input
 endfunction
 
-function! s:generate_command(mode, pattern, search_key)
+function! s:generate_command(mode, pattern, search_key) abort
     if (s:cli.exit_code() == 0)
         call s:cli.callevent('on_execute_pre') " XXX: side-effect!
         return s:build_search_cmd(a:mode, a:pattern, a:search_key)
@@ -569,7 +569,7 @@ function! s:generate_command(mode, pattern, search_key)
     endif
 endfunction
 
-function! s:build_search_cmd(mode, pattern, search_key)
+function! s:build_search_cmd(mode, pattern, search_key) abort
     let op = (a:mode == 'no')      ? v:operator
     \      : s:U.is_visual(a:mode) ? 'gv'
     \      : ''
@@ -586,7 +586,7 @@ endfunction
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.
-function! s:set_search_related_stuff(cmd, ...)
+function! s:set_search_related_stuff(cmd, ...) abort
     " For stay motion
     let should_set_jumplist = get(a:, 1, s:TRUE)
     let is_cancel = s:cli.exit_code()
@@ -666,7 +666,7 @@ endfunction
 " function because the first move event just set nested autocmd which
 " does :nohlsearch
 " @expr
-function! incsearch#auto_nohlsearch(nest)
+function! incsearch#auto_nohlsearch(nest) abort
     " NOTE: see this value inside this function in order to toggle auto
     " :nohlsearch feature easily with g:incsearch#auto_nohlsearch option
     if !g:incsearch#auto_nohlsearch | return '' | endif
@@ -698,7 +698,7 @@ endfunction
 
 " Helper: {{{
 " @return [pattern, offset]
-function! incsearch#parse_pattern(expr, search_key)
+function! incsearch#parse_pattern(expr, search_key) abort
     " search_key : '/' or '?'
     " expr       : {pattern\/pattern}/{offset}
     " expr       : {pattern}/;/{newpattern} :h //;
@@ -718,7 +718,7 @@ function! incsearch#parse_pattern(expr, search_key)
 endfunction
 
 " CommandLine Interface parse pattern wrapper
-function! s:cli_parse_pattern()
+function! s:cli_parse_pattern() abort
     if v:version == 704 && !has('patch421')
         " Ignore \ze* which clash vim 7.4 without 421 patch
         " Assume `\m`
@@ -731,21 +731,21 @@ function! s:cli_parse_pattern()
 endfunction
 
 " CommandLine Interface parse pattern wrapper for just getting pattern
-function! s:cli_get_pattern()
+function! s:cli_get_pattern() abort
     let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
     return pattern
 endfunction
 
-function! s:combine_pattern(pattern, offset)
+function! s:combine_pattern(pattern, offset) abort
     return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
 endfunction
 
-function! s:convert(pattern)
+function! s:convert(pattern) abort
     " TODO: convert pattern if required in addition to appending magic flag
     return s:magic() . a:pattern
 endfunction
 
-function! incsearch#detect_case(pattern)
+function! incsearch#detect_case(pattern) abort
     " Ignore \%C, \%U, \%V for smartcase detection
     let p = substitute(a:pattern, s:non_escaped_backslash . '%[CUV]', '', 'g')
     " Explicit \c has highest priority
@@ -766,11 +766,11 @@ function! incsearch#detect_case(pattern)
     endif
 endfunction
 
-function! incsearch#convert_with_case(pattern)
+function! incsearch#convert_with_case(pattern) abort
     return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
-function! s:silent_after_search(...) " arg: mode(1)
+function! s:silent_after_search(...) " arg: mode(1) abort
     " :h function-search-undo
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:_silent_hlsearch()
@@ -778,12 +778,12 @@ function! s:silent_after_search(...) " arg: mode(1)
     endif
 endfunction
 
-function! s:_silent_hlsearch()
+function! s:_silent_hlsearch() abort
     " Handle :set hlsearch
     call s:U.silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
 endfunction
 
-function! s:_silent_searchforward(...)
+function! s:_silent_searchforward(...) abort
     " NOTE: You have to 'exec normal! `/` or `?`' before calling this
     " function to update v:searchforward
     let direction = get(a:, 1,
@@ -794,7 +794,7 @@ function! s:_silent_searchforward(...)
     \   'searchforward', 'n')
 endfunction
 
-function! s:emulate_search_error(direction)
+function! s:emulate_search_error(direction) abort
     let keyseq = (a:direction == s:DIRECTION.forward ? '/' : '?')
     let old_errmsg = v:errmsg
     let v:errmsg = ''
@@ -835,15 +835,15 @@ function! s:emulate_search_error(direction)
 endfunction
 
 " Should I use :h echoerr ? But it save the messages in message-history
-function! s:Error(msg, ...)
+function! s:Error(msg, ...) abort
     return call(function('s:_echohl'), [a:msg, 'ErrorMsg'] + a:000)
 endfunction
 
-function! s:Warning(msg, ...)
+function! s:Warning(msg, ...) abort
     return call(function('s:_echohl'), [a:msg, 'WarningMsg'] + a:000)
 endfunction
 
-function! s:_echohl(msg, hlgroup, ...)
+function! s:_echohl(msg, hlgroup, ...) abort
     let echocmd = get(a:, 1, 'echo')
     redraw | echo ''
     exec 'echohl' a:hlgroup
@@ -852,7 +852,7 @@ function! s:_echohl(msg, hlgroup, ...)
 endfunction
 
 " Not to generate command with zv
-function! s:with_ignore_foldopen(F, ...)
+function! s:with_ignore_foldopen(F, ...) abort
     let foldopen_save = &foldopen
     let &foldopen=''
     try
@@ -865,18 +865,18 @@ endfunction
 " Try to avoid side-effect as much as possible except cursor movement
 let s:has_keeppattern = v:version > 704 || v:version == 704 && has('patch083')
 let s:keeppattern = (s:has_keeppattern ? 'keeppattern' : '')
-function! s:_execute_search(cmd)
+function! s:_execute_search(cmd) abort
     " :nohlsearch
     "   Please do not highlight at the first place if you set back
     "   info! I'll handle it myself :h function-search-undo
     execute s:keeppattern 'keepjumps' 'normal!' a:cmd | nohlsearch
 endfunction
 if s:has_keeppattern
-    function! s:execute_search(...)
+    function! s:execute_search(...) abort
         return call(function('s:_execute_search'), a:000)
     endfunction
 else
-    function! s:execute_search(...)
+    function! s:execute_search(...) abort
         " keeppattern emulation
         let p = @/
         let r = call(function('s:_execute_search'), a:000)
@@ -888,7 +888,7 @@ else
     endfunction
 endif
 
-function! s:magic()
+function! s:magic() abort
     let m = g:incsearch#magic
     return (len(m) == 2 && m =~# '\\[mMvV]' ? m : '')
 endfunction
