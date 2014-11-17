@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.8
+Version : 0.9.9
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -347,15 +347,30 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
-Version 1.0 Roadmap~
-
-1.0.0	1. Pattern converter feature
+Version 2.0(?) Roadmap~
+2.0.0	1. Pattern converter feature
 	    - https://github.com/haya14busa/incsearch.vim/tree/converter
 	    - Implement fuzzy-search, migemo, spellcheck and other feature
 	    - Make public pattern converter API for customization
 	    - Write test for converer feature
+
+Version 1.0 Roadmap~
+1.0.0	1. More stable, compatible with default |/| behavior
 	2. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+0.9.9	2014-11-17
+	1. Smart backward word feature. See: |g:incsearch#smart_backward_word|
+	2. Implement |g:incsearch#vim_cmdline_keymap| option which apply
+	   mappings defined with |:cmap| and |:cnoremap| to custome command line
+	   interface of incsearch.vim
+	3. Do not highlight annoying patterns which matches everything like
+	   `\v`, `vim\|`, etc..
+	4. Interactive module management (e.g. |g:incsearch#emacs_like_keymap|)
+	6. Fix |c_<C-r>_<C-w>| behavoir to be compatible with default one
+	7. Fix cancel behavior
+	8. Fix & improve {rhs} handling (after exit mappings, <C-r>=, etc...)
+	9. Fix minor problems
 
 0.9.8	2014-10-25
 	1. Handle |last-pattern| incrementally. See: |<Over>(incsearch-next)|
