@@ -95,6 +95,8 @@ You can set very magic option with no portability problem.
 ```vim
 let g:incsearch#magic = '\v'
 ```
+### Smart backward word
+See `:h g:incsearch#smart_backward_word`
 
 ### Command Line Interface Keymappings
 incsearch.vim uses a custom command line interface, so it provides a custom

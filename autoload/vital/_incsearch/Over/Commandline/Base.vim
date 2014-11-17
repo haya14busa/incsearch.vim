@@ -168,6 +168,12 @@ function! s:base.backward()
 endfunction
 
 
+function! s:base.backward_word(...)
+	let pat = get(a:, 1, '\k\+\s*\|.')
+	return matchstr(self.backward(), '\%(' . pat . '\)$')
+endfunction
+
+
 function! s:base.connect(module, ...)
 	if type(a:module) == type("")
 		return call(self.connect, [s:Module.make(a:module)] + a:000, self)
@@ -325,13 +331,36 @@ function! s:base.get(...)
 endfunction
 
 
-function! s:base._init()
+function! s:base.input_key_stack()
+	return self.variables.input_key_stack
+endfunction
+
+
+function! s:base.input_key_stack_string()
+	return join(self.variables.input_key_stack, "")
+endfunction
+
+
+function! s:base.set_input_key_stack(stack)
+	let self.variables.input_key_stack = a:stack
+	return self.variables.input_key_stack
+endfunction
+
+
+function! s:base._init_variables()
 	let self.variables.tap_key = ""
 	let self.variables.char = ""
 	let self.variables.input = ""
 	let self.variables.exit = 0
 	let self.variables.exit_code = 1
 	let self.variables.enable_keymapping = 1
+	let self.variables.input_key_stack = []
+	let self.line = deepcopy(s:String.make())
+endfunction
+
+
+function! s:base._init()
+	call self._init_variables()
 	call self.hl_cursor_off()
 	if !hlexists(self.highlights.cursor)
 		execute "highlight link " . self.highlights.cursor . " Cursor"
@@ -360,6 +389,17 @@ function! s:base._execute(command)
 endfunction
 
 
+function! s:base._input_char(char)
+	let char = a:char
+	let self.variables.input_key = char
+	let self.variables.char = char
+	call self.setchar(self.variables.char)
+	call self.callevent("on_char_pre")
+	call self.insert(self.variables.input)
+	call self.callevent("on_char")
+endfunction
+
+
 function! s:base._input(input, ...)
 	let self.variables.input_key = a:input
 	if self.is_enable_keymapping()
@@ -367,15 +407,14 @@ function! s:base._input(input, ...)
 	else
 		let key = a:input
 	endif
+	if key == ""
+		return
+	endif
 
-	for char in s:String.split_by_keys(key)
-		let self.variables.input_key = char
-		let self.variables.char = char
-		call self.setchar(self.variables.char)
-		call self.callevent("on_char_pre")
-		call self.insert(self.variables.input)
-		call self.callevent("on_char")
-	endfor
+	call self.set_input_key_stack(s:String.split_by_keys(key))
+	while !(empty(self.input_key_stack()) || self._is_exit())
+		call self._input_char(remove(self.input_key_stack(), 0))
+	endwhile
 endfunction
 
 
@@ -400,9 +439,9 @@ endfunction
 function! s:base._main(...)
 	try
 		call self._init()
-		let self.line = deepcopy(s:String.make(get(a:, 1, "")))
 		call self.callevent("on_enter")
 
+		call self._input(get(a:, 1, ""))
 		call self.draw()
 		while !self._is_exit()
 			try
