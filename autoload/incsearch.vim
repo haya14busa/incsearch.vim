@@ -51,6 +51,7 @@ let g:incsearch#separate_highlight     = get(g: , 'incsearch#separate_highlight'
 let g:incsearch#consistent_n_direction = get(g: , 'incsearch#consistent_n_direction' , s:FALSE)
 let g:incsearch#vim_cmdline_keymap     = get(g: , 'incsearch#vim_cmdline_keymap'     , s:TRUE)
 let g:incsearch#smart_backward_word    = get(g: , 'incsearch#smart_backward_word'    , s:TRUE)
+let g:incsearch#no_inc_hlsearch        = get(g: , 'incsearch#no_inc_hlsearch'        , s:FALSE)
 " This changes error and warning emulation way slightly
 let g:incsearch#do_not_save_error_message_history =
 \   get(g:, 'incsearch#do_not_save_error_message_history', s:FALSE)
@@ -150,6 +151,31 @@ endfunction
 call s:cli.connect(s:module_management)
 unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword s:incsearch_exit
 
+let s:pattern_saver =  {
+\   'name' : 'PatternSaver',
+\   'pattern' : '',
+\   'hlsearch' : &hlsearch
+\}
+function! s:pattern_saver.on_enter(cmdline) abort
+    if ! g:incsearch#no_inc_hlsearch
+        let self.pattern = @/
+        let self.hlsearch = &hlsearch
+        set hlsearch | nohlsearch
+        if exists('v:hlsearch')
+            let self.vhlsearch = v:hlsearch
+        endif
+    endif
+endfunction
+function! s:pattern_saver.on_leave(cmdline) abort
+    if ! g:incsearch#no_inc_hlsearch && a:cmdline.exit_code()
+        let @/ = self.pattern
+        let &hlsearch = self.hlsearch
+        if exists('v:hlsearch')
+            let v:hlsearch = self.vhlsearch
+        endif
+    endif
+endfunction
+call s:cli.connect(s:pattern_saver)
 
 function! s:cli.keymapping() abort
     " NOTE:
@@ -362,6 +388,8 @@ function! s:on_char(cmdline) abort
         return
     endif
 
+    let pattern = s:convert(raw_pattern)
+
     " For InsertRegister
     if a:cmdline.get_tap_key() ==# "\<C-r>"
         let p = a:cmdline.getpos()
@@ -372,8 +400,6 @@ function! s:on_char(cmdline) abort
         call s:InsertRegister.reset()
         call winrestview(w)
     endif
-
-    let pattern = s:convert(raw_pattern)
 
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)

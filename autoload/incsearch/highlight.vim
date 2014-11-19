@@ -243,6 +243,10 @@ function! incsearch#highlight#incremental_highlight(pattern, ...) abort
         call s:hi.delete_all()
     elseif ! should_separate_highlight
         call s:hi.add(m.group, m.group, a:pattern, m.priority)
+        if ! g:incsearch#no_inc_hlsearch
+            let @/ = a:pattern
+            let &hlsearch = &hlsearch
+        endif
     else
         let [p1, p2] = (direction == s:DIRECTION.forward)
         \   ? [incsearch#highlight#forward_pattern(a:pattern, start_pos)
