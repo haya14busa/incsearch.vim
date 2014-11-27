@@ -255,11 +255,17 @@ Command line interface~
 		<A-d>  | |<C-w>|
 
 Buffer completion			*incsearch-<Over>(buffer-complete)*
+					*incsearch-<Over>(buffer-complete-prev)*
 	Completion with the buffer text.
 
-	<Over>(buffer-complete)  start buffer text completion. default: <C-l>
-	<Right>			 select next candidate while completion
-	<Left>			 select candidate while completion
+	<Over>(buffer-complete)
+	    start buffer text completion. default: <C-l>
+	<Over>(buffer-complete-prev)
+	    start buffer text completion to backward direction.
+	<Right>
+	    select next candidate while completion
+	<Left>
+	    select candidate while completion
 
 	Example: >
 		augroup incsearch-keymap
@@ -268,6 +274,7 @@ Buffer completion			*incsearch-<Over>(buffer-complete)*
 		augroup END
 		function! s:incsearch_keymap()
 		    IncSearchNoreMap <Tab> <Over>(buffer-complete)
+		    IncSearchNoreMap <S-Tab> <Over>(buffer-complete-prev)
 		endfunction
 <
 ------------------------------------------------------------------------------
