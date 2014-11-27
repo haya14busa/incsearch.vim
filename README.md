@@ -2,6 +2,9 @@ incsearch.vim: Improved incremental searching
 =============================================
 [![Build Status](https://travis-ci.org/haya14busa/incsearch.vim.svg?branch=master)](https://travis-ci.org/haya14busa/incsearch.vim)
 [![Build status](https://ci.appveyor.com/api/projects/status/ks6gtsu46c1djoo6/branch/master)](https://ci.appveyor.com/project/haya14busa/incsearch-vim/branch/master)
+[![](http://img.shields.io/github/tag/haya14busa/incsearch.vim.svg)](https://github.com/haya14busa/incsearch.vim/releases)
+[![](http://img.shields.io/github/issues/haya14busa/incsearch.vim.svg)](https://github.com/haya14busa/incsearch.vim/issues)
+[![](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ![](https://cloud.githubusercontent.com/assets/3797062/3866249/573444b2-1fc8-11e4-859a-7e5fb940c1bb.gif)
 
@@ -101,7 +104,9 @@ See `:h g:incsearch#smart_backward_word`
 ### Command Line Interface Keymappings
 incsearch.vim uses a custom command line interface, so it provides a custom
 keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
-in your vimrc, please call it on `VimEnter`.
+in your vimrc, please call it on `VimEnter`. The mappings defined with this
+command have higher priority than vim default command line mappings if
+`g:incsearch#vim_cmdline_keymap` option is 1 (default: 1).
 
 ```vim
 augroup incsearch-keymap
@@ -109,33 +114,10 @@ augroup incsearch-keymap
     autocmd VimEnter * call s:incsearch_keymap()
 augroup END
 function! s:incsearch_keymap()
-    IncSearchNoreMap <C-f> <Right>
-    IncSearchNoreMap <C-b> <Left>
+    IncSearchNoreMap <C-f> <Over>(incsearch-scroll-f)
+    IncSearchNoreMap <C-b> <Over>(incsearch-scroll-b)
 endfunction
 ```
-
-#### Emacs-like keymappings
-
-If you want to set emacs-like keymappings, just set `g:incsearch#emacs_like_keymap`
-to 1 and basic emacs-like keymappings will be set.
-
-```vim
-let g:incsearch#emacs_like_keymap = 1
-```
-
-#### Emacs-like keymapping table
-
-| {lhs}    | {rhs}      |
-|--------- |----------- |
-| `<C-f>`  | `<Right>`  |
-| `<C-b>`  | `<Left>`   |
-| `<C-n>`  | `<Down>`   |
-| `<C-p>`  | `<Up>`     |
-| `<C-a>`  | `<Home>`   |
-| `<C-e>`  | `<End>`    |
-| `<C-d>`  | `<Del>`    |
-| `<A-d>`  | `<C-w>`    |
-
 
 ### Emacs-like incsearch: move the cursor while incremental searching
 
@@ -167,44 +149,6 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 | `<Over>(buffer-complete)` | buffer completion. default: `<C-l>` |
 
 
-### Highlight
-
-#### highlight group
-
-| highlight group         | description                                                         |
-| -------------------     | -----------------------------------------------------------         |
-| `IncSearchMatch`        | For all matched pattern. default: `Search`                          |
-| `IncSearchMatchReverse` | For all matched pattern in reverse direction.  default: `IncSearch` |
-| `IncSearchOnCursor`     | For the matched pattern on the cursor. default: `IncSearch`         |
-| `IncSearchCursor`       | For cursor position. default: `Cursor`                              |
-| `IncSearchUnderline`    | It's not used by default. Just for the customization                |
-
-#### custom highlight
-
-Change the cursor color to red
-
-```vim
-highlight IncSearchCursor ctermfg=0 ctermbg=9 guifg=#000000 guibg=#FF0000
-```
-
-Or use the `g:incsearch#highlight` option like this.
-
-```vim
-let g:incsearch#highlight = {
-\   'match' : {
-\     'group' : 'IncSearchUnderline',
-\     'priority' : '10'
-\   },
-\   'on_cursor' : {
-\     'priority' : '100'
-\   },
-\   'cursor' : {
-\     'group' : 'ErrorMsg',
-\     'priority' : '1000'
-\   }
-\ }
-```
-
 Author
 ------
 haya14busa (https://github.com/haya14busa)
@@ -215,35 +159,9 @@ osyo-manga(https://github.com/osyo-manga), the author of
 the custom command line library, https://github.com/osyo-manga/vital-over,
 which incsearch.vim heavily depends on.
 
-License
--------
-
-MIT License
-
-```
-Copyright (c) 2014 haya14busa
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
 Links
 -----
 
 ### VimConf2014
 - [/-improved](https://docs.google.com/presentation/d/1ie2VCSt9onXmoY3v_zxJdMjYJSbAelVR-QExdUQK-Tw/pub?start=false&loop=false&delayms=3000&slide=id.g4e7add63c_05) at [VimConf 2014](http://vimconf.vim-jp.org/2014/)
-  - I talked in Japanese but wrote slide in (poor) English ;)
+  - I talked in Japanese but wrote slide in English ;)
