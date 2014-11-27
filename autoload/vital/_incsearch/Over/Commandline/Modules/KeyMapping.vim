@@ -81,7 +81,8 @@ endfunction
 
 
 let s:vim_cmdline_mapping = {
-\	"name" : "KeyMapping_vim_cmdline_mapping"
+\	"name" : "KeyMapping_vim_cmdline_mapping",
+\	"_cmaps" : {}
 \}
 
 function! s:_auto_cmap()

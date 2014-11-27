@@ -320,7 +320,7 @@ function! s:base.get(...)
 	let Old_execute = self.execute
 	let self.execute = self.__empty
 	try
-		let exit_code = self.start()
+		let exit_code = call(self.start, a:000, self)
 		if exit_code == 0
 			return self.getline()
 		endif
