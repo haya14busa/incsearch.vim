@@ -5,6 +5,7 @@ incsearch.vim: Improved incremental searching
 [![](http://img.shields.io/github/tag/haya14busa/incsearch.vim.svg)](https://github.com/haya14busa/incsearch.vim/releases)
 [![](http://img.shields.io/github/issues/haya14busa/incsearch.vim.svg)](https://github.com/haya14busa/incsearch.vim/issues)
 [![](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![](http://img.shields.io/badge/doc-%3Ah%20incsearch.txt-red.svg)](doc/incsearch.txt)
 
 ![](https://cloud.githubusercontent.com/assets/3797062/3866249/573444b2-1fc8-11e4-859a-7e5fb940c1bb.gif)
 

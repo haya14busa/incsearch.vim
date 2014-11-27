@@ -42,12 +42,12 @@ let s:V = vital#of('incsearch')
 let s:hi = s:V.import("Coaster.Highlight").make()
 let g:incsearch#highlight#_hi = s:hi
 
-function! incsearch#highlight#update()
+function! incsearch#highlight#update() abort
     call s:hi.disable_all()
     call s:hi.enable_all()
 endfunction
 
-function! s:init_hl()
+function! s:init_hl() abort
     hi link IncSearchMatch Search
     hi link IncSearchMatchReverse IncSearch
     hi link IncSearchCursor Cursor
@@ -83,7 +83,7 @@ let s:default_highlight = {
 \   },
 \ }
 
-function! incsearch#highlight#hgm() " highlight group management
+function! incsearch#highlight#hgm() " highlight group management abort
     let hgm = copy(s:default_highlight)
     for key in keys(hgm)
         call extend(hgm[key], get(g:incsearch#highlight, key, {}))
@@ -96,7 +96,7 @@ endfunction
 " Util:
 
 " @return hldict
-function! incsearch#highlight#capture(hlname)
+function! incsearch#highlight#capture(hlname) abort
     " Based On: https://github.com/t9md/vim-ezbar
     "           https://github.com/osyo-manga/vital-over
     let hlname = a:hlname
@@ -129,18 +129,18 @@ function! incsearch#highlight#capture(hlname)
     return { 'name': hlname, 'highlight': HL_SAVE }
 endfunction
 
-function! incsearch#highlight#turn_off(hldict)
+function! incsearch#highlight#turn_off(hldict) abort
     execute 'highlight' a:hldict.name 'NONE'
 endfunction
 
-function! incsearch#highlight#turn_on(hldict)
+function! incsearch#highlight#turn_on(hldict) abort
     execute 'highlight' a:hldict.name a:hldict.highlight
 endfunction
 
 " Wrapper:
 
 " @return hlobj
-function! incsearch#highlight#get_visual_hlobj()
+function! incsearch#highlight#get_visual_hlobj() abort
     if ! exists('s:_visual_hl')
         let s:_visual_hl = incsearch#highlight#capture('Visual')
     endif
@@ -161,7 +161,7 @@ let s:INT = { 'MAX': 2147483647 }
 "   defined highlight, so you have to turn off default visual highlight and
 "   emulate it. All this function do is pseudo highlight visual selected area
 " args: mode, visual_hl, v_start_pos, v_end_pos
-function! incsearch#highlight#emulate_visual_highlight(...)
+function! incsearch#highlight#emulate_visual_highlight(...) abort
     let is_visual_now = s:U.is_visual(mode(1))
     let mode = get(a:, 1, is_visual_now ? mode(1) : visualmode())
     let visual_hl = get(a:, 2, incsearch#highlight#get_visual_hlobj())
@@ -186,7 +186,7 @@ function! incsearch#highlight#emulate_visual_highlight(...)
     call incsearch#highlight#update()
 endfunction
 
-function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
+function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos) abort
     " NOTE: highlight doesn't work if the range is over screen height, so
     "   limit pattern to visible window.
     let [_, v_start, v_end, _] = s:U.sort_pos([
@@ -230,7 +230,7 @@ endfunction
 
 " Incremental Highlighting:
 
-function! incsearch#highlight#incremental_highlight(pattern, ...)
+function! incsearch#highlight#incremental_highlight(pattern, ...) abort
     let should_separate_highlight = get(a:, 1, s:FALSE)
     let direction = get(a:, 2, s:DIRECTION.forward)
     let start_pos = get(a:, 3, getpos('.')[1:2])
@@ -257,12 +257,12 @@ function! incsearch#highlight#incremental_highlight(pattern, ...)
     call incsearch#highlight#update()
 endfunction
 
-function! incsearch#highlight#forward_pattern(pattern, from_pos)
+function! incsearch#highlight#forward_pattern(pattern, from_pos) abort
     let [line, col] = a:from_pos
     return printf('\v(%%>%dl|%%%dl%%>%dc)\m\(%s\m\)', line, line, col, a:pattern)
 endfunction
 
-function! incsearch#highlight#backward_pattern(pattern, from_pos)
+function! incsearch#highlight#backward_pattern(pattern, from_pos) abort
     let [line, col] = a:from_pos
     return printf('\v(%%<%dl|%%%dl%%<%dc)\m\(%s\m\)', line, line, col, a:pattern)
 endfunction
