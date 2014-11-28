@@ -97,6 +97,7 @@ Additional usage~
 
 						*g:incsearch#auto_nohlsearch*
 <Plug>(incsearch-nohl)				*<Plug>(incsearch-nohl)*
+<Plug>(incsearch-nohl0)				*<Plug>(incsearch-nohl0)*
 <Plug>(incsearch-nohl-n)			*<Plug>(incsearch-nohl-n)*
 <Plug>(incsearch-nohl-N)			*<Plug>(incsearch-nohl-N)*
 <Plug>(incsearch-nohl-*)			*<Plug>(incsearch-nohl-star)*
@@ -125,13 +126,29 @@ Additional usage~
 	behavior is completely same as default one.
 
 	If you want to use this feature with other search related plugins, use
-	|<Plug>(incsearch-nohl)|. Please make sure to place |<Plug>(incsearch-nohl)|
-	before the cursor moving mappings.
+	|<Plug>(incsearch-nohl)|.
+	Please make sure to place |<Plug>(incsearch-nohl)| before the cursor
+	moving mappings. |<Plug>(incsearch-nohl0)| handles search enhancement
+	mappings without |CursorMoved| event.
 
 	Working with |anzu.txt| example:
+	    https://github.com/osyo-manga/vim-anzu
 >
 	    map n <Plug>(incsearch-nohl)<Plug>(anzu-n-with-echo)
 	    map N <Plug>(incsearch-nohl)<Plug>(anzu-N-with-echo)
+<
+	Working with |asterisk.txt| example:
+	    https://github.com/haya14busa/vim-asterisk
+>
+	    map *   <Plug>(incsearch-nohl)<Plug>(asterisk-*)
+	    map g*  <Plug>(incsearch-nohl)<Plug>(asterisk-g*)
+	    map #   <Plug>(incsearch-nohl)<Plug>(asterisk-#)
+	    map g#  <Plug>(incsearch-nohl)<Plug>(asterisk-g#)
+
+	    map z*  <Plug>(incsearch-nohl0)<Plug>(asterisk-z*)
+	    map gz* <Plug>(incsearch-nohl0)<Plug>(asterisk-gz*)
+	    map z#  <Plug>(incsearch-nohl0)<Plug>(asterisk-z#)
+	    map gz# <Plug>(incsearch-nohl0)<Plug>(asterisk-gz#)
 <
 
 					    *g:incsearch#consistent_n_direction*
