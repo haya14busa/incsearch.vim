@@ -273,5 +273,10 @@ function! s:index(haystack, needle, ...)
 endfunction
 
 
+function! s:length(str)
+	return len(s:split_by_keys(a:str))
+endfunction
+
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
