@@ -29,6 +29,7 @@ function! s:suite.mappings()
     call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), 'incsearch#stay_expr()')
     " Additional:
     call s:assert.equals(maparg('<Plug>(incsearch-nohl)', 'nvo'), 'incsearch#auto_nohlsearch(1)')
+    call s:assert.equals(maparg('<Plug>(incsearch-nohl0)', 'nvo'), 'incsearch#auto_nohlsearch(0)')
     call s:assert.equals(maparg('<Plug>(incsearch-nohl-n)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-n)')
     call s:assert.equals(maparg('<Plug>(incsearch-nohl-N)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-N)')
     call s:assert.equals(maparg('<Plug>(incsearch-nohl-*)' , 'nvo'), '<Plug>(incsearch-nohl)<Plug>(_incsearch-*)')

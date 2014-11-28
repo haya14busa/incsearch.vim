@@ -57,8 +57,8 @@ onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
 "     e.g. `<Plug>(incsearch-nohl)n` works but `n<Plug>(incsearch-nohl)` doesn't
 "     work
 noremap <expr> <Plug>(incsearch-nohl) incsearch#auto_nohlsearch(1)
+noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
 " NOTE: Should I consider to make below mappings public?
-" noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
 " noremap <expr> <Plug>(incsearch-nohl2) incsearch#auto_nohlsearch(2)
 
 map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-n)
