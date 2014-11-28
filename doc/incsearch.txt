@@ -236,6 +236,10 @@ Command line interface~
 				    default: <C-j>
 	<Over>(incsearch-scroll-b) : scroll to the previous page match.
 				    default: <C-k>
+		NOTE: if you want to use |digraphs| feature, please overwrite
+		<C-k> or map another key to <C-k> like this. >
+		    IncSearchNoreMap <C-k> <C-k>
+<
 
 	Example:
 >
