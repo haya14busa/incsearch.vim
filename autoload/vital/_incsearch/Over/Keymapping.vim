@@ -67,10 +67,11 @@ endfunction
 
 
 
-function! s:_as_key_config(config)
+function! s:as_key_config(config)
 	let base = {
 \		"noremap" : 0,
 \		"lock"    : 0,
+\		"expr"    : 0,
 \	}
 	return type(a:config) == type({}) ? extend(base, a:config)
 \		 : extend(base, {
@@ -81,7 +82,14 @@ endfunction
 
 function! s:match_key(keymapping, key)
 	let keys = sort(keys(a:keymapping))
-	return get(filter(keys, 'a:key =~ ''^'' . v:val'), -1, '')
+	return get(filter(keys, 'a:key =~# ''^'' . v:val'), -1, '')
+endfunction
+
+
+function! s:_get_key(conf)
+" 	call extend(l:, a:conf)
+	let self = a:conf
+	return get(a:conf, "expr", 0) ? eval(a:conf.key) : a:conf.key
 endfunction
 
 
@@ -92,15 +100,15 @@ function! s:unmapping(keymapping, key, ...)
 		return s:String.length(a:key) <= 1 ? a:key : s:unmapping(a:keymapping, a:key[0], is_locking) . s:unmapping(a:keymapping, a:key[1:], is_locking)
 	endif
 
-	let map_conf = s:_as_key_config(a:keymapping[key])
+	let map_conf = s:as_key_config(a:keymapping[key])
 
 	let next_input = s:unmapping(a:keymapping, a:key[len(key) : ], is_locking)
 	if map_conf.lock == 0 && is_locking
 		return key . next_input
 	elseif map_conf.lock
-		return s:unmapping(a:keymapping, map_conf.key, is_locking) . next_input
+		return s:unmapping(a:keymapping, s:_get_key(map_conf), is_locking) . next_input
 	else
-		return s:unmapping(a:keymapping, map_conf.key, map_conf.noremap) . next_input
+		return s:unmapping(a:keymapping, s:_get_key(map_conf), map_conf.noremap) . next_input
 	endif
 endfunction
 
