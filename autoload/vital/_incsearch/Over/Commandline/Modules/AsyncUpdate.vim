@@ -19,12 +19,11 @@ function! s:module.on_enter(cmdline)
 			if !getchar(1)
 				return
 			endif
-			let key = s:Base.getchar(0)
+			call self._inputting()
 		catch /^Vim:Interrupt$/
-			let key = "\<C-c>"
+			call self._input("\<C-c>")
 		endtry
 
-		call self._input(key)
 		call self.draw()
 	endfunction
 endfunction

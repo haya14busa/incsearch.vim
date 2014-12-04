@@ -8,6 +8,7 @@ function! s:_vital_loaded(V)
 	let s:String  = s:V.import("Over.String")
 	let s:Signals = s:V.import("Over.Signals")
 	let s:Input = s:V.import("Over.Input")
+	let s:Keymapping = s:V.import("Over.Keymapping")
 	let s:Module = s:V.import("Over.Commandline.Modules")
 	let s:base.variables.modules = s:Signals.make()
 	function! s:base.variables.modules.get_slot(val)
@@ -21,6 +22,7 @@ function! s:_vital_depends()
 \		"Over.String",
 \		"Over.Signals",
 \		"Over.Input",
+\		"Over.Keymapping",
 \		"Over.Commandline.Modules",
 \	]
 endfunction
@@ -219,10 +221,9 @@ endfunction
 
 
 function! s:base.cnoremap(lhs, rhs)
-	let self.variables.keymapping[a:lhs] = {
-\		"key"     : a:rhs,
-\		"noremap" : 1,
-\	}
+	let key = s:Keymapping.as_key_config(a:rhs)
+	let key.noremap = 1
+	let self.variables.keymapping[a:lhs] = key
 endfunction
 
 
@@ -402,8 +403,13 @@ endfunction
 
 function! s:base._input(input, ...)
 	let self.variables.input_key = a:input
+	if a:0 == 0
+		let keymapping = self._get_keymapping()
+	else
+		let keymapping = a:1
+	endif
 	if self.is_enable_keymapping()
-		let key = s:_unmap(self._get_keymapping(), a:input)
+		let key = s:Keymapping.unmapping(keymapping, a:input)
 	else
 		let key = a:input
 	endif
@@ -418,6 +424,40 @@ function! s:base._input(input, ...)
 endfunction
 
 
+function! s:is_input_waiting(keymapping, input)
+	let num = len(filter(copy(a:keymapping), 'stridx(v:key, a:input) == 0'))
+	return num > 1 || (num == 1 && !has_key(a:keymapping, a:input))
+endfunction
+
+
+function! s:base._inputting()
+	if !self.is_enable_keymapping()
+		return self._input(s:Input.getchar())
+	endif
+
+	let input = s:Input.getchar()
+	let old_line = self.getline()
+	let old_pos  = self.getpos()
+	let old_forward = self.forward()
+	let old_backward = self.backward()
+	let keymapping = self._get_keymapping()
+	try
+		let t = reltime()
+		while s:is_input_waiting(keymapping, input)
+\		&& str2nr(reltimestr(reltime(t))) * 1000 < &timeoutlen
+			call self.setline(old_backward . input . old_forward)
+			call self.setpos(old_pos)
+			call self.draw()
+			let input .= s:Input.getchar(0)
+		endwhile
+	finally
+		call self.setline(old_line)
+		call self.setpos(old_pos)
+	endtry
+	call self._input(input, keymapping)
+endfunction
+
+
 function! s:base._update()
 " 	call self.callevent("on_update")
 " 	if !getchar(1)
@@ -428,7 +468,8 @@ function! s:base._update()
 " 	call self.draw()
 
 	call self.callevent("on_update")
-	call self._input(s:Input.getchar())
+	call self._inputting()
+" 	call self._input(s:Input.getchar())
 	if self._is_exit()
 		return -1
 	endif
@@ -470,35 +511,6 @@ endfunction
 
 function! s:base._is_exit()
 	return self.variables.exit
-endfunction
-
-
-function! s:_as_key_config(config)
-	let base = {
-\		"noremap" : 0,
-\		"lock"    : 0,
-\	}
-	return type(a:config) == type({}) ? extend(base, a:config)
-\		 : extend(base, {
-\		 	"key" : a:config,
-\		 })
-endfunction
-
-
-function! s:_unmap(mapping, key)
-	let keys = s:String.split_by_keys(a:key)
-	if len(keys) > 1
-		return join(map(keys, 's:_unmap(a:mapping, v:val)'), '')
-	endif
-	if !has_key(a:mapping, a:key)
-		return a:key
-	endif
-	let rhs  = s:_as_key_config(a:mapping[a:key])
-	let next = s:_as_key_config(get(a:mapping, rhs.key, {}))
-	if rhs.noremap && next.lock == 0
-		return rhs.key
-	endif
-	return s:_unmap(a:mapping, rhs.key)
 endfunction
 
 
