@@ -375,10 +375,10 @@ function! s:on_char(cmdline) abort
     " Improved Incremental highlighing!
     " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
     let case = incsearch#detect_case(raw_pattern)
-    let should_separete = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
+    let should_separate = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
-    \   case . pattern, should_separete, d, [s:w.lnum, s:w.col])
+    \   case . pattern, should_separate, d, [s:w.lnum, s:w.col])
 
     " functional `normal! zz` after scroll for <expr> mappings
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
