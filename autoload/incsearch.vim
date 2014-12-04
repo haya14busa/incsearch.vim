@@ -771,7 +771,7 @@ function! incsearch#convert_with_case(pattern) abort
     return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
-function! s:silent_after_search(...) " arg: mode(1) abort
+function! s:silent_after_search(...) abort " arg: mode(1)
     " :h function-search-undo
     if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
         call s:_silent_hlsearch()
