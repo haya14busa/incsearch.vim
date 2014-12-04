@@ -82,14 +82,26 @@ endfunction
 
 function! s:match_key(keymapping, key)
 	let keys = sort(keys(a:keymapping))
-	return get(filter(keys, 'a:key =~# ''^'' . v:val'), -1, '')
+	return get(filter(keys, 'stridx(a:key, v:val) == 0'), -1, '')
+endfunction
+
+
+function! s:_safe_eval(expr, ...)
+	call extend(l:, get(a:, 1, {}))
+	let result = get(a:, 2, "")
+	try
+		let result = eval(a:expr)
+	catch
+		echohl ErrorMsg | echom v:exception | echohl None
+	endtry
+	return result
 endfunction
 
 
 function! s:_get_key(conf)
 " 	call extend(l:, a:conf)
 	let self = a:conf
-	return get(a:conf, "expr", 0) ? eval(a:conf.key) : a:conf.key
+	return get(a:conf, "expr", 0) ? s:_safe_eval(a:conf.key, l:) : a:conf.key
 endfunction
 
 

@@ -424,8 +424,8 @@ function! s:base._input(input, ...)
 endfunction
 
 
-function! s:is_waiting(keymapping, input)
-	let num = len(filter(copy(a:keymapping), 'v:key =~# ''^'' . a:input'))
+function! s:is_input_waiting(keymapping, input)
+	let num = len(filter(copy(a:keymapping), 'stridx(v:key, a:input) == 0'))
 	return num > 1 || (num == 1 && !has_key(a:keymapping, a:input))
 endfunction
 
@@ -441,7 +441,7 @@ function! s:base._inputting()
 	let keymapping = self._get_keymapping()
 	try
 		let t = reltime()
-		while s:is_waiting(keymapping, input)
+		while s:is_input_waiting(keymapping, input)
 \		&& str2nr(reltimestr(reltime(t))) * 1000 < &timeoutlen
 			call self.setline(old_line . input)
 			call self.setpos(old_pos)
