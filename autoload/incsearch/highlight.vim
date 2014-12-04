@@ -83,7 +83,7 @@ let s:default_highlight = {
 \   },
 \ }
 
-function! incsearch#highlight#hgm() " highlight group management abort
+function! incsearch#highlight#hgm() abort " highlight group management
     let hgm = copy(s:default_highlight)
     for key in keys(hgm)
         call extend(hgm[key], get(g:incsearch#highlight, key, {}))
