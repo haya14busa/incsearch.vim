@@ -33,11 +33,14 @@ function! s:capture(cmd)
 endfunction
 
 function! s:digraph() abort
-	let x = split(s:capture(':digraph'), '\s\d\+\s\+\zs')
-	let digraphs = map(x, "split(v:val, '\\s\\+')")
+	let x = split(substitute(s:capture(':digraph'), "\n", ' ', 'g'),
+	\   '[[:graph:]]\{2}\s.\{1,4}\s\+\d\+\s*\zs')
+	let digraphs = map(x, "split(v:val, ' \\+')")
 	let r = {}
 	for d in digraphs
-		let r[d[0]] = d[1]
+		let r[d[0]] = len(d) is 3 && d[2] =~# '\d\+' ? nr2char(str2nr(d[2],10))
+		\   : len(d) is 2 && d[1] =~# '32' ? nr2char(str2nr(d[1],10))
+		\   : ''
 	endfor
 	return r
 endfunction
@@ -60,7 +63,12 @@ function! s:module.on_char_pre(cmdline)
 		call a:cmdline.setpos(self.old_pos)
 		let x = a:cmdline.input_key()
 		let y = s:Input.getchar()
-		call a:cmdline.setchar(get(self.digraphs, x . y, y))
+		" For CTRL-K, there is one general digraph: CTRL-K <Space> {char} will
+		" enter {char} with the highest bit set.  You can use this to enter
+		" meta-characters.
+		let char = x ==# "\<Space>" ?
+		\	nr2char(char2nr(y) + 128) : get(self.digraphs, x . y, y)
+		call a:cmdline.setchar(char)
 	endif
 endfunction
 
