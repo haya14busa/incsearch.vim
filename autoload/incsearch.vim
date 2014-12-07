@@ -250,6 +250,8 @@ function! s:on_searching(func, ...) abort
     catch /E70:/  " E70: Empty \%[]
     catch /E554:/
     catch /E678:/ " E678: Invalid character after \%[dxouU]
+    catch /E864:/ " E864: \%#= can only be followed by 0, 1, or 2. The
+                  "       automatic engine will be used
     catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
     catch /E866:/ " E866: (NFA regexp) Misplaced @
     catch /E867:/ " E867: (NFA) Unknown operator
@@ -378,7 +380,7 @@ function! s:on_char(cmdline) abort
     let should_separate = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
-    \   case . pattern, should_separate, d, [s:w.lnum, s:w.col])
+    \   pattern . case, should_separate, d, [s:w.lnum, s:w.col])
 
     " functional `normal! zz` after scroll for <expr> mappings
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -765,10 +767,6 @@ function! incsearch#detect_case(pattern) abort
     else
         return '\c' " smartcase without [A-Z]
     endif
-endfunction
-
-function! incsearch#convert_with_case(pattern) abort
-    return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
 function! s:silent_after_search(...) abort " arg: mode(1)

@@ -71,7 +71,6 @@ function! s:suite.test_autoload_function()
     call s:assert.exists('*incsearch#backward')
     call s:assert.exists('*incsearch#stay')
     call s:assert.exists('*incsearch#parse_pattern')
-    call s:assert.exists('*incsearch#convert_with_case')
 endfunction
 
 function! s:suite.is_duplicate_helptags()
