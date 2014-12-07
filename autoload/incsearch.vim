@@ -565,7 +565,14 @@ endfunction
 
 function! s:generate_command(mode, pattern, search_key) abort
     if (s:cli.exit_code() == 0)
-        call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+        let v = winsaveview()
+        try
+            call winrestview(s:w)
+            call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+        finally
+            call winrestview(v)
+        endtry
+        call s:cli.callevent('on_execute') " XXX: side-effect!
         return s:build_search_cmd(a:mode, a:pattern, a:search_key)
     else " Cancel
         return s:U.is_visual(a:mode) ? '\<ESC>gv' : "\<ESC>"
