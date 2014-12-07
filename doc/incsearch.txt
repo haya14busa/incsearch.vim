@@ -359,11 +359,10 @@ IncSearchExecutePre	triggered before a command execution
 IncSearchExecute	triggered after a command execution
 IncSearchCharPre	triggered before every character insertion
 IncSearchChar		triggered after every character insertion
-IncSearchCancel		triggered when you exit without running the line
 
 NOTE:
-	incsearch.vim uses |:map-<expr>| for visual and operator-pending
-	mappings, so the same restriction apply to your defined autocmd.
+	incsearch.vim uses |:map-<expr>| for operator-pending mappings, so the
+	same restriction apply to your defined autocmd for operator-pending.
 
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*
