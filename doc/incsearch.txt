@@ -211,7 +211,7 @@ Smart backward word~
 Command line interface~
 					*incsearch-commandline-interface*
 
-:IncSearchNoreMap {lhs} {rhs}				*IncSearchNoreMap*
+:IncSearchNoreMap {lhs} {rhs}				*:IncSearchNoreMap*
 
 	Map the key sequence {lhs} to {rhs} for the |incsearch.vim| command
 	line interface. This command doesn't load while loading your vimrc,
@@ -256,7 +256,9 @@ Command line interface~
 <
 						*g:incsearch#vim_cmdline_keymap*
 	Apply vim default |:cnoremap| and |:cmap| mappings to custom command line
-	interface of |incsearch.vim|. default: 1
+	interface of |incsearch.vim|. |:IncSearchNoreMap| has higher priority
+	than :cnoremap and :cmap mappings
+	    default: 1
 
 						*g:incsearch#emacs_like_keymap*
 	It enables Emacs-like keymappings if you set
@@ -361,13 +363,13 @@ Name			triggered by ~
 IncSearchEnter		triggered when you enter the command line
 IncSearchLeave		triggered when you leave the command line
 IncSearchExecutePre	triggered before a command execution
+IncSearchExecute	triggered after a command execution
 IncSearchCharPre	triggered before every character insertion
 IncSearchChar		triggered after every character insertion
-IncSearchCancel		triggered when you exit without running the line
 
 NOTE:
-	incsearch.vim uses |:map-<expr>| for visual and operator-pending
-	mappings, so the same restriction apply to your defined autocmd.
+	incsearch.vim uses |:map-<expr>| for operator-pending mappings, so the
+	same restriction apply to your defined autocmd for operator-pending.
 
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*

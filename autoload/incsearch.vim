@@ -243,13 +243,19 @@ function! s:on_searching(func, ...) abort
     catch /E53:/  " E53: Unmatched %(
     catch /E54:/
     catch /E55:/
+    catch /E63:/  " E63: invalid use of \_
+    catch /E64:/  " E64: \@ follows nothing
+    catch /E65:/  " E65: Illegal back reference
     catch /E66:/  " E66: \z( not allowed here
     catch /E67:/  " E67: \z1 et al. not allowed here
     catch /E68:/  " E68: Invalid character after \z (with /\za & re=1)
     catch /E69:/  " E69: Missing ] after \%[
     catch /E70:/  " E70: Empty \%[]
+    catch /E71:/  " E71: Invalid character after \%
     catch /E554:/
     catch /E678:/ " E678: Invalid character after \%[dxouU]
+    catch /E864:/ " E864: \%#= can only be followed by 0, 1, or 2. The
+                  "       automatic engine will be used
     catch /E865:/ " E865: (NFA) Regexp end encountered prematurely
     catch /E866:/ " E866: (NFA regexp) Misplaced @
     catch /E867:/ " E867: (NFA) Unknown operator
@@ -378,7 +384,7 @@ function! s:on_char(cmdline) abort
     let should_separate = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
     let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call incsearch#highlight#incremental_highlight(
-    \   case . pattern, should_separate, d, [s:w.lnum, s:w.col])
+    \   pattern . case, should_separate, d, [s:w.lnum, s:w.col])
 
     " functional `normal! zz` after scroll for <expr> mappings
     if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
@@ -563,7 +569,14 @@ endfunction
 
 function! s:generate_command(mode, pattern, search_key) abort
     if (s:cli.exit_code() == 0)
-        call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+        let v = winsaveview()
+        try
+            call winrestview(s:w)
+            call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+        finally
+            call winrestview(v)
+        endtry
+        call s:cli.callevent('on_execute') " XXX: side-effect!
         return s:build_search_cmd(a:mode, a:pattern, a:search_key)
     else " Cancel
         return s:U.is_visual(a:mode) ? '\<ESC>gv' : "\<ESC>"
@@ -765,10 +778,6 @@ function! incsearch#detect_case(pattern) abort
     else
         return '\c' " smartcase without [A-Z]
     endif
-endfunction
-
-function! incsearch#convert_with_case(pattern) abort
-    return incsearch#detect_case(a:pattern) . a:pattern
 endfunction
 
 function! s:silent_after_search(...) abort " arg: mode(1)
