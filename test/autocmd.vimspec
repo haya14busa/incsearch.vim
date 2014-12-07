@@ -46,6 +46,7 @@ Describe autocmd
         let @/ = ''
         unlet g:i
         unlet g:line
+        silent! autocmd! incsearch-test
     End
 
     Context IncSearchEnter
