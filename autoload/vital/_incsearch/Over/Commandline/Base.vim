@@ -14,6 +14,8 @@ function! s:_vital_loaded(V)
 	function! s:base.variables.modules.get_slot(val)
 		return a:val.slot.module
 	endfunction
+
+	let s:Highlight = s:V.import("Palette.Highlight")
 endfunction
 
 
@@ -24,6 +26,7 @@ function! s:_vital_depends()
 \		"Over.Input",
 \		"Over.Keymapping",
 \		"Over.Commandline.Modules",
+\		"Palette.Highlight",
 \	]
 endfunction
 
@@ -360,11 +363,34 @@ function! s:base._init_variables()
 endfunction
 
 
+function! s:_is_valid_highlight(name)
+	let highlight = s:Highlight.get(a:name)
+	if empty(highlight)
+		return 0
+	endif
+
+	if has("gui_running")
+\	&& (has_key(highlight, "guifg") || has_key(highlight, "guibg"))
+		return 1
+	elseif (has_key(highlight, "ctermfg") || has_key(highlight, "ctermbg"))
+		return 1
+	endif
+	return 0
+endfunction
+
+
 function! s:base._init()
 	call self._init_variables()
 	call self.hl_cursor_off()
 	if !hlexists(self.highlights.cursor)
-		execute "highlight link " . self.highlights.cursor . " Cursor"
+		if s:_is_valid_highlight("Cursor")
+			execute "highlight link " . self.highlights.cursor . " Cursor"
+		else
+			" Workaround by CUI Vim Cursor Highlight
+			" issues #92
+			" https://github.com/osyo-manga/vital-over/issues/92
+			execute "highlight " . self.highlights.cursor . " term=reverse cterm=reverse gui=reverse"
+		endif
 	endif
 	if !hlexists(self.highlights.cursor_on)
 		execute "highlight link " . self.highlights.cursor_on . " " . self.highlights.cursor
@@ -402,6 +428,10 @@ endfunction
 
 
 function! s:base._input(input, ...)
+	if a:input == ""
+		return
+	endif
+
 	let self.variables.input_key = a:input
 	if a:0 == 0
 		let keymapping = self._get_keymapping()
