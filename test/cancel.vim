@@ -135,6 +135,6 @@ function! s:suite.default_highlight_will_not_remain()
         exec "normal"  key_seq . "pattern\<Tab>\<C-c>"
         call s:assert.equals(v:hlsearch, 0)
     endfor
-    set hlsearch&
+    set hlsearch& | nohlsearch
 endfunction
 

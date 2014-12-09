@@ -17,6 +17,7 @@ function! s:suite.config()
     call s:assert.equals(g:incsearch#do_not_save_error_message_history, 0)
     call s:assert.equals(g:incsearch#auto_nohlsearch, 0)
     call s:assert.equals(g:incsearch#magic, '')
+    call s:assert.equals(g:incsearch#no_inc_hlsearch, 0)
 endfunction
 
 function! s:suite.mappings()
