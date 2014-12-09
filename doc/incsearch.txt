@@ -346,6 +346,18 @@ Customize highlight ~
 		\   }
 		\ }
 <
+
+						*g:incsearch#no_inc_hlsearch*
+	Use 'hlsearch' incrementally to highlight matched patterns including
+	patterns in the other windows. The highlight of |IncSearchMatch| have
+	higher priority than 'hlsearch' in the current window but it doesn't
+	applied to other windows right now. If you do not want to highlight
+	with 'hlsearch', turn on this variable. >
+
+	    let g:incsearch#no_inc_hlsearch = 1
+
+<	default: 0
+
 ------------------------------------------------------------------------------
 AUTOCMD ~
 							    *incsearch-autocmd*
