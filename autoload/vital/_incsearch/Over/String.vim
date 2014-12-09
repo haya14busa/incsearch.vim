@@ -46,7 +46,7 @@ function! s:base.forward()
 	return join(self.list[self.col+1 : ], '')
 endfunction
 
-function! s:base.pos_word()
+function! s:base.pos_char()
 	return get(self.list, self.col, "")
 endfunction
 
