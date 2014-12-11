@@ -269,6 +269,7 @@ function! s:on_searching(func, ...) abort
     catch /E53:/  " E53: Unmatched %(
     catch /E54:/
     catch /E55:/
+    catch /E62:/  " E62: Nested \= (with /a\=\=)
     catch /E63:/  " E63: invalid use of \_
     catch /E64:/  " E64: \@ follows nothing
     catch /E65:/  " E65: Illegal back reference
