@@ -80,8 +80,11 @@ call s:cli.connect('Digraphs')
 call s:cli.connect('Delete')
 call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
-" NOTE: see s:cli.keymapping()
 " call s:cli.connect('Exit')
+" NOTE:
+" <CR> in {rhs} wil be remapped even after exiting vital-over comman line
+" interface, so do not use <Over>(exit)
+" See also s:cli.keymapping()
 let s:incsearch_exit = {
 \   "name" : "IncsearchExit",
 \   "exit_code" : 0
@@ -178,36 +181,29 @@ endfunction
 call s:cli.connect(s:pattern_saver)
 
 function! s:cli.keymapping() abort
-    " NOTE:
-    " 'lock' doesn't be remapped if it is in the multi {rhs} mapping
-    " workaround: use s:incsearch_exit module and do not use `lock` fetaure
-    " \       "\<CR>"   : {
-    " \           "key" : "<Over>(exit)",
-    " \           "noremap" : 1,
-    " \           "lock" : 1,
-    " \       },
     return extend({
-\       "\<Tab>"   : {
-\           "key" : "<Over>(incsearch-next)",
-\           "noremap" : 1,
-\       },
-\       "\<S-Tab>"   : {
-\           "key" : "<Over>(incsearch-prev)",
-\           "noremap" : 1,
-\       },
-\       "\<C-j>"   : {
-\           "key" : "<Over>(incsearch-scroll-f)",
-\           "noremap" : 1,
-\       },
-\       "\<C-k>"   : {
-\           "key" : "<Over>(incsearch-scroll-b)",
-\           "noremap" : 1,
-\       },
-\       "\<C-l>"   : {
-\           "key" : "<Over>(buffer-complete)",
-\           "noremap" : 1,
-\       },
-\   }, g:incsearch_cli_key_mappings)
+    \   "\<Tab>"   : {
+    \       "key" : "<Over>(incsearch-next)",
+    \       "noremap" : 1,
+    \   },
+    \   "\<S-Tab>"   : {
+    \       "key" : "<Over>(incsearch-prev)",
+    \       "noremap" : 1,
+    \   },
+    \   "\<C-j>"   : {
+    \       "key" : "<Over>(incsearch-scroll-f)",
+    \       "noremap" : 1,
+    \   },
+    \   "\<C-k>"   : {
+    \       "key" : "<Over>(incsearch-scroll-b)",
+    \       "noremap" : 1,
+    \   },
+    \   "\<C-l>"   : {
+    \       "key" : "<Over>(buffer-complete)",
+    \       "noremap" : 1,
+    \   },
+    \   "\<CR>"   : {"key": "\<CR>", "noremap": 1},
+    \  }, g:incsearch_cli_key_mappings)
 endfunction
 
 let s:inc = {
@@ -269,6 +265,7 @@ function! s:on_searching(func, ...) abort
     catch /E53:/  " E53: Unmatched %(
     catch /E54:/
     catch /E55:/
+    catch /E62:/  " E62: Nested \= (with /a\=\=)
     catch /E63:/  " E63: invalid use of \_
     catch /E64:/  " E64: \@ follows nothing
     catch /E65:/  " E65: Illegal back reference
