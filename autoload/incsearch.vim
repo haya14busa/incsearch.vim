@@ -382,6 +382,7 @@ function! s:on_char(cmdline) abort
 
     if raw_pattern ==# ''
         call s:hi.disable_all()
+        nohlsearch
         return
     endif
 
