@@ -135,7 +135,7 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 
 ### Scroll-like feature while incremental searching
 
-![](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incsearch_smart_backward_word.gif)
+![](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incremental_move_and_scroll.gif)
 
 | Mapping                      | description                                         |
 | ------------------------     | ---------------------------------                   |
