@@ -386,18 +386,18 @@ function! s:on_char(cmdline) abort
         return
     endif
 
-    let pattern = s:convert(raw_pattern)
-
     " For InsertRegister
     if a:cmdline.get_tap_key() ==# "\<C-r>"
         let p = a:cmdline.getpos()
         " Remove `"`
         let raw_pattern = raw_pattern[:p-1] . raw_pattern[p+1:]
         let w = winsaveview()
-        call cursor(line('.'), col('.') + len(raw_pattern))
+        call cursor(line('.'), col('.') + len(a:cmdline.backward_word()))
         call s:InsertRegister.reset()
         call winrestview(w)
     endif
+
+    let pattern = s:convert(raw_pattern)
 
     " Improved Incremental cursor move!
     call s:move_cursor(pattern, a:cmdline.flag, offset)
