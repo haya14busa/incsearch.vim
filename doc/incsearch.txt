@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 0.9.9
+Version : 1.0.0
 License : MIT license {{{
 
 	Copyright (c) 2014 haya14busa
@@ -399,11 +399,22 @@ Version 2.0(?) Roadmap~
 	    - Implement fuzzy-search, migemo, spellcheck and other feature
 	    - Make public pattern converter API for customization
 	    - Write test for converer feature
-
-Version 1.0 Roadmap~
-1.0.0	1. More stable, compatible with default |/| behavior
-	2. More configurable options
+	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+Version 1.0~
+
+1.0.0	2014-12-14
+	1. Improve compatibility with default commandline behavior
+	    - Automatically apply mappings defined with |:cnoremap| and |:cmap|
+	      See |g:incsearch#vim_cmdline_keymap|
+	    - Support multi {lhs} and <expr> mappings
+	2. Support incremental highlighting in other windows.
+	    - See |g:incsearch#no_inc_hlsearch|
+	3. Add |<Over>(buffer-complete-prev)|
+	4. Add |IncsearchExecute| event
+	5. Implement |:digraph| feature
+	6. Fix minor problems.
 
 0.9.9	2014-11-17
 	1. Smart backward word feature. See: |g:incsearch#smart_backward_word|
