@@ -35,8 +35,6 @@ while incremental searching.
 Usage
 -----
 
-See `:h incsearch.txt` for detail.
-
 ### Installation
 
 [Neobundle](https://github.com/Shougo/neobundle.vim) / [Vundle](https://github.com/gmarik/Vundle.vim) / [vim-plug](https://github.com/junegunn/vim-plug)
@@ -63,6 +61,7 @@ map g/ <Plug>(incsearch-stay)
 `<Plug>(incsearch-stay)` doesn't move the cursor.
 
 ### Additional usages
+README introduces some features, but please see [:h incsearch.vim](doc/incsearch.txt) for more information.
 
 #### Automatic :nohlsearch
 
@@ -81,45 +80,6 @@ map *  <Plug>(incsearch-nohl-*)
 map #  <Plug>(incsearch-nohl-#)
 map g* <Plug>(incsearch-nohl-g*)
 map g# <Plug>(incsearch-nohl-g#)
-```
-
-#### Consistent n and N direction
-`n` and `N` directions are always forward and backward respectively even after performing `<Plug>(incsearch-backward)`.
-
-```vim
-let g:incsearch#consistent_n_direction = 1
-```
-
-#### Improved 'magic' option
-- `:h 'magic'`
-- `:h g:incsearch#magic`
-
-You can set very magic option with no portability problem.
-
-```vim
-let g:incsearch#magic = '\v'
-```
-### Smart backward word
-See `:h g:incsearch#smart_backward_word`
-
-![](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incsearch_smart_backward_word.gif)
-
-### Command Line Interface Keymappings
-incsearch.vim uses a custom command line interface, so it provides a custom
-keymapping interface(`IncSearchNoreMap`) like `cnoremap`. To use this command
-in your vimrc, please call it on `VimEnter`. The mappings defined with this
-command have higher priority than vim default command line mappings if
-`g:incsearch#vim_cmdline_keymap` option is 1 (default: 1).
-
-```vim
-augroup incsearch-keymap
-    autocmd!
-    autocmd VimEnter * call s:incsearch_keymap()
-augroup END
-function! s:incsearch_keymap()
-    IncSearchNoreMap <C-f> <Over>(incsearch-scroll-f)
-    IncSearchNoreMap <C-b> <Over>(incsearch-scroll-b)
-endfunction
 ```
 
 ### Emacs-like incsearch: move the cursor while incremental searching
@@ -142,16 +102,6 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 | `<Over>(incsearch-scroll-f)` | scroll to the next page match. default: `<C-j>`     |
 | `<Over>(incsearch-scroll-b)` | scroll to the previous page match. default: `<C-k>` |
 
-
-### BufferCompletion
-
-![](https://cloud.githubusercontent.com/assets/3797062/3866279/2ce7939c-1fca-11e4-8851-d83773dff4a0.gif)
-
-| Mapping                   | description                         |
-| ------------------------- | ----------------------------------  |
-| `<Over>(buffer-complete)` | buffer completion. default: `<C-l>` |
-
-
 Author
 ------
 haya14busa (https://github.com/haya14busa)
@@ -168,3 +118,7 @@ Links
 ### VimConf2014
 - [/-improved](https://docs.google.com/presentation/d/1ie2VCSt9onXmoY3v_zxJdMjYJSbAelVR-QExdUQK-Tw/pub?start=false&loop=false&delayms=3000&slide=id.g4e7add63c_05) at [VimConf 2014](http://vimconf.vim-jp.org/2014/)
   - I talked in Japanese but wrote slide in English ;)
+
+Document
+--------
+[:h incsearch.vim](doc/incsearch.txt)
