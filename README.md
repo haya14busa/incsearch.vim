@@ -1,5 +1,5 @@
-incsearch.vim: Improved incremental searching
-=============================================
+![incsearch.vim](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incsearch_logo.png)
+
 [![Build Status](https://travis-ci.org/haya14busa/incsearch.vim.svg?branch=master)](https://travis-ci.org/haya14busa/incsearch.vim)
 [![Build status](https://ci.appveyor.com/api/projects/status/ks6gtsu46c1djoo6/branch/master)](https://ci.appveyor.com/project/haya14busa/incsearch-vim/branch/master)
 [![](http://img.shields.io/github/tag/haya14busa/incsearch.vim.svg)](https://github.com/haya14busa/incsearch.vim/releases)
