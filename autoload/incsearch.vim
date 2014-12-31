@@ -778,9 +778,14 @@ function! s:combine_pattern(pattern, offset) abort
     return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
 endfunction
 
+" convert implementation. assume pattern is not empty
+function! s:_convert(pattern) abort
+    return s:magic() . a:pattern
+endfunction
+
 function! s:convert(pattern) abort
     " TODO: convert pattern if required in addition to appending magic flag
-    return s:magic() . a:pattern
+    return a:pattern is# '' ? a:pattern : s:_convert(a:pattern)
 endfunction
 
 function! incsearch#detect_case(pattern) abort

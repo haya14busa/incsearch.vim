@@ -4,3 +4,19 @@ let g:Expect = themis#helper('expect')
 call themis#helper('command').with(themis#helper('assert')).with({'Expect': g:Expect})
 
 language C
+
+
+" Helper Functions:
+
+function! AddLine(str)
+    put! =a:str
+endfunction
+function! AddLines(lines)
+    for line in reverse(deepcopy(a:lines))
+        put! =line
+    endfor
+endfunction
+function! GetPosChar()
+    return getline('.')[col('.')-1]
+endfunction
+
