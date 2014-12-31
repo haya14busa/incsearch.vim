@@ -53,6 +53,13 @@ Describe lastpattern
             Assert Equals(line('.'), 2)
             Assert Equals(GetPosChar(), '2')
         End
+        It should handle empty pattern with {offset} as last-pattern
+            let g:incsearch#magic = '\v'
+            let @/ = s:lines[1]
+            exec "normal" "//e\<CR>"
+            Assert Equals(line('.'), '2')
+            Assert Equals(GetPosChar(), 'b')
+        End
     End
 
 End
