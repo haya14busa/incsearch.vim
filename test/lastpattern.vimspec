@@ -27,16 +27,17 @@ Describe lastpattern
         unmap ?
         unmap g/
         let @/ = ''
+        let g:incsearch#magic = ''
     End
 
-    Context handle last-patten
-        It should handle empty patten as last-patten
+    Context handle last-pattern
+        It should handle empty pattern as last-pattern
             let @/ = s:lines[1]
             exec "normal" "/\<CR>"
             Assert Equals(line('.'), 2)
             Assert Equals(GetPosChar(), '2')
         End
-        It should handle empty patten with {offset} as last-patten
+        It should handle empty pattern with {offset} as last-pattern
             let @/ = s:lines[1]
             exec "normal" "//e\<CR>"
             Assert Equals(line('.'), '2')
@@ -44,8 +45,14 @@ Describe lastpattern
         End
     End
 
-    Context handle last-patten with improved magic option
-        " TODO:
+    Context handle last-pattern with improved magic option
+        It should handle empty pattern as last-pattern
+            let g:incsearch#magic = '\v'
+            let @/ = s:lines[1]
+            exec "normal" "/\<CR>"
+            Assert Equals(line('.'), 2)
+            Assert Equals(GetPosChar(), '2')
+        End
     End
 
 End
