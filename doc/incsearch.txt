@@ -387,6 +387,10 @@ Version 2.0(?) Roadmap~
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
 
+1.0.1	2015-01-04
+	1. Fix keymapping escape
+	2. Fix |last-pattern| with |g:incsearch#magic|
+
 Version 1.0~
 
 1.0.0	2014-12-14
