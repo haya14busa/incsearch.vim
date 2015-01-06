@@ -42,9 +42,9 @@ CONTENTS				*incsearch-contents*
 ==============================================================================
 INTRODUCTION					    *incsearch-introduction*
 
-	*incsearch.vim* provide incremental highlighting for __ALL__ pattern
+	*incsearch.vim* provides incremental highlighting for __ALL__ pattern
 	matches unlike default 'incsearch'.
-	You can use incsearch.vim as improved |/| & |?|.
+	You can use incsearch.vim as improved versions of |/| & |?|.
 
 ==============================================================================
 INSTALL						    *incsearch-install*
@@ -70,11 +70,11 @@ Basic usage~
 		map ?  <Plug>(incsearch-backward)
 		map g/ <Plug>(incsearch-stay)
 <
-    <Plug>(incsearch-forward)  : Incremental searching to forward
-    <Plug>(incsearch-backward) : Incremental searching to backward
-    <Plug>(incsearch-stay)     : It doesn't move the cursor unless explicitly
-                                 using cursor move command while incremental
-                                 searching.
+    <Plug>(incsearch-forward):   Incremental searching forward
+    <Plug>(incsearch-backward):  Incremental searching backward
+    <Plug>(incsearch-stay):      It doesn't move the cursor unless you
+                                 explicitly use cursor move commands during
+                                 incremental search.
 
 ------------------------------------------------------------------------------
 Additional usage~
@@ -90,7 +90,7 @@ Additional usage~
 <Plug>(incsearch-nohl-g*)			*<Plug>(incsearch-nohl-gstar)*
 <Plug>(incsearch-nohl-g#)			*<Plug>(incsearch-nohl-g#)*
 
-	Let's farewell to this kind of mapping! >
+	Let's farewell to this kind of mappings! >
 	    nnoremap <Esc><Esc> :<C-u>nohlsearch<CR>
 <
 	If you set |g:incsearch#auto_nohlsearch| to 1 (default: 0) and use
@@ -106,9 +106,9 @@ Additional usage~
 	    map g* <Plug>(incsearch-nohl-g*)
 	    map g# <Plug>(incsearch-nohl-g#)
 <
-	NOTE: |<Plug>(incsearch-nohl-n)| staffs are just alias to
-	`<Plug>(incsearch-nohl)n` except |n| doesn't be remapped, so the basic
-	behavior is completely same as default one.
+	NOTE: |<Plug>(incsearch-nohl-n)| stuff are just aliases to
+	`<Plug>(incsearch-nohl)n` except |n| doesn't get remapped, so the
+	basic behaviour is completely same as the default one.
 
 	If you want to use this feature with other search related plugins, use
 	|<Plug>(incsearch-nohl)|.
