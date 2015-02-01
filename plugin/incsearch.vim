@@ -90,7 +90,7 @@ function! s:mode_wrap(cmd) abort
 endfunction
 
 " CommandLine Mapping {{{
-let g:incsearch_cli_key_mappings = get(g:, 'g:incsearch_cli_key_mappings', {})
+let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
 
 function! s:key_mapping(lhs, rhs, noremap) abort
     let g:incsearch_cli_key_mappings[a:lhs] = {
