@@ -72,12 +72,7 @@ function! s:suite.error_forward_backward()
         silent! exec "normal" keyseq . "pattern\\)\<CR>"
         call s:assert.equals(v:errmsg, 'E55: Unmatched \)')
         silent! exec "normal" keyseq . "bbb\\zA\<CR>"
-        " NOTE: Skip E867: (NFA) Unknown operator '\za' error
-        if exists('&regexpengine') && &regexpengine != 1
-            call s:assert.equals(v:errmsg, 'E383: Invalid search string: bbb\zA')
-        else " old engine
-            call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
-        endif
+        call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
     endfor
 endfunction
 
@@ -96,12 +91,7 @@ function! s:suite.error_stay()
     exec "normal" "g/びむぅぅぅぅ\\)\<CR>"
     call s:assert.equals(v:errmsg, 'E55: Unmatched \)')
     exec "normal" "g/びむぅぅぅぅ\\zA\<CR>"
-    " NOTE: Skip E867: (NFA) Unknown operator '\za' error
-    if exists('&regexpengine') && &regexpengine != 1
-        call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
-    else " old engine
-        call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
-    endif
+    call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
 endfunction
 
 function! s:suite.two_error_E383_and_E367()
@@ -122,8 +112,8 @@ function! s:suite.two_error_E383_and_E367()
         let &verbose = save_verbose
     endtry
     let errmsgs = reverse(split(messages_text, "\n"))
-    call s:assert.equals(v:errmsg, 'E383: Invalid search string: びむぅぅぅぅ\zA')
-    call s:assert.equals(errmsgs[0], 'E383: Invalid search string: びむぅぅぅぅ\zA')
+    call s:assert.equals(v:errmsg, 'E68: Invalid character after \z')
+    call s:assert.equals(errmsgs[0], 'E68: Invalid character after \z')
     call s:assert.equals(errmsgs[1], "E867: (NFA) Unknown operator '\\zA'")
     let g:incsearch#do_not_save_error_message_history = 1
 endfunction
