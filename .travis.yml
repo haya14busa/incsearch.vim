@@ -1,4 +1,4 @@
-language: viml
+language: generic
 
 env:
   - PPA=yes
