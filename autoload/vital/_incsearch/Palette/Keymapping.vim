@@ -26,7 +26,7 @@ endfunction
 
 
 function! s:_keymapping(str)
-	return a:str =~# '^[nvoicsxl]\s'
+	return a:str =~ '^[nvoicsxl]\s'
 endfunction
 
 
