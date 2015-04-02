@@ -551,7 +551,7 @@ function! incsearch#stay_expr(...) abort
         " have to use feedkeys()
         let is_cancel = s:cli.exit_code()
         if is_cancel
-            " do nothing
+            call s:cleanup_cmdline()
         elseif !empty(offset) && mode(1) !=# 'no'
             let cmd = s:with_ignore_foldopen(
             \   function('s:generate_command'), m, input, '/')
@@ -648,6 +648,7 @@ function! s:set_search_related_stuff(cmd, ...) abort
         " Restore cursor position and return
         " NOTE: Should I request on_cancel event to vital-over and use it?
         call winrestview(s:w)
+        call s:cleanup_cmdline()
         return
     endif
     let [raw_pattern, offset] = s:cli_parse_pattern()
@@ -887,6 +888,10 @@ function! s:emulate_search_error(direction) abort
             let v:errmsg = old_errmsg
         endif
     endif
+endfunction
+
+function! s:cleanup_cmdline()
+    redraw | echo ''
 endfunction
 
 " Should I use :h echoerr ? But it save the messages in message-history
