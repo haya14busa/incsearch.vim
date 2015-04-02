@@ -104,7 +104,8 @@ call s:cli.connect(s:InsertRegister)
 call s:cli.connect('Paste')
 " XXX: better handling.
 if expand("%:p") !=# expand("<sfile>:p")
-    call s:cli.connect(s:modules.get('Doautocmd').make('IncSearch'))
+    let s:Doautocmd = s:modules.get('Doautocmd')
+    call s:cli.connect(s:Doautocmd.make('IncSearch'))
 endif
 call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:cli.connect(s:modules.get('History').make('/'))
@@ -483,6 +484,12 @@ call s:cli.connect(s:inc)
 "}}}
 
 " Main: {{{
+
+" @return vital-over command-line interface object. it's experimental!!!
+function! incsearch#cli()
+    return s:Doautocmd.get_cmdline()
+endfunction
+
 " TODO: make public API to which you can pass `context` (or option)
 " @expr: called by <expr> mappings
 
