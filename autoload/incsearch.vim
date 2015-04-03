@@ -486,7 +486,7 @@ call s:cli.connect(s:inc)
 " Main: {{{
 
 " @return vital-over command-line interface object. it's experimental!!!
-function! incsearch#cli()
+function! incsearch#cli() abort
     return s:Doautocmd.get_cmdline()
 endfunction
 
@@ -897,7 +897,7 @@ function! s:emulate_search_error(direction) abort
     endif
 endfunction
 
-function! s:cleanup_cmdline()
+function! s:cleanup_cmdline() abort
     redraw | echo ''
 endfunction
 
