@@ -3,6 +3,19 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+function! s:_vital_loaded(V)
+	let s:V = a:V
+	let s:E  = s:V.import("Over.Exception")
+endfunction
+
+
+function! s:_vital_depends()
+	return [
+\		"Over.Exception",
+\	]
+endfunction
+
+
 let s:cache_command = {}
 function! s:doautocmd_user(prefix, command)
 	let group =  a:prefix . "-vital-over-commandline-doautocmd-dummy"
@@ -68,6 +81,9 @@ endfor
 
 
 function! s:get_cmdline()
+	if !exists("s:cmdline")
+		execute s:E.throw_cmd("Undefined cmdline object.", "Over.Commandline.Modules.Doautocmd")
+	endif
 	return s:cmdline
 endfunction
 

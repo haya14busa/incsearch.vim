@@ -128,8 +128,8 @@ endfunction
 
 function! s:base.is_input(key, ...)
 	let prekey = get(a:, 1, "")
-	return self.get_tap_key() == prekey
-\		&& self.char() == a:key
+	return self.get_tap_key() ==# prekey
+\		&& self.char() ==# a:key
 " \		&& self.char() == (prekey . a:key)
 endfunction
 
@@ -353,6 +353,19 @@ function! s:base.set_input_key_stack(stack)
 endfunction
 
 
+function! s:base.input_key_stack_pop()
+	return remove(self.input_key_stack(), 0)
+endfunction
+
+
+function! s:base.getchar(...)
+	if empty(self.input_key_stack())
+		return call(s:Input.getchar, a:000, s:Input)
+	endif
+	return self.input_key_stack_pop()
+endfunction
+
+
 function! s:base._init_variables()
 	let self.variables.tap_key = ""
 	let self.variables.char = ""
@@ -452,7 +465,7 @@ function! s:base._input(input, ...)
 
 	call self.set_input_key_stack(s:String.split_by_keys(key))
 	while !(empty(self.input_key_stack()) || self._is_exit())
-		call self._input_char(remove(self.input_key_stack(), 0))
+		call self._input_char(self.input_key_stack_pop())
 	endwhile
 endfunction
 
