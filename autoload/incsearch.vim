@@ -220,7 +220,7 @@ if has('mac')
 endif
 
 function! s:cli.keymapping() abort
-    return extend(s:default_keymappings, g:incsearch_cli_key_mappings)
+    return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
 endfunction
 
 let s:inc = {
@@ -487,7 +487,13 @@ call s:cli.connect(s:inc)
 
 " @return vital-over command-line interface object. it's experimental!!!
 function! incsearch#cli() abort
-    return s:Doautocmd.get_cmdline()
+    try
+        return s:Doautocmd.get_cmdline()
+    catch /== vital-over(_incsearch)/
+        " TODO: is it really ok with this exception messages?
+        " https://github.com/osyo-manga/vital-over/issues/123
+        return s:cli
+    endtry
 endfunction
 
 " TODO: make public API to which you can pass `context` (or option)
