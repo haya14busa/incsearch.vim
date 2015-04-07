@@ -487,7 +487,13 @@ call s:cli.connect(s:inc)
 
 " @return vital-over command-line interface object. it's experimental!!!
 function! incsearch#cli() abort
-    return s:Doautocmd.get_cmdline()
+    try
+        return s:Doautocmd.get_cmdline()
+    catch /== vital-over(_incsearch)/
+        " TODO: is it really ok with this exception messages?
+        " https://github.com/osyo-manga/vital-over/issues/123
+        return s:cli
+    endtry
 endfunction
 
 " TODO: make public API to which you can pass `context` (or option)
