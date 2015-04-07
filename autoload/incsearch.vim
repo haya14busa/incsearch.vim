@@ -220,7 +220,7 @@ if has('mac')
 endif
 
 function! s:cli.keymapping() abort
-    return extend(s:default_keymappings, g:incsearch_cli_key_mappings)
+    return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
 endfunction
 
 let s:inc = {
