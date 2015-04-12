@@ -488,10 +488,10 @@ call s:cli.connect(s:inc)
 " @return vital-over command-line interface object. it's experimental!!!
 function! incsearch#cli() abort
     try
+        " It returns current cli object
         return s:Doautocmd.get_cmdline()
-    catch /== vital-over(_incsearch)/
-        " TODO: is it really ok with this exception messages?
-        " https://github.com/osyo-manga/vital-over/issues/123
+    catch /vital-over(_incsearch) Exception/
+        " If there are no current cli object, return default one
         return s:cli
     endtry
 endfunction

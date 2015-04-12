@@ -49,17 +49,22 @@ endfunction
 
 
 function! s:escape_special_key(key)
+	" Workaround : <C-?> https://github.com/osyo-manga/vital-palette/issues/5
+	if a:key ==# "<^?>"
+		return "\<C-?>"
+	endif
 	execute 'let result = "' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
 	return result
 endfunction
 
 
 function! s:parse_lhs(text, ...)
-	let mode = get(a:, 1, '[nvoicsxl]')
-	if mode =~# '[ci]'
+	let mode = get(a:, 1, '[!nvoicsxl]')
+	" NOTE: :map! Surpport : https://github.com/osyo-manga/vital-palette/issues/4
+	if get(a:, 1, "") =~# '[!ci]'
 		let mode = '[!ci]'
 	endif
-	return matchstr(a:text, mode . '\s\+\zs\S\{-}\ze\s\+')
+	return matchstr(a:text, mode . '\{1,3\}\s*\zs\S\{-}\ze\s\+')
 endfunction
 
 
@@ -75,6 +80,15 @@ function! s:lhs_key_list(...)
 endfunction
 
 
+function! s:_maparg(name, mode, abbr, dict)
+	" Workaround : <C-?> https://github.com/osyo-manga/vital-palette/issues/5
+	if a:name ==# "<^?>"
+		return maparg("\<C-?>", a:mode, a:abbr, a:dict)
+	endif
+	return maparg(a:name, a:mode, a:abbr, a:dict)
+endfunction
+
+
 function! s:rhs_key_list(...)
 	let mode = get(a:, 1, "")
 	let abbr = get(a:, 2, 0)
@@ -82,9 +96,9 @@ function! s:rhs_key_list(...)
 	
 	let result = []
 	for m in split(mode, '\zs')
-		let result += map(s:parse_lhs_list(m), "maparg(v:val, m, abbr, dict)")
+		let result += map(s:parse_lhs_list(m), "s:_maparg(v:val, m, abbr, dict)")
 	endfor
-	return result
+	return filter(result, "empty(v:val) == 0")
 endfunction
 
 
