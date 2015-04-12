@@ -25,13 +25,32 @@ function! s:_reset()
 endfunction
 
 
+function! s:extend(dict, src)
+	for [key, value] in items(a:src)
+		let a:dict[key] = value
+		unlet value
+	endfor
+endfunction
+
+
 function! s:command(cmd, ...)
-	call extend(l:, get(a:, 1, {}))
+	" Workaround : Vim 7.3.xxx in Travis and Ubuntu
+	" https://github.com/osyo-manga/vital-palette/issues/5
+" 	call extend(l:, get(a:, 1, {}))
+	if a:0 > 0
+		call s:extend(l:, a:1)
+	endif
+
 	call s:_verbosefile_push(tempname())
-	redir =>result
-	execute "silent" a:cmd
-	redir END
+	try
+		redir =>result
+		silent execute a:cmd
+	finally
+		redir END
+	endtry
 	call s:_verbosefile_pop()
+" 	let result = substitute(result, "<SRN>", "\<SNR>", "g")
+" 	let result = substitute(result, "<SID>", "\<SID>", "g")
 	return result
 endfunction
 

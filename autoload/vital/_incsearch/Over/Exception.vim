@@ -4,8 +4,11 @@ set cpo&vim
 
 
 let s:vname = expand("<sfile>:h:h:t")
-let s:prefix = printf("== vital-over(%s)", s:vname)
+let s:prefix = printf("vital-over(%s) Exception", s:vname)
 
+function! s:set_prefix(prefix)
+	let s:prefix = a:prefix
+endfunction
 
 function! s:throw_cmd(exp, where)
 	return 'throw ' . string(s:prefix . " : " . a:exp . " in " . a:where)
