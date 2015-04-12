@@ -25,10 +25,10 @@
 scriptencoding utf-8
 " Load Once {{{
 if expand("%:p") ==# expand("<sfile>:p")
-    unlet! g:loaded_incsearch
+  unlet! g:loaded_incsearch
 endif
 if exists('g:loaded_incsearch')
-    finish
+  finish
 endif
 let g:loaded_incsearch = 1
 " }}}
@@ -79,30 +79,30 @@ noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
 
 function! s:is_visual(mode) abort
-    return a:mode =~# "[vV\<C-v>]"
+  return a:mode =~# "[vV\<C-v>]"
 endfunction
 
 " for normal and visual mode
 function! s:mode_wrap(cmd) abort
-    let m = mode(1)
-    let esc = s:is_visual(m) ? "\<ESC>" : ''
-    return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
-    \             a:cmd, strtrans(m), v:count1)
+  let m = mode(1)
+  let esc = s:is_visual(m) ? "\<ESC>" : ''
+  return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
+  \             a:cmd, strtrans(m), v:count1)
 endfunction
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
 
 function! s:key_mapping(lhs, rhs, noremap) abort
-    let g:incsearch_cli_key_mappings[a:lhs] = {
-\       "key" : a:rhs,
-\       "noremap" : a:noremap,
-\   }
+  let g:incsearch_cli_key_mappings[a:lhs] = {
+  \       "key" : a:rhs,
+  \       "noremap" : a:noremap,
+  \   }
 endfunction
 
 function! s:as_keymapping(key) abort
-    execute 'let result = "' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
-    return result
+  execute 'let result = "' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
+  return result
 endfunction
 
 command! -nargs=* IncSearchNoreMap
@@ -118,6 +118,6 @@ let &cpo = s:save_cpo
 unlet s:save_cpo
 " }}}
 " __END__  {{{
-" vim: expandtab softtabstop=4 shiftwidth=4
+" vim: expandtab softtabstop=2 shiftwidth=2
 " vim: foldmethod=marker
 " }}}
