@@ -40,14 +40,14 @@ set cpo&vim
 
 " <expr> is just for passing mode(1) value, so basically called with
 " non-<expr> state
-noremap <silent><expr> <Plug>(incsearch-forward)  <SID>mode_wrap('forward')
-noremap <silent><expr> <Plug>(incsearch-backward) <SID>mode_wrap('backward')
-noremap <silent><expr> <Plug>(incsearch-stay)     <SID>mode_wrap('stay')
+noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go_wrap({'command': '/'})
+noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go_wrap({'command': '?'})
+noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go_wrap({'command': '/', 'is_stay': 1})
 
 " <expr> for dot repeat (`.`) in operator pending mode
-onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
-onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
-onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
+onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'is_expr': 1, 'command': '/'})
+onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'is_expr': 1, 'command': '?'})
+onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'is_expr': 1, 'command': '/', 'is_stay': 1})
 
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:
@@ -77,18 +77,6 @@ noremap <Plug>(_incsearch-*)  *
 noremap <Plug>(_incsearch-#)  #
 noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
-
-function! s:is_visual(mode) abort
-  return a:mode =~# "[vV\<C-v>]"
-endfunction
-
-" for normal and visual mode
-function! s:mode_wrap(cmd) abort
-  let m = mode(1)
-  let esc = s:is_visual(m) ? "\<ESC>" : ''
-  return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
-  \             a:cmd, strtrans(m), v:count1)
-endfunction
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})

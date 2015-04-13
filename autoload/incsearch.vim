@@ -496,52 +496,53 @@ function! incsearch#cli() abort
   endtry
 endfunction
 
-" TODO: make public API to which you can pass `context` (or option)
-" @expr: called by <expr> mappings
+"" incsearch config
+" @count1 default: v:count1
+let s:config = {
+\   'command': '/',
+\   'is_stay': s:FALSE,
+\   'is_expr': s:FALSE,
+\   'mode': 'n',
+\   'count1': 1
+\ }
 
-function! incsearch#forward(mode, ...) abort
-  if s:U.is_visual(a:mode)
+function! s:config(additional) abort
+  return extend(extend(copy(s:config), {'count1': v:count1}), a:additional)
+endfunction
+
+function! incsearch#go(...) abort
+  let config = s:config(get(a:, 1, {}))
+  " TODO: fix function() with s:
+  let Search = function(config.is_stay ? 'incsearch#stay' : 's:search')
+  if s:U.is_visual(config.mode) && !config.is_expr
     normal! gv
   endif
-  let cmd = s:search('/', get(a:, 1, v:count1), s:FALSE)
-  call s:set_search_related_stuff(cmd)
-endfunction
-
-" @expr
-function! incsearch#forward_expr() abort
-  return s:search('/')
-endfunction
-
-function! incsearch#backward(mode, ...) abort
-  if s:U.is_visual(a:mode)
-    normal! gv
+  " let cmd = s:search(config.command, config.count1, config.is_expr)
+  let cmd = Search(config.command, config.count1, config.is_expr)
+  if !config.is_expr
+    let should_set_jumplist = (s:cli.flag !=# 'n')
+    call s:set_search_related_stuff(cmd, should_set_jumplist)
   endif
-  let cmd = s:search('?', get(a:, 1, v:count1), s:FALSE)
-  call s:set_search_related_stuff(cmd)
+  return cmd
 endfunction
 
-" @expr
-function! incsearch#backward_expr() abort
-  return s:search('?')
+" incsearch#go wrapper to call from non-expr state with mode detection
+" @return incsearch#go command to execute
+function! incsearch#go_wrap(...) abort
+  let m = mode(1)
+  let config = extend(get(a:, 1, {}), {'mode': strtrans(m)}, 'keep')
+  let esc = s:U.is_visual(m) ? "\<ESC>" : ''
+  return printf("%s:\<C-u>call incsearch#go(%s)\<CR>", esc, string(config))
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
-function! incsearch#stay(mode, ...) abort
-  if s:U.is_visual(a:mode)
-    normal! gv
-  endif
-  let cmd = incsearch#stay_expr(get(a:, 1, v:count1), s:FALSE) " force non-expr state
-  let should_set_jumplist = (s:cli.flag !=# 'n')
-  call s:set_search_related_stuff(cmd, should_set_jumplist)
-endfunction
-
 " @expr but sometimes called by non-<expr>
-function! incsearch#stay_expr(...) abort
+function! incsearch#stay(...) abort
   " return: command which is excutable with expr-mappings or `exec 'normal!'`
-  let s:cli.vcount1 = get(a:, 1, v:count1)
-  let s:cli.is_expr = get(a:, 2, s:TRUE)
-  let s:cli.base_key = '/' " assume `/`
+  let s:cli.base_key = get(a:, 1, '/')
+  let s:cli.vcount1 = get(a:, 2, v:count1)
+  let s:cli.is_expr = get(a:, 3, s:TRUE)
   let m = mode(1)
 
   let input = s:get_input('', m)
@@ -551,11 +552,11 @@ function! incsearch#stay_expr(...) abort
 
   " execute histadd manually
   if s:cli.flag ==# 'n' && input !=# ''
-    " NOTE: this is for non-expr mapping see incsearch#stay() and below NOTE:
-    if (s:cli.is_expr || empty(offset))
-      call histadd('/', input)
-      let @/ = pattern
-    endif
+        " NOTE: this is for non-expr mapping see incsearch#stay() and below NOTE:
+      if (s:cli.is_expr || empty(offset))
+          call histadd('/', input)
+          let @/ = pattern
+      endif
   endif
 
   if s:cli.flag ==# 'n' " stay
