@@ -525,12 +525,13 @@ function! incsearch#go(...) abort
   return cmd
 endfunction
 
-" incsearch#go wrapper to call from non-expr state with mode detection
+" incsearch#go wrapper to call from non-expr state with mode and v:count1
+" detection
 " @api
 " @return incsearch#go command to execute
 function! incsearch#go_wrap(...) abort
   let m = mode(1)
-  let config = extend(get(a:, 1, {}), {'mode': strtrans(m)}, 'keep')
+  let config = extend(get(a:, 1, {}), {'mode': strtrans(m), 'count1': v:count1}, 'keep')
   let esc = s:U.is_visual(m) ? "\<ESC>" : ''
   return printf("%s:\<C-u>call incsearch#go(%s)\<CR>", esc, string(config))
 endfunction
