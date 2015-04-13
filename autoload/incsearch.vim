@@ -510,14 +510,13 @@ function! s:config(additional) abort
   return extend(extend(copy(s:config), {'count1': v:count1}), a:additional)
 endfunction
 
+" @api
 function! incsearch#go(...) abort
   let config = s:config(get(a:, 1, {}))
-  " TODO: fix function() with s:
-  let Search = function(config.is_stay ? 'incsearch#stay' : 's:search')
+  let Search = function(config.is_stay ? 'incsearch#stay' : 'incsearch#search')
   if s:U.is_visual(config.mode) && !config.is_expr
     normal! gv
   endif
-  " let cmd = s:search(config.command, config.count1, config.is_expr)
   let cmd = Search(config.command, config.count1, config.is_expr)
   if !config.is_expr
     let should_set_jumplist = (s:cli.flag !=# 'n')
@@ -527,6 +526,7 @@ function! incsearch#go(...) abort
 endfunction
 
 " incsearch#go wrapper to call from non-expr state with mode detection
+" @api
 " @return incsearch#go command to execute
 function! incsearch#go_wrap(...) abort
   let m = mode(1)
@@ -584,7 +584,7 @@ function! incsearch#stay(...) abort
   endif
 endfunction
 
-function! s:search(search_key, ...) abort
+function! incsearch#search(search_key, ...) abort
   let m = mode(1)
   let s:cli.vcount1 = get(a:, 1, v:count1)
   let s:cli.is_expr = get(a:, 2, s:TRUE)
