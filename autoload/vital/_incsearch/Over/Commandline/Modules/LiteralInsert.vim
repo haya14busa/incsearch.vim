@@ -2,15 +2,6 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! s:_vital_loaded(V)
-	let s:Input = a:V.import("Over.Input")
-endfunction
-
-function! s:_vital_depends()
-	return [
-\		"Over.Input",
-\	]
-endfunction
 
 let s:module = {
 \	"name" : "LiteralInsert",
@@ -24,7 +15,7 @@ function! s:module.on_char_pre(cmdline)
 		call a:cmdline.insert('^')
 		call a:cmdline.setpos(old_pos)
 		call a:cmdline.draw()
-		let char = s:Input.getchar()
+		let char = a:cmdline.getchar()
 		call a:cmdline.setline(old_line)
 		call a:cmdline.setpos(old_pos)
 		call a:cmdline.setchar(char)

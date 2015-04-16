@@ -16,6 +16,11 @@ function! s:_vital_depends()
 endfunction
 
 
+function! s:_execute(cmd)
+	execute a:cmd
+endfunction
+
+
 function! s:capture(name)
 	if hlexists(a:name) == 0
 		return ""
@@ -37,14 +42,14 @@ endfunction
 function! s:parse(highlight)
 	let highlight = a:highlight
 	
-	if highlight !~ '^\w\+\s\+xxx\s'
+	if highlight !~# '^\w\+\s\+xxx\s'
 		return {}
 	endif
 
 	let name = s:parse_to_name(a:highlight)
-	let result = { "name " : name }
+	let result = { "_name" : name }
 
-	if highlight =~ '^\w\+\s\+xxx cleared'
+	if highlight =~# '^\w\+\s\+xxx cleared'
 		let result.cleared = 1
 		return result
 	endif
@@ -86,6 +91,20 @@ function! s:get(name, ...)
 	else
 		return result
 	endif
+endfunction
+
+
+function! s:set(name, config)
+	if type(a:config) == type("")
+		return s:set(a:config, s:get(a:config))
+	endif
+	if has_key(a:config, "cleared")
+		return s:_execute("highlight clear " . a:name)
+	endif
+	if has_key(a:config, "link")
+		return s:_execute("highlight link " . a:name . " " . a:config.link)
+	endif
+	return s:_execute("highlight " . a:name . " " . join(map(items(filter(a:config, "v:key !=# '_name'")), "v:val[0] . '=' . v:val[1]"), " "))
 endfunction
 
 

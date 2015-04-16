@@ -64,6 +64,7 @@ function! s:standard(...)
 	call result.connect("ExceptionMessage")
 	call result.connect(s:Modules.get("KeyMapping").make_vim_cmdline_mapping())
 	call result.connect("Digraphs")
+	call result.connect("LiteralInsert")
 
 	return result
 endfunction
