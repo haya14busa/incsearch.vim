@@ -387,6 +387,17 @@ Version 2.0(?) Roadmap~
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
 
+1.0.2	2015-04-16
+	1. Implement experimental API (undocumented) to access vital-over
+	   command line object
+	2. Add LiteralInsert module to insert special character literally
+	  - e.g. <C-v><Tab> now inserts literal <Tab> and search them.
+	3. Add workaround pasting issue for MacVim #35
+	4. Fix to redraw commandline when leaving with <Esc> #67
+	5. Fix <SID> handling for <expr> mappings #51
+	6. Fix flicker at entering incsearch's commands #73
+
+
 1.0.1	2015-01-04
 	1. Fix keymapping escape
 	2. Fix |last-pattern| with |g:incsearch#magic|
