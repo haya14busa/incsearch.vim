@@ -46,12 +46,18 @@ function! s:digraph() abort
 endfunction
 
 
-function! s:module.on_enter(cmdline)
-	let self.digraphs = s:digraph()
+function! s:module.on_leave(cmdline)
+	" Delete cache to handle additional digraphs definition
+	let self.digraphs = {}
 endfunction
 
 function! s:module.on_char_pre(cmdline)
 	if a:cmdline.is_input("\<C-k>")
+		if empty(self.digraphs)
+			" Get digraphs when inputting <C-k> instead of on_enter because it cause
+			" flicker in some environments #107
+			let self.digraphs = s:digraph()
+		endif
 		call a:cmdline.setchar('?')
 		let self.prefix_key = a:cmdline.input_key()
 		let self.old_line = a:cmdline.getline()
