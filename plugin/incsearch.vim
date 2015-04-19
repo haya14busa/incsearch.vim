@@ -24,7 +24,7 @@
 "=============================================================================
 scriptencoding utf-8
 " Load Once {{{
-if expand("%:p") ==# expand("<sfile>:p")
+if expand('%:p') ==# expand('<sfile>:p')
   unlet! g:loaded_incsearch
 endif
 if exists('g:loaded_incsearch')
@@ -38,8 +38,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-" <expr> is just for passing mode(1) value, so basically called with
-" non-<expr> state
+" <expr> is just for handling mode(1) & v:count value, so basically called
+" with non-<expr> state
 noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go_wrap({'command': '/'})
 noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go_wrap({'command': '?'})
 noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go_wrap({'command': '/', 'is_stay': 1})
@@ -58,7 +58,6 @@ onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'is_expr': 1, '
 "     work
 noremap <expr> <Plug>(incsearch-nohl) incsearch#auto_nohlsearch(1)
 noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
-" NOTE: Should I consider to make below mappings public?
 noremap <expr> <Plug>(incsearch-nohl2) incsearch#auto_nohlsearch(2)
 
 
@@ -83,8 +82,8 @@ let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
 
 function! s:key_mapping(lhs, rhs, noremap) abort
   let g:incsearch_cli_key_mappings[a:lhs] = {
-  \       "key" : a:rhs,
-  \       "noremap" : a:noremap,
+  \       'key' : a:rhs,
+  \       'noremap' : a:noremap,
   \   }
 endfunction
 
@@ -94,10 +93,10 @@ function! s:as_keymapping(key) abort
 endfunction
 
 command! -nargs=* IncSearchNoreMap
-\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [1])
+\   call call('s:key_mapping', map([<f-args>], 's:as_keymapping(v:val)') + [1])
 
 command! -nargs=* IncSearchMap
-\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [0])
+\   call call('s:key_mapping', map([<f-args>], 's:as_keymapping(v:val)') + [0])
 
 "}}}
 
