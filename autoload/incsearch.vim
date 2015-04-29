@@ -219,7 +219,8 @@ if has('mac')
   \ })
 endif
 
-function! s:cli.keymapping() abort
+" FIXME: arguments?
+function! s:cli.keymapping(...) abort
   return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
 endfunction
 
@@ -248,15 +249,14 @@ function! s:inc.on_enter(cmdline) abort
 endfunction
 
 function! s:inc.on_leave(cmdline) abort
-  call s:reset()
   call s:hi.disable_all()
   call s:hi.delete_all()
   " redraw: hide pseud-cursor
   redraw " need to redraw for handling non-<expr> mappings
-  if s:cli.getline() ==# ''
+  if a:cmdline.getline() ==# ''
     echo ''
   else
-    echo s:cli.get_prompt() . s:cli.getline()
+    echo a:cmdline.get_prompt() . a:cmdline.getline()
   endif
   " NOTE:
   "   push rest of keymappings with feedkeys()
@@ -266,12 +266,6 @@ function! s:inc.on_leave(cmdline) abort
     call feedkeys(a:cmdline.input_key_stack_string(), 'n')
   endif
 endfunction
-
-function! s:reset() abort
-  " Current commandline is called by <expr> mapping
-  let s:cli.is_expr = s:FALSE
-endfunction
-call s:reset()
 
 " Avoid search-related error while incremental searching
 function! s:on_searching(func, ...) abort
@@ -314,7 +308,7 @@ endfunction
 function! s:on_char_pre(cmdline) abort
   " NOTE:
   " `:call a:cmdline.setchar('')` as soon as possible!
-  let [pattern, offset] = s:cli_parse_pattern()
+  let [pattern, offset] = s:cli_parse_pattern(a:cmdline)
 
   " Interactive :h last-pattern if pattern is empty
   if ( a:cmdline.is_input("<Over>(incsearch-next)")
@@ -322,7 +316,7 @@ function! s:on_char_pre(cmdline) abort
   \ ) && empty(pattern)
     call a:cmdline.setchar('')
     " Use history instead of @/ to work with magic option and converter
-    call a:cmdline.setline(histget('/', -1) . (empty(offset) ? '' : s:cli.base_key) . offset)
+    call a:cmdline.setline(histget('/', -1) . (empty(offset) ? '' : a:cmdline.base_key) . offset)
     " Just insert last-pattern and do not count up, but the incsearch-prev
     " should move the cursor to reversed directly, so do not return if the
     " command is prev
@@ -332,46 +326,46 @@ function! s:on_char_pre(cmdline) abort
   if a:cmdline.is_input("<Over>(incsearch-next)")
     call a:cmdline.setchar('')
     if a:cmdline.flag ==# 'n' " exit stay mode
-      let s:cli.flag = ''
+      let a:cmdline.flag = ''
     else
-      let s:cli.vcount1 += 1
+      let a:cmdline.vcount1 += 1
     endif
   elseif a:cmdline.is_input("<Over>(incsearch-prev)")
     call a:cmdline.setchar('')
     if a:cmdline.flag ==# 'n' " exit stay mode
-      let s:cli.flag = ''
+      let a:cmdline.flag = ''
     endif
-    let s:cli.vcount1 -= 1
-    if s:cli.vcount1 < 1
-      let s:cli.vcount1 += s:U.count_pattern(pattern)
+    let a:cmdline.vcount1 -= 1
+    if a:cmdline.vcount1 < 1
+      let a:cmdline.vcount1 += s:U.count_pattern(pattern)
     endif
   elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-  \ &&   (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && s:cli.flag ==# 'b')
+  \ &&   (a:cmdline.flag ==# '' || a:cmdline.flag ==# 'n'))
+  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && a:cmdline.flag ==# 'b')
     call a:cmdline.setchar('')
-    if a:cmdline.flag ==# 'n' | let s:cli.flag = '' | endif
+    if a:cmdline.flag ==# 'n' | let a:cmdline.flag = '' | endif
     let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
     let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \          ? s:U.get_max_col(pos_expr) : 1
     let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
     let cnt = s:U.count_pattern(pattern, from, to)
-    let s:cli.vcount1 += cnt
+    let a:cmdline.vcount1 += cnt
   elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
-  \ &&   (s:cli.flag ==# '' || s:cli.flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && s:cli.flag ==# 'b')
+  \ &&   (a:cmdline.flag ==# '' || a:cmdline.flag ==# 'n'))
+  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && a:cmdline.flag ==# 'b')
     call a:cmdline.setchar('')
     if a:cmdline.flag ==# 'n'
-      let s:cli.flag = ''
-      let s:cli.vcount1 -= 1
+      let a:cmdline.flag = ''
+      let a:cmdline.vcount1 -= 1
     endif
     let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
     let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \          ? s:U.get_max_col(pos_expr) : 1
     let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
     let cnt = s:U.count_pattern(pattern, from, to)
-    let s:cli.vcount1 -= cnt
-    if s:cli.vcount1 < 1
-      let s:cli.vcount1 += s:U.count_pattern(pattern)
+    let a:cmdline.vcount1 -= cnt
+    if a:cmdline.vcount1 < 1
+      let a:cmdline.vcount1 += s:U.count_pattern(pattern)
     endif
   endif
 
@@ -385,17 +379,17 @@ function! s:on_char_pre(cmdline) abort
   \ )
     call a:cmdline.setchar('')
     let [from, to] = [[s:w.lnum, s:w.col],
-    \       s:cli.flag !=# 'b'
+    \       a:cmdline.flag !=# 'b'
     \       ? [line('$'), s:U.get_max_col('$')]
     \       : [1, 1]
     \   ]
     let max_cnt = s:U.count_pattern(pattern, from, to)
-    let s:cli.vcount1 = min([max_cnt, s:cli.vcount1])
+    let a:cmdline.vcount1 = min([max_cnt, a:cmdline.vcount1])
   endif
 endfunction
 
 function! s:on_char(cmdline) abort
-  let [raw_pattern, offset] = s:cli_parse_pattern()
+  let [raw_pattern, offset] = s:cli_parse_pattern(a:cmdline)
 
   if raw_pattern ==# ''
     call s:hi.disable_all()
@@ -417,13 +411,13 @@ function! s:on_char(cmdline) abort
   let pattern = s:convert(raw_pattern)
 
   " Improved Incremental cursor move!
-  call s:move_cursor(pattern, a:cmdline.flag, offset)
+  call s:move_cursor(a:cmdline, pattern, offset)
 
   " Improved Incremental highlighing!
   " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
   let case = incsearch#detect_case(raw_pattern)
-  let should_separate = g:incsearch#separate_highlight && s:cli.flag !=# 'n'
-  let d = (s:cli.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+  let should_separate = g:incsearch#separate_highlight && a:cmdline.flag !=# 'n'
+  let d = (a:cmdline.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
   call incsearch#highlight#incremental_highlight(
   \   pattern . case, should_separate, d, [s:w.lnum, s:w.col])
 
@@ -436,18 +430,18 @@ endfunction
 
 " Caveat: It handle :h last-pattern, so be careful if you want to pass empty
 " string as a pattern
-function! s:move_cursor(pattern, flag, ...) abort
+function! s:move_cursor(cli, pattern, ...) abort
   let offset = get(a:, 1, '')
-  if a:flag ==# 'n' " skip if stay mode
+  if a:cli.flag ==# 'n' " skip if stay mode
     return
   endif
   call winrestview(s:w)
   " pseud-move cursor position: this is restored afterward if called by
   " <expr> mappings
-  if s:cli.is_expr
-    for _ in range(s:cli.vcount1)
+  if a:cli.is_expr
+    for _ in range(a:cli.vcount1)
       " NOTE: This cannot handle {offset} for cursor position
-      call search(a:pattern, a:flag)
+      call search(a:pattern, a:cli.flag)
     endfor
   else
     " More precise cursor position while searching
@@ -457,7 +451,7 @@ function! s:move_cursor(pattern, flag, ...) abort
     let is_visual_mode = s:U.is_visual(mode(1))
     let cmd = s:with_ignore_foldopen(
     \   function('s:build_search_cmd'),
-    \   'n', s:combine_pattern(a:pattern, offset), s:cli.base_key)
+    \   a:cli, 'n', s:combine_pattern(a:cli, a:pattern, offset), a:cli.base_key)
     " NOTE:
     " :silent!
     "   Shut up errors! because this is just for the cursor emulation
@@ -496,6 +490,16 @@ function! incsearch#cli() abort
   endtry
 endfunction
 
+function! s:make_cli(config) abort
+  let cli = copy(s:cli)
+  let cli.base_key = a:config.command
+  let cli.vcount1 = a:config.count1
+  let cli.is_expr = a:config.is_expr
+  let cli._mode = a:config.mode
+  " NOTE: default pattern
+  return cli
+endfunction
+
 " @api
 function! incsearch#go(...) abort
   let config = incsearch#config#make(get(a:, 1, {}))
@@ -503,10 +507,11 @@ function! incsearch#go(...) abort
   if s:U.is_visual(config.mode) && !config.is_expr
     normal! gv
   endif
-  let cmd = Search(config)
+  let cli = s:make_cli(config)
+  let cmd = Search(cli)
   if !config.is_expr
-    let should_set_jumplist = (s:cli.flag !=# 'n')
-    call s:set_search_related_stuff(cmd, should_set_jumplist)
+    let should_set_jumplist = (cli.flag !=# 'n')
+    call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
   endif
   return cmd
 endfunction
@@ -526,36 +531,28 @@ endfunction
 " move the cursor while searching
 " @expr but sometimes called by non-<expr>
 " @return: command which is excutable with expr-mappings or `exec 'normal!'`
-function! incsearch#stay(config) abort
-  let s:cli.base_key = a:config.command
-  let s:cli.vcount1 = a:config.count1
-  let s:cli.is_expr = a:config.is_expr
-  let m = a:config.mode
+function! incsearch#stay(cli) abort
+  let input = s:get_input(a:cli, '')
 
-  let input = s:get_input('', m)
-
-  let [raw_pattern, offset] = s:cli_parse_pattern()
+  let [raw_pattern, offset] = s:cli_parse_pattern(a:cli)
   let pattern = s:convert(raw_pattern)
 
   " execute histadd manually
-  if s:cli.flag ==# 'n' && input !=# ''
-        " NOTE: this is for non-expr mapping see incsearch#stay() and below NOTE:
-      if (s:cli.is_expr || empty(offset))
-          call histadd('/', input)
-          let @/ = pattern
-      endif
+  if a:cli.flag ==# 'n' && input !=# '' && (a:cli.is_expr || empty(offset))
+    call histadd('/', input)
+    let @/ = pattern
   endif
 
-  if s:cli.flag ==# 'n' " stay
+  if a:cli.flag ==# 'n' " stay
     " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
     " FIXME: cannot set {offset} if in operator-pending mode because this
     " have to use feedkeys()
-    let is_cancel = s:cli.exit_code()
+    let is_cancel = a:cli.exit_code()
     if is_cancel
       call s:cleanup_cmdline()
     elseif !empty(offset) && mode(1) !=# 'no'
       let cmd = s:with_ignore_foldopen(
-      \   function('s:generate_command'), m, input, '/')
+      \   function('s:generate_command'), a:cli, input, '/')
       call feedkeys(cmd, 'n')
       " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
       call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(s:w) . ")\<CR>", 'winrestview', 'n')
@@ -564,67 +561,63 @@ function! incsearch#stay(config) abort
       call incsearch#auto_nohlsearch(0)
     endif
     " }}}
-    return s:U.is_visual(m) ? "\<ESC>gv" : "\<ESC>" " just exit
+    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
   else " exit stay mode while searching
     call incsearch#auto_nohlsearch(1)
-    return s:generate_command(m, input, '/') " assume '/'
+    return s:generate_command(a:cli, input, '/') " assume '/'
   endif
 endfunction
 
-function! incsearch#search(config) abort
-  let m = a:config.mode
-  let s:cli.base_key = a:config.command
-  let s:cli.vcount1 = a:config.count1
-  let s:cli.is_expr = a:config.is_expr
-  let input = s:get_input(s:cli.base_key, m)
-  let [pattern, offset] = incsearch#parse_pattern(input, s:cli.base_key)
+function! incsearch#search(cli) abort
+  let input = s:get_input(a:cli, a:cli.base_key)
+  let [pattern, offset] = incsearch#parse_pattern(input, a:cli.base_key)
   call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
   return s:generate_command(
-  \   m, s:combine_pattern(s:convert(pattern), offset), s:cli.base_key)
+  \   a:cli, s:combine_pattern(a:cli, s:convert(pattern), offset), a:cli.base_key)
 endfunction
 
-function! s:get_input(search_key, mode) abort
+function! s:get_input(cli, search_key) abort
   " if search_key is empty, it means `stay` & do not move cursor
   let prompt = a:search_key ==# '' ? '/' : a:search_key
-  call s:cli.set_prompt(prompt)
-  let s:cli.flag = a:search_key ==# '/' ? ''
+  call a:cli.set_prompt(prompt)
+  let a:cli.flag = a:search_key ==# '/' ? ''
   \              : a:search_key ==# '?' ? 'b'
   \              : a:search_key ==# ''  ? 'n'
   \              : ''
 
   " Handle visual mode highlight
-  if s:U.is_visual(a:mode)
+  if s:U.is_visual(a:cli._mode)
     let visual_hl = incsearch#highlight#get_visual_hlobj()
     try
       call incsearch#highlight#turn_off(visual_hl)
-      call incsearch#highlight#emulate_visual_highlight(a:mode, visual_hl)
-      let input = s:cli.get()
+      call incsearch#highlight#emulate_visual_highlight(a:cli._mode, visual_hl)
+      let input = a:cli.get()
     finally
       call incsearch#highlight#turn_on(visual_hl)
     endtry
   else
-    let input = s:cli.get()
+    let input = a:cli.get()
   endif
   return input
 endfunction
 
-function! s:generate_command(mode, pattern, search_key) abort
-  if (s:cli.exit_code() == 0)
+function! s:generate_command(cli, pattern, search_key) abort
+  if (a:cli.exit_code() == 0)
     let v = winsaveview()
     try
       call winrestview(s:w)
-      call s:cli.callevent('on_execute_pre') " XXX: side-effect!
+      call a:cli.callevent('on_execute_pre') " XXX: side-effect!
     finally
       call winrestview(v)
     endtry
-    call s:cli.callevent('on_execute') " XXX: side-effect!
-    return s:build_search_cmd(a:mode, a:pattern, a:search_key)
+    call a:cli.callevent('on_execute') " XXX: side-effect!
+    return s:build_search_cmd(a:cli, a:cli._mode, a:pattern, a:search_key)
   else " Cancel
-    return s:U.is_visual(a:mode) ? '\<ESC>gv' : "\<ESC>"
+    return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
   endif
 endfunction
 
-function! s:build_search_cmd(mode, pattern, search_key) abort
+function! s:build_search_cmd(cli, mode, pattern, search_key) abort
   let op = (a:mode == 'no')      ? v:operator
   \      : s:U.is_visual(a:mode) ? 'gv'
   \      : ''
@@ -635,16 +628,16 @@ function! s:build_search_cmd(mode, pattern, search_key) abort
   "   but, if you do not move the cursor while incremental searching,
   "   there are no need to use <Esc>.
   return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
-  \   v:register, op, s:cli.vcount1, a:search_key, a:pattern, zv)
+  \   v:register, op, a:cli.vcount1, a:search_key, a:pattern, zv)
 endfunction
 
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.
-function! s:set_search_related_stuff(cmd, ...) abort
+function! s:set_search_related_stuff(cli, cmd, ...) abort
   " For stay motion
   let should_set_jumplist = get(a:, 1, s:TRUE)
-  let is_cancel = s:cli.exit_code()
+  let is_cancel = a:cli.exit_code()
   if is_cancel
     " Restore cursor position and return
     " NOTE: Should I request on_cancel event to vital-over and use it?
@@ -652,7 +645,7 @@ function! s:set_search_related_stuff(cmd, ...) abort
     call s:cleanup_cmdline()
     return
   endif
-  let [raw_pattern, offset] = s:cli_parse_pattern()
+  let [raw_pattern, offset] = s:cli_parse_pattern(a:cli)
   let should_execute = !empty(offset) || empty(raw_pattern)
   if should_execute
     " Execute with feedkeys() to work with
@@ -668,8 +661,8 @@ function! s:set_search_related_stuff(cmd, ...) abort
     " Add history if necessary
     " Do not save converted pattern to history
     let pattern = s:convert(raw_pattern)
-    let input = s:combine_pattern(raw_pattern, offset)
-    call histadd(s:cli.base_key, input)
+    let input = s:combine_pattern(a:cli, raw_pattern, offset)
+    call histadd(a:cli.base_key, input)
     let @/ = pattern
 
     " Emulate errors, and handling `n` and `N` preparation {{{
@@ -679,7 +672,7 @@ function! s:set_search_related_stuff(cmd, ...) abort
     if should_set_jumplist
       normal! m`
     endif
-    let d = (s:cli.base_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
+    let d = (a:cli.base_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
     call s:emulate_search_error(d)
     call winrestview(target_view)
     "}}}
@@ -774,26 +767,20 @@ function! incsearch#parse_pattern(expr, search_key) abort
 endfunction
 
 " CommandLine Interface parse pattern wrapper
-function! s:cli_parse_pattern() abort
+function! s:cli_parse_pattern(cli) abort
   if v:version == 704 && !has('patch421')
     " Ignore \ze* which clash vim 7.4 without 421 patch
     " Assume `\m`
-    let [p, o] = incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+    let [p, o] = incsearch#parse_pattern(a:cli.getline(), a:cli.base_key)
     let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
     return [p, o]
   else
-    return incsearch#parse_pattern(s:cli.getline(), s:cli.base_key)
+    return incsearch#parse_pattern(a:cli.getline(), a:cli.base_key)
   endif
 endfunction
 
-" CommandLine Interface parse pattern wrapper for just getting pattern
-function! s:cli_get_pattern() abort
-  let [pattern, _] = s:cli_parse_pattern() " get `pattern` and ignore {offset}
-  return pattern
-endfunction
-
-function! s:combine_pattern(pattern, offset) abort
-  return empty(a:offset) ? a:pattern : a:pattern . s:cli.base_key . a:offset
+function! s:combine_pattern(cli, pattern, offset) abort
+  return empty(a:offset) ? a:pattern : a:pattern . a:cli.base_key . a:offset
 endfunction
 
 " convert implementation. assume pattern is not empty
