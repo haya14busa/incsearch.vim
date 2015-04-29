@@ -21,7 +21,8 @@ let s:config = {
 \   'is_expr': s:FALSE,
 \   'pattern': '',
 \   'mode': 'n',
-\   'count1': 1
+\   'count1': 1,
+\   'modules': []
 \ }
 
 " @return config for lazy value

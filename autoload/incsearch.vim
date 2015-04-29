@@ -99,8 +99,9 @@ function! s:incsearch_exit.on_char_pre(cmdline) abort
 endfunction
 call s:cli.connect(s:incsearch_exit)
 
+" Lazy connect
 let s:InsertRegister = s:modules.get('InsertRegister').make()
-call s:cli.connect(s:InsertRegister)
+
 call s:cli.connect('Paste')
 " XXX: better handling.
 if expand("%:p") !=# expand("<sfile>:p")
@@ -227,6 +228,11 @@ endfunction
 let s:inc = {
 \   "name" : "incsearch",
 \}
+
+" NOTE: for InsertRegister handling
+function! s:inc.priority(event) abort
+  return a:event is# 'on_char' ? 10 : 0
+endfunction
 
 function! s:inc.on_enter(cmdline) abort
   nohlsearch " disable previous highlight
@@ -491,12 +497,17 @@ function! incsearch#cli() abort
 endfunction
 
 function! s:make_cli(config) abort
-  let cli = copy(s:cli)
+  " deepcopy() for cli.connect(module) instead of copy()
+  let cli = deepcopy(s:cli)
   let cli._base_key = a:config.command
   let cli._vcount1 = a:config.count1
   let cli._is_expr = a:config.is_expr
   let cli._mode = a:config.mode
   let cli._pattern = a:config.pattern
+  for module in a:config.modules
+    call cli.connect(module)
+  endfor
+  call cli.connect(s:InsertRegister)
   return cli
 endfunction
 
@@ -516,15 +527,19 @@ function! incsearch#go(...) abort
   return cmd
 endfunction
 
+"" NOTE: this global variable is only for handling config from go_wrap func
+" It avoids to make config string temporarily
+let g:incsearch#_go_wrap_config = {}
+
 " incsearch#go wrapper to call from non-expr state with mode and v:count1
 " detection
 " @api
 " @return incsearch#go command to execute
 function! incsearch#go_wrap(...) abort
   let config = extend(get(a:, 1, {}), incsearch#config#lazy(), 'keep')
-  let esc = s:U.is_visual(config.mode) ? "\<ESC>" : ''
-  return printf("%s:\<C-u>call incsearch#go(%s)\<CR>",
-  \ esc, strtrans(string(config)))
+  let g:incsearch#_go_wrap_config = config
+  let esc = s:U.is_visual(g:incsearch#_go_wrap_config.mode) ? "\<ESC>" : ''
+  return printf("%s:\<C-u>call incsearch#go(g:incsearch#_go_wrap_config)\<CR>", esc)
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
