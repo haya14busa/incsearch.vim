@@ -481,6 +481,28 @@ function! s:inc.on_char(cmdline) abort
 endfunction
 
 call s:cli.connect(s:inc)
+
+"" partial deepcopy() for cli.connect(module) instead of copy()
+function! s:copy_cli(cli) abort
+  let cli = copy(a:cli)
+  let cli.variables = deepcopy(a:cli.variables)
+  return cli
+endfunction
+
+function! s:make_cli(config) abort
+  let cli = s:copy_cli(s:cli)
+  let cli._base_key = a:config.command
+  let cli._vcount1 = a:config.count1
+  let cli._is_expr = a:config.is_expr
+  let cli._mode = a:config.mode
+  let cli._pattern = a:config.pattern
+  for module in a:config.modules
+    call cli.connect(module)
+  endfor
+  call cli.connect(s:InsertRegister)
+  return cli
+endfunction
+
 "}}}
 
 " Main: {{{
@@ -494,21 +516,6 @@ function! incsearch#cli() abort
     " If there are no current cli object, return default one
     return s:cli
   endtry
-endfunction
-
-function! s:make_cli(config) abort
-  " deepcopy() for cli.connect(module) instead of copy()
-  let cli = deepcopy(s:cli)
-  let cli._base_key = a:config.command
-  let cli._vcount1 = a:config.count1
-  let cli._is_expr = a:config.is_expr
-  let cli._mode = a:config.mode
-  let cli._pattern = a:config.pattern
-  for module in a:config.modules
-    call cli.connect(module)
-  endfor
-  call cli.connect(s:InsertRegister)
-  return cli
 endfunction
 
 " @api
