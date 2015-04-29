@@ -496,35 +496,9 @@ function! incsearch#cli() abort
   endtry
 endfunction
 
-"" incsearch config
-" @command is equivalent with base_key TODO: fix this inconsistence
-" @count1 default: v:count1
-" @mode default: mode(1)
-let s:config = {
-\   'command': '/',
-\   'is_stay': s:FALSE,
-\   'is_expr': s:FALSE,
-\   'mode': 'n',
-\   'count1': 1
-\ }
-
-function! s:lazy_config() abort
-  return {'count1': v:count1, 'mode': mode(1)}
-endfunction
-
-function! s:config(additional) abort
-  let default = extend(copy(s:config), s:lazy_config())
-  let c = extend(default, a:additional)
-  " FIXME: handle this with more clean way
-  if c.mode is# '^V'
-    let c.mode = "\<C-v>"
-  endif
-  return c
-endfunction
-
 " @api
 function! incsearch#go(...) abort
-  let config = s:config(get(a:, 1, {}))
+  let config = incsearch#config#make(get(a:, 1, {}))
   let Search = function(config.is_stay ? 'incsearch#stay' : 'incsearch#search')
   if s:U.is_visual(config.mode) && !config.is_expr
     normal! gv
@@ -542,7 +516,7 @@ endfunction
 " @api
 " @return incsearch#go command to execute
 function! incsearch#go_wrap(...) abort
-  let config = extend(get(a:, 1, {}), s:lazy_config(), 'keep')
+  let config = extend(get(a:, 1, {}), incsearch#config#lazy(), 'keep')
   let esc = s:U.is_visual(config.mode) ? "\<ESC>" : ''
   return printf("%s:\<C-u>call incsearch#go(%s)\<CR>",
   \ esc, strtrans(string(config)))
