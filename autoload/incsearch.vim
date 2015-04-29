@@ -497,7 +497,9 @@ function! incsearch#cli() abort
 endfunction
 
 "" incsearch config
+" @command is equivalent with base_key TODO: fix this inconsistence
 " @count1 default: v:count1
+" @mode default: mode(1)
 let s:config = {
 \   'command': '/',
 \   'is_stay': s:FALSE,
@@ -506,8 +508,18 @@ let s:config = {
 \   'count1': 1
 \ }
 
+function! s:lazy_config() abort
+  return {'count1': v:count1, 'mode': mode(1)}
+endfunction
+
 function! s:config(additional) abort
-  return extend(extend(copy(s:config), {'count1': v:count1}), a:additional)
+  let default = extend(copy(s:config), s:lazy_config())
+  let c = extend(default, a:additional)
+  " FIXME: handle this with more clean way
+  if c.mode is# '^V'
+    let c.mode = "\<C-v>"
+  endif
+  return c
 endfunction
 
 " @api
@@ -517,7 +529,7 @@ function! incsearch#go(...) abort
   if s:U.is_visual(config.mode) && !config.is_expr
     normal! gv
   endif
-  let cmd = Search(config.command, config.count1, config.is_expr)
+  let cmd = Search(config)
   if !config.is_expr
     let should_set_jumplist = (s:cli.flag !=# 'n')
     call s:set_search_related_stuff(cmd, should_set_jumplist)
@@ -530,21 +542,21 @@ endfunction
 " @api
 " @return incsearch#go command to execute
 function! incsearch#go_wrap(...) abort
-  let m = mode(1)
-  let config = extend(get(a:, 1, {}), {'mode': strtrans(m), 'count1': v:count1}, 'keep')
-  let esc = s:U.is_visual(m) ? "\<ESC>" : ''
-  return printf("%s:\<C-u>call incsearch#go(%s)\<CR>", esc, string(config))
+  let config = extend(get(a:, 1, {}), s:lazy_config(), 'keep')
+  let esc = s:U.is_visual(config.mode) ? "\<ESC>" : ''
+  return printf("%s:\<C-u>call incsearch#go(%s)\<CR>",
+  \ esc, strtrans(string(config)))
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly
 " move the cursor while searching
 " @expr but sometimes called by non-<expr>
-function! incsearch#stay(...) abort
-  " return: command which is excutable with expr-mappings or `exec 'normal!'`
-  let s:cli.base_key = get(a:, 1, '/')
-  let s:cli.vcount1 = get(a:, 2, v:count1)
-  let s:cli.is_expr = get(a:, 3, s:TRUE)
-  let m = mode(1)
+" @return: command which is excutable with expr-mappings or `exec 'normal!'`
+function! incsearch#stay(config) abort
+  let s:cli.base_key = a:config.command
+  let s:cli.vcount1 = a:config.count1
+  let s:cli.is_expr = a:config.is_expr
+  let m = a:config.mode
 
   let input = s:get_input('', m)
 
@@ -585,16 +597,16 @@ function! incsearch#stay(...) abort
   endif
 endfunction
 
-function! incsearch#search(search_key, ...) abort
-  let m = mode(1)
-  let s:cli.vcount1 = get(a:, 1, v:count1)
-  let s:cli.is_expr = get(a:, 2, s:TRUE)
-  let s:cli.base_key = a:search_key " `/` or `?`
-  let input = s:get_input(a:search_key, m)
+function! incsearch#search(config) abort
+  let m = a:config.mode
+  let s:cli.base_key = a:config.command
+  let s:cli.vcount1 = a:config.count1
+  let s:cli.is_expr = a:config.is_expr
+  let input = s:get_input(s:cli.base_key, m)
   let [pattern, offset] = incsearch#parse_pattern(input, s:cli.base_key)
   call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
   return s:generate_command(
-  \   m, s:combine_pattern(s:convert(pattern), offset), a:search_key)
+  \   m, s:combine_pattern(s:convert(pattern), offset), s:cli.base_key)
 endfunction
 
 function! s:get_input(search_key, mode) abort
