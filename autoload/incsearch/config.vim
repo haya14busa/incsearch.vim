@@ -19,6 +19,7 @@ let s:config = {
 \   'command': '/',
 \   'is_stay': s:FALSE,
 \   'is_expr': s:FALSE,
+\   'pattern': '',
 \   'mode': 'n',
 \   'count1': 1
 \ }

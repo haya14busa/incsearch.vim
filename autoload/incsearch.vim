@@ -496,7 +496,7 @@ function! s:make_cli(config) abort
   let cli._vcount1 = a:config.count1
   let cli._is_expr = a:config.is_expr
   let cli._mode = a:config.mode
-  " NOTE: default pattern
+  let cli._pattern = a:config.pattern
   return cli
 endfunction
 
@@ -591,12 +591,12 @@ function! s:get_input(cli, search_key) abort
     try
       call incsearch#highlight#turn_off(visual_hl)
       call incsearch#highlight#emulate_visual_highlight(a:cli._mode, visual_hl)
-      let input = a:cli.get()
+      let input = a:cli.get(a:cli._pattern)
     finally
       call incsearch#highlight#turn_on(visual_hl)
     endtry
   else
-    let input = a:cli.get()
+    let input = a:cli.get(a:cli._pattern)
   endif
   return input
 endfunction
