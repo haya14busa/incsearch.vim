@@ -117,13 +117,13 @@ let s:KeyMapping = s:modules.get('KeyMapping')
 let s:emacs_like = s:KeyMapping.make_emacs()
 let s:vim_cmap = s:KeyMapping.make_vim_cmdline_mapping()
 let s:smartbackword = s:modules.get('IgnoreRegexpBackwardWord').make()
-function! s:emacs_like.__condition() abort
+function! s:emacs_like._condition() abort
   return g:incsearch#emacs_like_keymap
 endfunction
-function! s:vim_cmap.__condition() abort
+function! s:vim_cmap._condition() abort
   return g:incsearch#vim_cmdline_keymap
 endfunction
-function! s:smartbackword.__condition() abort
+function! s:smartbackword._condition() abort
   return g:incsearch#smart_backward_word
 endfunction
 let s:module_management =  {
@@ -135,7 +135,7 @@ let s:module_management =  {
 let s:backward_word = s:cli.backward_word
 function! s:module_management.on_enter(cmdline) abort
   for module in self.modules
-    if has_key(module, '__condition') && ! module.__condition()
+    if has_key(module, '_condition') && ! module._condition()
       call a:cmdline.disconnect(module.name)
       if module.name ==# 'IgnoreRegexpBackwardWord'
         function! a:cmdline.backward_word(...) abort
