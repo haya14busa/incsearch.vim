@@ -27,7 +27,8 @@ let s:config = {
 
 " @return config for lazy value
 function! incsearch#config#lazy() abort
-  return {'count1': v:count1, 'mode': mode(1)}
+  let m = mode(1)
+  return {'count1': v:count1, 'mode': m, 'is_expr': (m is# 'no')}
 endfunction
 
 " @return config with default value

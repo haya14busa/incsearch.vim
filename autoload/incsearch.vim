@@ -518,35 +518,44 @@ function! incsearch#cli() abort
   endtry
 endfunction
 
+"" NOTE: this global variable is only for handling config from go_wrap func
+" It avoids to make config string temporarily
+let g:incsearch#_go_config = {}
+
+"" This is main API
+" ARGS:
+"   @config See autoload/incsearch/config.vim
+" RETURN:
+"   Return primitive search commands (like `3/pattern<CR>`) if config.is_expr
+"   is TRUE, return excute command to call incsearch.vim's inner API.
+"   To handle dot repeat, make sure that config.is_expr is true. If you do not
+"   specify config.is_expr, it automatically set config.is_expr TRUE for
+"   operator-pending mode
 " @api
 function! incsearch#go(...) abort
   let config = incsearch#config#make(get(a:, 1, {}))
-  let Search = function(config.is_stay ? 'incsearch#stay' : 'incsearch#search')
-  if s:U.is_visual(config.mode) && !config.is_expr
+  if config.is_expr
+    return incsearch#_go(config)
+  else
+    let g:incsearch#_go_config = config
+    let esc = s:U.is_visual(g:incsearch#_go_config.mode) ? "\<ESC>" : ''
+    return printf("%s:\<C-u>call incsearch#_go(g:incsearch#_go_config)\<CR>", esc)
+  endif
+endfunction
+
+" @return command: String to search
+function! incsearch#_go(config) abort
+  let Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
+  if s:U.is_visual(a:config.mode) && !a:config.is_expr
     normal! gv
   endif
-  let cli = s:make_cli(config)
+  let cli = s:make_cli(a:config)
   let cmd = Search(cli)
-  if !config.is_expr
+  if !a:config.is_expr
     let should_set_jumplist = (cli.flag !=# 'n')
     call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
   endif
   return cmd
-endfunction
-
-"" NOTE: this global variable is only for handling config from go_wrap func
-" It avoids to make config string temporarily
-let g:incsearch#_go_wrap_config = {}
-
-" incsearch#go wrapper to call from non-expr state with mode and v:count1
-" detection
-" @api
-" @return incsearch#go command to execute
-function! incsearch#go_wrap(...) abort
-  let config = extend(get(a:, 1, {}), incsearch#config#lazy(), 'keep')
-  let g:incsearch#_go_wrap_config = config
-  let esc = s:U.is_visual(g:incsearch#_go_wrap_config.mode) ? "\<ESC>" : ''
-  return printf("%s:\<C-u>call incsearch#go(g:incsearch#_go_wrap_config)\<CR>", esc)
 endfunction
 
 " similar to incsearch#forward() but do not move the cursor unless explicitly

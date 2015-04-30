@@ -38,16 +38,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-" <expr> is just for handling mode(1) & v:count value, so basically called
-" with non-<expr> state
-noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go_wrap({'command': '/'})
-noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go_wrap({'command': '?'})
-noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go_wrap({'command': '/', 'is_stay': 1})
-
-" <expr> for dot repeat (`.`) in operator pending mode
-onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'is_expr': 1, 'command': '/'})
-onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'is_expr': 1, 'command': '?'})
-onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'is_expr': 1, 'command': '/', 'is_stay': 1})
+noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
+noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
+noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
 
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:
