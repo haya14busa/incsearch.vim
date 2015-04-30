@@ -22,12 +22,9 @@ endfunction
 
 function! s:suite.mappings()
   " Main:
-  call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'nv'), "incsearch#go_wrap({'command': '/'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'nv'), "incsearch#go_wrap({'command': '?'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'nv'), "incsearch#go_wrap({'command': '/', 'is_stay': 1})")
-  call s:assert.equals(maparg('<Plug>(incsearch-forward)', 'o'), "incsearch#go({'is_expr': 1, 'command': '/'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'o'), "incsearch#go({'is_expr': 1, 'command': '?'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-stay)', 'o'), "incsearch#go({'is_expr': 1, 'command': '/', 'is_stay': 1})")
+  call s:assert.equals(maparg('<Plug>(incsearch-forward)' , 'nvo'), "incsearch#go({'command': '/'})")
+  call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'nvo'), "incsearch#go({'command': '?'})")
+  call s:assert.equals(maparg('<Plug>(incsearch-stay)'    , 'nvo'), "incsearch#go({'command': '/', 'is_stay': 1})")
   " Additional:
   call s:assert.equals(maparg('<Plug>(incsearch-nohl)', 'nvo'), 'incsearch#auto_nohlsearch(1)')
   call s:assert.equals(maparg('<Plug>(incsearch-nohl0)', 'nvo'), 'incsearch#auto_nohlsearch(0)')
@@ -69,7 +66,7 @@ function! s:suite.test_autoload_function()
   catch
   endtry
   call s:assert.exists('*incsearch#go')
-  call s:assert.exists('*incsearch#go_wrap')
+  call s:assert.exists('*incsearch#_go')
   call s:assert.exists('*incsearch#stay')
   call s:assert.exists('*incsearch#parse_pattern')
 endfunction
