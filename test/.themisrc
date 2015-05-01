@@ -5,7 +5,6 @@ call themis#helper('command').with(themis#helper('assert')).with({'Expect': g:Ex
 
 language C
 
-
 " Helper Functions:
 
 function! AddLine(str)

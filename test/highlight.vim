@@ -44,7 +44,8 @@ function! s:suite.hlsearch()
   if !exists('v:hlsearch')
     call s:assert.skip("Skip because vim version are too low to test it")
   endif
-  " FIXME:
+  set hlsearch
+  " FIXME: <- why...???
   for keyseq in ['/', '?', 'g/']
     nohlsearch
     call s:assert.equals(v:hlsearch, 0)
@@ -55,6 +56,18 @@ function! s:suite.hlsearch()
   call s:assert.equals(v:hlsearch, 0)
   exec "normal!" "hl" | " dummy
   call s:assert.equals(v:hlsearch, 0)
+  set hlsearch&
+endfunction
+
+function! s:suite.preserve_nohlsearch() abort
+  for keyseq in ['/', '?', 'g/']
+    set nohlsearch
+    nohlsearch
+    call s:assert.equals(&hlsearch, 0)
+    exec "normal" keyseq . "pattern\<CR>"
+    call s:assert.equals(&hlsearch, 0)
+  endfor
+  set hlsearch&
 endfunction
 
 function! s:suite.incremental_highlight()
