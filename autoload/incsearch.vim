@@ -165,15 +165,18 @@ function! s:pattern_saver.on_enter(cmdline) abort
   if ! g:incsearch#no_inc_hlsearch
     let self.pattern = @/
     let self.hlsearch = &hlsearch
-    set hlsearch | nohlsearch
     if exists('v:hlsearch')
       let self.vhlsearch = v:hlsearch
     endif
+    set hlsearch | nohlsearch
   endif
 endfunction
 function! s:pattern_saver.on_leave(cmdline) abort
-  if ! g:incsearch#no_inc_hlsearch && a:cmdline.exit_code()
-    let @/ = self.pattern
+  if ! g:incsearch#no_inc_hlsearch
+    let is_cancel = a:cmdline.exit_code()
+    if is_cancel
+      let @/ = self.pattern
+    endif
     let &hlsearch = self.hlsearch
     if exists('v:hlsearch')
       let v:hlsearch = self.vhlsearch
