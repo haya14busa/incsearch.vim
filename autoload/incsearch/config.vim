@@ -35,10 +35,6 @@ endfunction
 function! incsearch#config#make(additional) abort
   let default = extend(copy(s:config), incsearch#config#lazy())
   let c = extend(default, a:additional)
-  " FIXME: handle this with more clean way
-  if c.mode is# '^V'
-    let c.mode = "\<C-v>"
-  endif
   return c
 endfunction
 
