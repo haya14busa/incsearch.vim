@@ -12,6 +12,7 @@ let s:FALSE = 0
 lockvar s:TRUE s:FALSE
 
 "" incsearch config
+" TODO: more detail documentation
 " @command is equivalent with base_key TODO: fix this inconsistence
 " @count1 default: v:count1
 " @mode default: mode(1)

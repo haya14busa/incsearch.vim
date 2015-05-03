@@ -522,7 +522,7 @@ endfunction
 " It avoids to make config string temporarily
 let g:incsearch#_go_config = {}
 
-"" This is main API
+"" This is main API assuming used by <expr> mappings
 " ARGS:
 "   @config See autoload/incsearch/config.vim
 " RETURN:
@@ -531,9 +531,16 @@ let g:incsearch#_go_config = {}
 "   To handle dot repeat, make sure that config.is_expr is true. If you do not
 "   specify config.is_expr, it automatically set config.is_expr TRUE for
 "   operator-pending mode
+" USAGE:
+"   :noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
+"   " FIXME?: Calling this with feedkeys() is ugly... Reason: incsearch#go()
+"   is optimize the situation which calling from <expr> mappings, and do not
+"   take care from calling directly or some defined command.
+"   :call feedkeys(incsearch#go(), 'n')
 " @api
 function! incsearch#go(...) abort
   let config = incsearch#config#make(get(a:, 1, {}))
+  " FIXME?: this condition should not be config.is_expr?
   if config.is_expr
     return incsearch#_go(config)
   else
@@ -543,6 +550,17 @@ function! incsearch#go(...) abort
   endif
 endfunction
 
+"" Debuggin incsearch.vim interface for calling from function call
+" USAGE:
+"   :call incsearch#call({'pattern': @/})
+" @api for debugging
+function! incsearch#call(...) abort
+  return incsearch#_go(incsearch#config#make(get(a:, 1, {})))
+endfunction
+
+" IMPORTANT NOTE:
+"   Calling `incsearch#go()` and executing command which returned from
+"   `incsearch#go()` have to result in the same cursor move.
 " @return command: String to search
 function! incsearch#_go(config) abort
   let Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
