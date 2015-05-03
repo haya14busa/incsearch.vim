@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 1.0.2
+Version : 1.0.3
 License : MIT license {{{
 
 	Copyright (c) 2014-2015 haya14busa
