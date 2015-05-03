@@ -228,7 +228,10 @@ function! s:get_input(cli, search_key) abort
 endfunction
 
 function! s:generate_command(cli, pattern, search_key) abort
-  if (a:cli.exit_code() == 0)
+  let is_cancel = a:cli.exit_code()
+  if is_cancel
+    return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
+  else
     let v = winsaveview()
     try
       call winrestview(a:cli._w)
@@ -238,8 +241,6 @@ function! s:generate_command(cli, pattern, search_key) abort
     endtry
     call a:cli.callevent('on_execute') " XXX: side-effect!
     return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern, a:search_key)
-  else " Cancel
-    return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
   endif
 endfunction
 
