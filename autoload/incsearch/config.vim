@@ -14,8 +14,8 @@ lockvar s:TRUE s:FALSE
 "" incsearch config
 " TODO: more detail documentation
 " @command is equivalent with base_key TODO: fix this inconsistence
-" @count1 default: v:count1
-" @mode default: mode(1)
+" @count1 default: v:count1 secret
+" @mode default: mode(1) secret
 let s:config = {
 \   'command': '/',
 \   'is_stay': s:FALSE,
