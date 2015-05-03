@@ -138,3 +138,16 @@ function! s:suite.default_highlight_will_not_remain()
   set hlsearch& | nohlsearch
 endfunction
 
+function! s:suite.preserve_vhlsearch_with_esc()
+  if !exists('v:hlsearch')
+    call s:assert.skip("Skip because vim version are too low to test it")
+  endif
+  set hlsearch
+  for keyseq in ['/', '?', 'g/']
+    let v:hlsearch = 1
+    exec "normal" keyseq . "pattern\<Esc>"
+    call s:assert.equals(v:hlsearch, 1)
+  endfor
+  set hlsearch& | nohlsearch
+endfunction
+
