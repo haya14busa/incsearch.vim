@@ -2,6 +2,7 @@
 " FILE: autoload/incsearch/over/modules/pattern_saver.vim
 " AUTHOR: haya14busa
 " License: MIT license
+" @vimlint(EVL103, 1, a:cmdline)
 "=============================================================================
 scriptencoding utf-8
 let s:save_cpo = &cpo
