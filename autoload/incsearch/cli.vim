@@ -26,9 +26,15 @@ function! incsearch#cli#make(config) abort
   let cli._is_expr = a:config.is_expr
   let cli._mode = a:config.mode
   let cli._pattern = a:config.pattern
+  let cli._prompt = a:config.prompt
+  let cli._flag =  a:config.is_stay         ? 'n'
+  \              : a:config.command is# '/' ? ''
+  \              : a:config.command is# '?' ? 'b'
+  \              : ''
   for module in a:config.modules
     call cli.connect(module)
   endfor
+  call cli.set_prompt(cli._prompt)
   return cli
 endfunction
 

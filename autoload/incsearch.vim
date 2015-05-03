@@ -127,15 +127,14 @@ endfunction
 "   `incsearch#go()` have to result in the same cursor move.
 " @return command: String to search
 function! incsearch#_go(config) abort
-  let Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
   if s:U.is_visual(a:config.mode) && !a:config.is_expr
     normal! gv
   endif
-  " let cli = s:make_cli(a:config)
   let cli = incsearch#cli#make(a:config)
+  let Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
   let cmd = Search(cli)
   if !a:config.is_expr
-    let should_set_jumplist = (cli.flag !=# 'n')
+    let should_set_jumplist = (cli._flag !=# 'n')
     call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
     if a:config.mode is# 'no'
       call s:set_vimrepeat(cmd)
@@ -158,18 +157,18 @@ endfunction
 " @expr but sometimes called by non-<expr>
 " @return: command which is excutable with expr-mappings or `exec 'normal!'`
 function! incsearch#stay(cli) abort
-  let input = s:get_input(a:cli, '')
+  let input = s:get_input(a:cli)
 
   let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
   let pattern = incsearch#convert(raw_pattern)
 
   " execute histadd manually
-  if a:cli.flag ==# 'n' && input !=# '' && (a:cli._is_expr || empty(offset))
+  if a:cli._flag ==# 'n' && input !=# '' && (a:cli._is_expr || empty(offset))
     call histadd('/', input)
     let @/ = pattern
   endif
 
-  if a:cli.flag ==# 'n' " stay
+  if a:cli._flag ==# 'n' " stay
     " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
     " FIXME: cannot set {offset} if in operator-pending mode because this
     " have to use feedkeys()
@@ -195,22 +194,14 @@ function! incsearch#stay(cli) abort
 endfunction
 
 function! incsearch#search(cli) abort
-  let input = s:get_input(a:cli, a:cli._base_key)
+  let input = s:get_input(a:cli)
   let [pattern, offset] = incsearch#parse_pattern(input, a:cli._base_key)
   call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
   return s:generate_command(
   \   a:cli, incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset), a:cli._base_key)
 endfunction
 
-function! s:get_input(cli, search_key) abort
-  " if search_key is empty, it means `stay` & do not move cursor
-  let prompt = a:search_key ==# '' ? '/' : a:search_key
-  call a:cli.set_prompt(prompt)
-  let a:cli.flag = a:search_key ==# '/' ? ''
-  \              : a:search_key ==# '?' ? 'b'
-  \              : a:search_key ==# ''  ? 'n'
-  \              : ''
-
+function! s:get_input(cli) abort
   " Handle visual mode highlight
   if s:U.is_visual(a:cli._mode)
     let visual_hl = incsearch#highlight#get_visual_hlobj()

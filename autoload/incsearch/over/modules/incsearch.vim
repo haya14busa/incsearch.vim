@@ -26,7 +26,6 @@ endfunction
 
 function! s:inc.on_enter(cmdline) abort
   nohlsearch " disable previous highlight
-  " let s:w = winsaveview()
   let a:cmdline._w = winsaveview()
   let hgm = incsearch#highlight#hgm()
   let c = hgm.cursor
@@ -122,25 +121,25 @@ function! s:on_char_pre(cmdline) abort
 
   if a:cmdline.is_input("<Over>(incsearch-next)")
     call a:cmdline.setchar('')
-    if a:cmdline.flag ==# 'n' " exit stay mode
-      let a:cmdline.flag = ''
+    if a:cmdline._flag ==# 'n' " exit stay mode
+      let a:cmdline._flag = ''
     else
       let a:cmdline._vcount1 += 1
     endif
   elseif a:cmdline.is_input("<Over>(incsearch-prev)")
     call a:cmdline.setchar('')
-    if a:cmdline.flag ==# 'n' " exit stay mode
-      let a:cmdline.flag = ''
+    if a:cmdline._flag ==# 'n' " exit stay mode
+      let a:cmdline._flag = ''
     endif
     let a:cmdline._vcount1 -= 1
     if a:cmdline._vcount1 < 1
       let a:cmdline._vcount1 += s:U.count_pattern(pattern)
     endif
   elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-  \ &&   (a:cmdline.flag ==# '' || a:cmdline.flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && a:cmdline.flag ==# 'b')
+  \ &&   (a:cmdline._flag ==# '' || a:cmdline._flag ==# 'n'))
+  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && a:cmdline._flag ==# 'b')
     call a:cmdline.setchar('')
-    if a:cmdline.flag ==# 'n' | let a:cmdline.flag = '' | endif
+    if a:cmdline._flag ==# 'n' | let a:cmdline._flag = '' | endif
     let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
     let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
     \          ? s:U.get_max_col(pos_expr) : 1
@@ -148,11 +147,11 @@ function! s:on_char_pre(cmdline) abort
     let cnt = s:U.count_pattern(pattern, from, to)
     let a:cmdline._vcount1 += cnt
   elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
-  \ &&   (a:cmdline.flag ==# '' || a:cmdline.flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && a:cmdline.flag ==# 'b')
+  \ &&   (a:cmdline._flag ==# '' || a:cmdline._flag ==# 'n'))
+  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && a:cmdline._flag ==# 'b')
     call a:cmdline.setchar('')
-    if a:cmdline.flag ==# 'n'
-      let a:cmdline.flag = ''
+    if a:cmdline._flag ==# 'n'
+      let a:cmdline._flag = ''
       let a:cmdline._vcount1 -= 1
     endif
     let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
@@ -176,7 +175,7 @@ function! s:on_char_pre(cmdline) abort
   \ )
     call a:cmdline.setchar('')
     let [from, to] = [[a:cmdline._w.lnum, a:cmdline._w.col],
-    \       a:cmdline.flag !=# 'b'
+    \       a:cmdline._flag !=# 'b'
     \       ? [line('$'), s:U.get_max_col('$')]
     \       : [1, 1]
     \   ]
@@ -213,8 +212,8 @@ function! s:on_char(cmdline) abort
   " Improved Incremental highlighing!
   " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
   let case = incsearch#detect_case(raw_pattern)
-  let should_separate = g:incsearch#separate_highlight && a:cmdline.flag !=# 'n'
-  let d = (a:cmdline.flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
+  let should_separate = g:incsearch#separate_highlight && a:cmdline._flag !=# 'n'
+  let d = (a:cmdline._flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
   call incsearch#highlight#incremental_highlight(
   \   pattern . case, should_separate, d, [a:cmdline._w.lnum, a:cmdline._w.col])
 
@@ -229,7 +228,7 @@ endfunction
 " string as a pattern
 function! s:move_cursor(cli, pattern, ...) abort
   let offset = get(a:, 1, '')
-  if a:cli.flag ==# 'n' " skip if stay mode
+  if a:cli._flag ==# 'n' " skip if stay mode
     return
   endif
   call winrestview(a:cli._w)
@@ -238,7 +237,7 @@ function! s:move_cursor(cli, pattern, ...) abort
   if a:cli._is_expr
     for _ in range(a:cli._vcount1)
       " NOTE: This cannot handle {offset} for cursor position
-      call search(a:pattern, a:cli.flag)
+      call search(a:pattern, a:cli._flag)
     endfor
   else
     " More precise cursor position while searching
