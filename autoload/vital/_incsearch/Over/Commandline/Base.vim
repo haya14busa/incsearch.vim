@@ -238,14 +238,18 @@ endfunction
 
 
 function! s:base.keymapping()
+	return self.__keymapping__()
+endfunction
+
+
+function! s:base.__keymapping__()
 	return {}
 endfunction
 
 
 function! s:base.execute(...)
 	let command = get(a:, 1, self.getline())
-	call self._execute(command)
-" 	execute self.getline()
+	call self.__execute(command)
 endfunction
 
 
@@ -277,7 +281,7 @@ endfunction
 
 " function! s:base.cancel()
 " 	call self.exit(1)
-" 	call self._on_cancel()
+" 	call self.__on_cancel()
 " endfunction
 
 
@@ -313,7 +317,7 @@ endfunction
 
 
 function! s:base.start(...)
-	let exit_code = call(self._main, a:000, self)
+	let exit_code = call(self.__main, a:000, self)
 	return exit_code
 endfunction
 
@@ -366,7 +370,7 @@ function! s:base.getchar(...)
 endfunction
 
 
-function! s:base._init_variables()
+function! s:base.__init_variables()
 	let self.variables.tap_key = ""
 	let self.variables.char = ""
 	let self.variables.input = ""
@@ -394,8 +398,8 @@ function! s:_is_valid_highlight(name)
 endfunction
 
 
-function! s:base._init()
-	call self._init_variables()
+function! s:base.__init()
+	call self.__init_variables()
 	call self.hl_cursor_off()
 	if !hlexists(self.highlights.cursor)
 		if s:_is_valid_highlight("Cursor")
@@ -416,10 +420,10 @@ function! s:base._init()
 endfunction
 
 
-function! s:base._execute(command)
+function! s:base.__execute(command)
 	call self.callevent("on_execute_pre")
 	try
-		execute a:command
+		call self.__execute__(a:command)
 	catch
 		echohl ErrorMsg
 		echom matchstr(v:exception, 'Vim\((\w*)\)\?:\zs.*\ze')
@@ -431,7 +435,12 @@ function! s:base._execute(command)
 endfunction
 
 
-function! s:base._input_char(char)
+function! s:base.__execute__(cmd)
+	execute a:cmd
+endfunction
+
+
+function! s:base.__input_char(char)
 	let char = a:char
 	let self.variables.input_key = char
 	let self.variables.char = char
@@ -443,14 +452,14 @@ function! s:base._input_char(char)
 endfunction
 
 
-function! s:base._input(input, ...)
+function! s:base.__input(input, ...)
 	if a:input == ""
 		return
 	endif
 
 	let self.variables.input_key = a:input
 	if a:0 == 0
-		let keymapping = self._get_keymapping()
+		let keymapping = self.__get_keymapping()
 	else
 		let keymapping = a:1
 	endif
@@ -464,8 +473,8 @@ function! s:base._input(input, ...)
 	endif
 
 	call self.set_input_key_stack(s:String.split_by_keys(key))
-	while !(empty(self.input_key_stack()) || self._is_exit())
-		call self._input_char(self.input_key_stack_pop())
+	while !(empty(self.input_key_stack()) || self.is_exit())
+		call self.__input_char(self.input_key_stack_pop())
 	endwhile
 endfunction
 
@@ -476,15 +485,15 @@ function! s:is_input_waiting(keymapping, input)
 endfunction
 
 
-function! s:base._inputting()
+function! s:base.__inputting()
 	if !self.is_enable_keymapping()
-		return self._input(s:Input.getchar())
+		return self.__input(s:Input.getchar())
 	endif
 
 	let input = s:Input.getchar()
 	let old_line = self.getline()
 	let old_pos  = self.getpos()
-	let keymapping = self._get_keymapping()
+	let keymapping = self.__get_keymapping()
 	try
 		let t = reltime()
 		while s:is_input_waiting(keymapping, input)
@@ -499,39 +508,39 @@ function! s:base._inputting()
 		call self.setline(old_line)
 		call self.setpos(old_pos)
 	endtry
-	call self._input(input, keymapping)
+	call self.__input(input, keymapping)
 endfunction
 
 
-function! s:base._update()
+function! s:base.__update()
 " 	call self.callevent("on_update")
 " 	if !getchar(1)
 " 		continue
 " 	endif
 "
-" 	call self._input(s:getchar(0))
+" 	call self.__input(s:getchar(0))
 " 	call self.draw()
 
 	call self.callevent("on_update")
-	call self._inputting()
-" 	call self._input(s:Input.getchar())
-	if self._is_exit()
+	call self.__inputting()
+" 	call self.__input(s:Input.getchar())
+	if self.is_exit()
 		return -1
 	endif
 	call self.draw()
 endfunction
 
 
-function! s:base._main(...)
+function! s:base.__main(...)
 	try
-		call self._init()
+		call self.__init()
 		call self.callevent("on_enter")
 
-		call self._input(get(a:, 1, ""))
+		call self.__input(get(a:, 1, ""))
 		call self.draw()
-		while !self._is_exit()
+		while !self.is_exit()
 			try
-				if self._update()
+				if self.__update()
 					break
 				endif
 			catch
@@ -542,24 +551,29 @@ function! s:base._main(...)
 		echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
 		let self.variables.exit_code = -1
 	finally
-		call self._finish()
+		call self.__finish()
 		call self.callevent("on_leave")
 	endtry
 	return self.exit_code()
 endfunction
 
 
-function! s:base._finish()
+function! s:base.__finish()
 	call self.hl_cursor_on()
 endfunction
 
 
-function! s:base._is_exit()
+function! s:base.__is_exit()
+	return self.is_exit()
+endfunction
+
+
+function! s:base.is_exit()
 	return self.variables.exit
 endfunction
 
 
-function! s:base._get_keymapping()
+function! s:base.__get_keymapping()
 	let result = {}
 " 	for module in values(self.variables.modules)
 	for module in self.variables.modules.slots()
