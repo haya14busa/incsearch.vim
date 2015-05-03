@@ -26,14 +26,14 @@ let s:config = {
 \ }
 
 " @return config for lazy value
-function! incsearch#config#lazy() abort
+function! s:lazy_config() abort
   let m = mode(1)
   return {'count1': v:count1, 'mode': m, 'is_expr': (m is# 'no')}
 endfunction
 
 " @return config with default value
 function! incsearch#config#make(additional) abort
-  let default = extend(copy(s:config), incsearch#config#lazy())
+  let default = extend(copy(s:config), s:lazy_config())
   let c = extend(default, a:additional)
   return c
 endfunction
