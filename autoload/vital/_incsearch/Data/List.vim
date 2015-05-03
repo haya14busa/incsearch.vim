@@ -268,7 +268,6 @@ function! s:with_index(list, ...) abort
 endfunction
 
 " similar to Ruby's detect or Haskell's find.
-" TODO spec and doc
 function! s:find(list, default, f) abort
   for x in a:list
     if eval(substitute(a:f, 'v:val', string(x), 'g'))

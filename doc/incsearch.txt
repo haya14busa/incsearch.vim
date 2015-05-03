@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 1.0.3
+Version : 1.1.0
 License : MIT license {{{
 
 	Copyright (c) 2014-2015 haya14busa
@@ -36,6 +36,7 @@ CONTENTS				*incsearch-contents*
 	    Command line interface	|incsearch-commandline-interface|
 	    Highlight			|incsearch-highlight|
 	    AUTOCMD			|incsearch-autocmd|
+	API				|incsearch-api|
 	Known Issues			|incsearch-known-issues|
 	ChangeLog			|incsearch-changelog|
 
@@ -369,6 +370,108 @@ NOTE:
 	same restriction apply to your defined autocmd for operator-pending.
 
 ==============================================================================
+API							*incsearch-api*
+	incsearch.vim's API. It may changes because it's EXPERIMENTAL but I
+	try to keep it as much as possible.
+
+------------------------------------------------------------------------------
+Functions ~
+							*incsearch-functions*
+
+incsearch#go([{config}])			*incsearch#go()*
+	Starts incsearch.vim's search interface. It assumes called by <expr>
+	mappings. It doesn't work nicely if you call it directly, so if you
+	want to call from command-line, use |incsearch#call()|. It returns
+	command to execute search, but you have no need to execute it to move
+	cursor because it's handled by <expr> mapping.
+	See |incsearch-config| for available configuration.
+
+	Example: >
+	noremap <expr> z/ incsearch#go()
+	noremap <expr> z? incsearch#go({'command': '?'})
+	noremap <expr> <Space>/ incsearch#go({'pattern': histget('/', -1)})
+
+incsearch#call([{config}])			*incsearch#call()*
+	Starts incsearch.vim's search interface with function call. If you
+	want to create mapping to start incsearch.vim's search interface,
+	please use |incsearch#go()|. It returns primitive command to execute
+	search, but you have no need to execute it explicitly because calling
+	this function already move the cursor to destination.
+	See |incsearch-config| for available configuration.
+
+	Example: >
+	:call incsearch#call()
+	:call incsearch#call({'command': '?'})
+	:call incsearch#call({'pattern': histget('/', -1)})
+
+incsearch#cli()					*incsearch#cli()*
+	Returns current |Vital.Over.Commandline-object|.
+
+------------------------------------------------------------------------------
+Config ~
+							*incsearch-config*
+	Here are available configurations you can specify to call
+	incsearch.vim's search interface like |incsearch#go()| and
+	|incsearch#call()|.
+
+command						*incsearch-config-command*
+	Search command to use. You can use |/| or |?|.
+	  Type: |string|
+	  Default: '/'
+	  Example: >
+	  noremap <expr> z? incsearch#go({'command': '?'})
+
+is_stay						*incsearch-config-is_stay*
+	Boolean option for stay feature |<Plug>(incsearch-stay)|.
+	If you set this option to 1, the cursor will not move while
+	incremental searching unless you explicitly move it.
+	  Type: boolean (0 or 1)
+	  Default: false (0)
+	  Example: >
+	  noremap <expr> g/ incsearch#go({'is_stay': 1})
+
+is_expr						*incsearch-config-is_expr*
+	Boolean option for calling main function with <expr> state or
+	not. This value is turned on by default for
+	|Operator-pending-mode| to support dot-repeat(|.|) without any
+	additional library. But <expr> has a constraint like
+	|textlock| and moving cursor etc... see |:map-<expr>| for
+	detail. So if you want to avoid these constraint, turn off
+	this value explicitly. As for the dot-repeat(|.|) handling, if
+	vim-repeat[1] is installed, use it to handle dot-repeat(|.|).
+	  [1]:
+	    - https://github.com/tpope/vim-repeat
+	    - https://github.com/kana/vim-repeat
+	  Type: boolean (0 or 1)
+	  Default: false (0) or true (1) for |Operator-pending-mode|
+	  Example: >
+	  noremap <expr> z/ incsearch#go({'is_expr': 0})
+
+pattern						*incsearch-config-pattern*
+	Default pattern to start incsearch.vim's search interface.
+	  Type: |string|
+	  Default: ''
+	  Example: >
+	  noremap <expr> <Space>/ incsearch#go({'pattern': histget('/', -1)})
+
+modules						*incsearch-config-modules*
+	Additional |Vital.Over.Commandline-modules| to connect.
+	  Type: |list| of |Vital.Over.Commandline-modules|
+	  Default: []
+	  Example: >
+	  let s:pcount = {'name': 'PromptCount'}
+
+	  function! s:pcount.on_char(cmdline) abort
+	    call a:cmdline.set_prompt(len(a:cmdline.getline()) . '/')
+	  endfunction
+
+	  function! s:config() abort
+	    return {'modules': [s:pcount]}
+	  endfunction
+
+	  noremap <expr> z/ incsearch#go(<SID>config())
+
+==============================================================================
 KNOWN ISSUES						*incsearch-issues*
 
 	Issues
@@ -386,6 +489,16 @@ Version 2.0(?) Roadmap~
 	    - Write test for converer feature
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+1.1.0	2015-05-03
+	1. Add experimental API |incsearch-api|.
+	    - Now you can pass a default pattern |incsearch-config-pattern|
+	    - Use |incsearch#cli()| with |incsearch-autocmd| to extend
+	      incsearch.vim's search interface
+	    - vim-repeat support if needed |incsearch-config-is_expr|
+	    - You can pass additional vital-over module to connect
+	      |incsearch-config-modules|
+
 
 1.0.3	2015-05-03
 	1. Fix 'hlsearch' handling #74
