@@ -38,9 +38,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
-noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
-noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
+noremap <expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
+noremap <expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
+noremap <expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
 
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:
