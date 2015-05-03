@@ -87,11 +87,8 @@ call s:cli.connect(s:incsearch_exit)
 let s:InsertRegister = s:modules.get('InsertRegister').make()
 
 call s:cli.connect('Paste')
-" XXX: better handling.
-if expand("%:p") !=# expand("<sfile>:p")
-  let s:Doautocmd = s:modules.get('Doautocmd')
-  call s:cli.connect(s:Doautocmd.make('IncSearch'))
-endif
+let s:Doautocmd = s:modules.get('Doautocmd')
+call s:cli.connect(s:Doautocmd.make('IncSearch'))
 call s:cli.connect(s:modules.get('ExceptionMessage').make('incsearch.vim: ', 'echom'))
 call s:cli.connect(s:modules.get('History').make('/'))
 call s:cli.connect(s:modules.get('NoInsert').make_special_chars())
