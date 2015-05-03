@@ -290,8 +290,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     if should_set_jumplist
       normal! m`
     endif
-    let d = (a:cli._base_key == '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
-    call s:emulate_search_error(d)
+    call s:emulate_search_error(a:cli._direction)
     call winrestview(target_view)
     "}}}
 
@@ -307,9 +306,9 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
       let to = [target_view.lnum, target_view.col]
       let old_warningmsg = v:warningmsg
       let v:warningmsg =
-      \   ( d == s:DIRECTION.forward && !s:U.is_pos_less_equal(from, to)
+      \   ( a:cli._direction == s:DIRECTION.forward && !s:U.is_pos_less_equal(from, to)
       \   ? 'search hit BOTTOM, continuing at TOP'
-      \   : d == s:DIRECTION.backward && s:U.is_pos_less_equal(from, to)
+      \   : a:cli._direction == s:DIRECTION.backward && s:U.is_pos_less_equal(from, to)
       \   ? 'search hit TOP, continuing at BOTTOM'
       \   : '' )
       if v:warningmsg !=# ''

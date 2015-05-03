@@ -213,9 +213,11 @@ function! s:on_char(cmdline) abort
   " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
   let case = incsearch#detect_case(raw_pattern)
   let should_separate = g:incsearch#separate_highlight && a:cmdline._flag !=# 'n'
-  let d = (a:cmdline._flag !=# 'b' ? s:DIRECTION.forward : s:DIRECTION.backward)
   call incsearch#highlight#incremental_highlight(
-  \   pattern . case, should_separate, d, [a:cmdline._w.lnum, a:cmdline._w.col])
+  \   pattern . case,
+  \   should_separate,
+  \   a:cmdline._direction,
+  \   [a:cmdline._w.lnum, a:cmdline._w.col])
 
   " functional `normal! zz` after scroll for <expr> mappings
   if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")

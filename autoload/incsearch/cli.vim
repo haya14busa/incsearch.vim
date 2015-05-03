@@ -7,6 +7,8 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
+
 let s:V = incsearch#vital()
 
 function! incsearch#cli#get() abort
@@ -31,6 +33,8 @@ function! incsearch#cli#make(config) abort
   \              : a:config.command is# '/' ? ''
   \              : a:config.command is# '?' ? 'b'
   \              : ''
+  let cli._direction =
+  \ (cli._base_key is# '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
   for module in a:config.modules
     call cli.connect(module)
   endfor
