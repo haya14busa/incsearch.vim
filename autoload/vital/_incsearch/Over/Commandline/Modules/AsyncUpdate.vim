@@ -13,15 +13,15 @@ let s:module = {
 \}
 
 function! s:module.on_enter(cmdline)
-	function! a:cmdline._update()
+	function! a:cmdline.__update()
 		call self.callevent("on_update")
 		try
 			if !getchar(1)
 				return
 			endif
-			call self._inputting()
+			call self.__inputting()
 		catch /^Vim:Interrupt$/
-			call self._input("\<C-c>")
+			call self.__input("\<C-c>")
 		endtry
 
 		call self.draw()

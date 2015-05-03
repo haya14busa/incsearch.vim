@@ -2,6 +2,24 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+
+function! s:_vital_loaded(V)
+	let s:V = a:V
+	let s:Window = a:V.import("Coaster.Window")
+	let s:Gift = a:V.import("Gift")
+	call s:_init()
+endfunction
+
+
+function! s:_vital_depends()
+	return [
+\		"Coaster.Window",
+\		"Gift",
+\	]
+endfunction
+
+
+
 let s:base = {
 \	"variables" : {
 \		"hl_list" : {},
@@ -17,6 +35,7 @@ function! s:base.add(name, group, pattern, ...)
 \		"group" : a:group,
 \		"pattern" : a:pattern,
 \		"priority" : priority,
+\		"name" : a:name,
 \	}
 endfunction
 
@@ -31,9 +50,28 @@ function! s:base.hl_list()
 endfunction
 
 
+function! s:base.to_list()
+	return values(self.variables.hl_list)
+endfunction
+
+
+function! s:_is_equal(__expr, __hl)
+	let name     = a:__hl.name
+	let group    = a:__hl.group
+	let pattern  = a:__hl.pattern
+	let priority = a:__hl.priority
+	return eval(a:__expr)
+endfunction
+
+
+function! s:base.to_list_by(expr)
+	return filter(values(self.variables.hl_list), "s:_is_equal(a:expr, v:val)")
+endfunction
+
+
 function! s:base.enable_list(...)
-	let bufnr = get(a:, 1, bufnr("%"))
-	return keys(get(self.variables.id_list, bufnr, {}))
+	let window = get(a:, 1, s:Gift.uniq_winnr())
+	return keys(get(self.variables.id_list, window, {}))
 endfunction
 
 
@@ -46,14 +84,7 @@ endfunction
 
 
 function! s:base.delete_by(expr)
-	for [name, _] in items(self.variables.hl_list)
-		let group = _.group
-		let pattern = _.pattern
-		let priority = _.priority
-		if eval(a:expr)
-			call self.delete(name)
-		endif
-	endfor
+	return map(self.to_list_by(a:expr), "self.delete(v:val.name)")
 endfunction
 
 
@@ -65,14 +96,14 @@ endfunction
 
 
 function! s:base.get_hl_id(name, ...)
-	let bufnr = get(a:, 1, bufnr("%"))
-	return get(get(self.variables.id_list, bufnr, {}), a:name, "")
+	let window = get(a:, 1, s:Gift.uniq_winnr())
+	return get(get(self.variables.id_list, window, {}), a:name, "")
 endfunction
 
 
 function! s:base.is_enabled(name, ...)
-	let bufnr = get(a:, 1, bufnr("%"))
-	return self.get_hl_id(a:name, bufnr) != ""
+	let window = get(a:, 1, s:Gift.uniq_winnr())
+	return self.get_hl_id(a:name, window) != ""
 endfunction
 
 
@@ -84,10 +115,11 @@ function! s:base.enable(name)
 	if self.is_enabled(a:name)
 		call self.disable(a:name)
 	endif
-	if !has_key(self.variables.id_list, bufnr("%"))
-		let self.variables.id_list[bufnr("%")] = {}
+	let winnr = s:Gift.uniq_winnr()
+	if !has_key(self.variables.id_list, winnr)
+		let self.variables.id_list[winnr] = {}
 	endif
-	let self.variables.id_list[bufnr("%")][a:name] = matchadd(hl.group, hl.pattern, hl.priority)
+	let self.variables.id_list[winnr][a:name] = matchadd(hl.group, hl.pattern, hl.priority)
 endfunction
 
 
@@ -107,8 +139,8 @@ function! s:base.disable(name)
 	if id == -1
 		return -1
 	endif
-	let bufnr = bufnr("%")
-	unlet! self.variables.id_list[bufnr][a:name]
+	let winnr = get(a:, 1, s:Gift.uniq_winnr())
+	unlet! self.variables.id_list[winnr][a:name]
 endfunction
 
 
@@ -116,6 +148,18 @@ function! s:base.disable_all()
 	for name in self.enable_list()
 		call self.disable(name)
 	endfor
+endfunction
+
+
+function! s:base.update(name)
+	call self.disable(a:name)
+	call self.enable(a:name)
+endfunction
+
+
+function! s:base.update_all()
+	call self.disable_all()
+	call self.enable_all()
 endfunction
 
 
@@ -138,13 +182,19 @@ function! s:base.clear_all()
 endfunction
 
 
+function! s:base.as_windo()
+	return self.windo
+endfunction
+
+
 function! s:make()
 	let result = deepcopy(s:base)
+	let result.windo = s:Window.as_windo(result)
 	return result
 endfunction
 
 
-let s:global = s:make()
+let s:global = deepcopy(s:base)
 let s:funcs =  keys(filter(copy(s:global), "type(v:val) == type(function('tr'))"))
 
 for s:name in s:funcs
@@ -154,6 +204,26 @@ for s:name in s:funcs
 \		"endfunction"
 endfor
 unlet s:name
+
+
+function! s:_init()
+	let s:global.windo = s:Window.as_windo(s:global)
+endfunction
+
+" function! s:matchadd(...)
+" 	return {
+" \		"id" : call("matchadd", a:000),
+" \		"bufnr" : bufnr("%"),
+" \	}
+" endfunction
+"
+"
+" function! s:matchdelete(id)
+" 	if empty(a:id)
+" 		return -1
+" 	endif
+" 	return s:Buffer.execute(a:id.bufnr, "call matchdelete(" . a:id.id . ")")
+" endfunction
 
 
 let &cpo = s:save_cpo
