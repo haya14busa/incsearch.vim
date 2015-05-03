@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 1.0.2
+Version : 1.0.3
 License : MIT license {{{
 
 	Copyright (c) 2014-2015 haya14busa
@@ -386,6 +386,9 @@ Version 2.0(?) Roadmap~
 	    - Write test for converer feature
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
+
+1.0.3	2015-05-03
+	1. Fix 'hlsearch' handling #74
 
 1.0.2	2015-04-16
 	1. Implement experimental API (undocumented) to access vital-over
