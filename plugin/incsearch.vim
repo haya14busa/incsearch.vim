@@ -24,7 +24,7 @@
 "=============================================================================
 scriptencoding utf-8
 " Load Once {{{
-if expand("%:p") ==# expand("<sfile>:p")
+if expand('%:p') ==# expand('<sfile>:p')
   unlet! g:loaded_incsearch
 endif
 if exists('g:loaded_incsearch')
@@ -38,16 +38,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
-" <expr> is just for passing mode(1) value, so basically called with
-" non-<expr> state
-noremap <silent><expr> <Plug>(incsearch-forward)  <SID>mode_wrap('forward')
-noremap <silent><expr> <Plug>(incsearch-backward) <SID>mode_wrap('backward')
-noremap <silent><expr> <Plug>(incsearch-stay)     <SID>mode_wrap('stay')
-
-" <expr> for dot repeat (`.`) in operator pending mode
-onoremap <silent><expr> <Plug>(incsearch-forward)  incsearch#forward_expr()
-onoremap <silent><expr> <Plug>(incsearch-backward) incsearch#backward_expr()
-onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
+noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
+noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
+noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
 
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:
@@ -58,7 +51,6 @@ onoremap <silent><expr> <Plug>(incsearch-stay)     incsearch#stay_expr()
 "     work
 noremap <expr> <Plug>(incsearch-nohl) incsearch#auto_nohlsearch(1)
 noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
-" NOTE: Should I consider to make below mappings public?
 noremap <expr> <Plug>(incsearch-nohl2) incsearch#auto_nohlsearch(2)
 
 
@@ -78,25 +70,13 @@ noremap <Plug>(_incsearch-#)  #
 noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
 
-function! s:is_visual(mode) abort
-  return a:mode =~# "[vV\<C-v>]"
-endfunction
-
-" for normal and visual mode
-function! s:mode_wrap(cmd) abort
-  let m = mode(1)
-  let esc = s:is_visual(m) ? "\<ESC>" : ''
-  return printf(esc . ":\<C-u>call incsearch#%s('%s', %d)\<CR>",
-  \             a:cmd, strtrans(m), v:count1)
-endfunction
-
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
 
 function! s:key_mapping(lhs, rhs, noremap) abort
   let g:incsearch_cli_key_mappings[a:lhs] = {
-  \       "key" : a:rhs,
-  \       "noremap" : a:noremap,
+  \       'key' : a:rhs,
+  \       'noremap' : a:noremap,
   \   }
 endfunction
 
@@ -106,10 +86,10 @@ function! s:as_keymapping(key) abort
 endfunction
 
 command! -nargs=* IncSearchNoreMap
-\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [1])
+\   call call('s:key_mapping', map([<f-args>], 's:as_keymapping(v:val)') + [1])
 
 command! -nargs=* IncSearchMap
-\   call call("s:key_mapping", map([<f-args>], "s:as_keymapping(v:val)") + [0])
+\   call call('s:key_mapping', map([<f-args>], 's:as_keymapping(v:val)') + [0])
 
 "}}}
 
