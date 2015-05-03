@@ -62,13 +62,18 @@ let g:incsearch#magic           = get(g: , 'incsearch#magic'           , '')
 " Debug:
 let g:incsearch#debug = get(g:, 'incsearch#debug', s:FALSE)
 
-let s:V = vital#of(g:incsearch#debug ? 'vital' : 'incsearch')
+function! incsearch#vital() abort
+  if exists('s:V')
+    return s:V
+  endif
+  let s:V = vital#of(g:incsearch#debug ? 'vital' : 'incsearch')
+  return s:V
+endfunction
+
+let s:V = incsearch#vital()
 
 " Utility:
 let s:U = incsearch#util#import()
-
-" Highlight:
-let s:hi = g:incsearch#highlight#_hi
 
 " Main: {{{
 

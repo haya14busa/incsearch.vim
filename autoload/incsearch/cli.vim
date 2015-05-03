@@ -7,7 +7,7 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:V = vital#of(g:incsearch#debug ? 'vital' : 'incsearch')
+let s:V = incsearch#vital()
 
 function! incsearch#cli#get() abort
   try
