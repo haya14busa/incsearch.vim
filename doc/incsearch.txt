@@ -454,6 +454,13 @@ pattern						*incsearch-config-pattern*
 	  Example: >
 	  noremap <expr> <Space>/ incsearch#go({'pattern': histget('/', -1)})
 
+prompt						*incsearch-config-prompt*
+	Prompt string.
+	  Type: |string|
+	  Default: same as |incsearch-config-command| ('/' or '?')
+	  Example: >
+	  noremap <expr> <Space>/ incsearch#go({'prompt': '>>>'})
+
 modules						*incsearch-config-modules*
 	Additional |Vital.Over.Commandline-modules| to connect.
 	  Type: |list| of |Vital.Over.Commandline-modules|
