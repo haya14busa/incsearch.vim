@@ -292,41 +292,20 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     call histadd(a:cli._base_key, input)
     let @/ = pattern
 
-    " Emulate errors, and handling `n` and `N` preparation {{{
     let target_view = winsaveview()
     call winrestview(a:cli._w) " Get back start position temporarily for emulation
     " Set jump list
     if should_set_jumplist
       normal! m`
     endif
-    call s:emulate_search_error(a:cli._direction)
-    call winrestview(target_view)
-    "}}}
+    " Emulate errors, and handling `n` and `N` preparation
+    call s:emulate_search_error(a:cli._direction, a:cli._w)
 
-    " Emulate warning {{{
-    " NOTE:
-    " - It should use :h echomsg considering emulation of default
-    "   warning messages remain in the :h message-history, but it'll mess
-    "   up the message-history unnecessary, so it use :h echo
-    " - Echo warning message after winrestview() to avoid flickering
-    " - See :h shortmess
-    if &shortmess !~# 's' && g:incsearch#do_not_save_error_message_history
-      let from = [a:cli._w.lnum, a:cli._w.col]
-      let to = [target_view.lnum, target_view.col]
-      let old_warningmsg = v:warningmsg
-      let v:warningmsg =
-      \   ( a:cli._direction == s:DIRECTION.forward && !s:U.is_pos_less_equal(from, to)
-      \   ? 'search hit BOTTOM, continuing at TOP'
-      \   : a:cli._direction == s:DIRECTION.backward && s:U.is_pos_less_equal(from, to)
-      \   ? 'search hit TOP, continuing at BOTTOM'
-      \   : '' )
-      if v:warningmsg !=# ''
-        call s:Warning(v:warningmsg)
-      else
-        let v:warningmsg = old_warningmsg
-      endif
-    endif
-    "}}}
+    " winrestview() between error and wraning emulation to avoid flickering
+    call winrestview(target_view)
+
+    " Emulate warning
+    call s:emulate_search_warning(a:cli._direction, a:cli._w, target_view)
 
     call s:silent_after_search()
 
@@ -465,7 +444,8 @@ function! s:_silent_searchforward(...) abort
   \   'searchforward', 'n')
 endfunction
 
-function! s:emulate_search_error(direction) abort
+function! s:emulate_search_error(direction, ...) abort
+  let from = get(a:, 1, winsaveview())
   let keyseq = (a:direction == s:DIRECTION.forward ? '/' : '?')
   let old_errmsg = v:errmsg
   let v:errmsg = ''
@@ -474,10 +454,9 @@ function! s:emulate_search_error(direction) abort
   "   - silent!: Do not show error and warning message, because it also
   "     echo v:throwpoint for error and save messages in message-history
   "   - Unlike v:errmsg, v:warningmsg doesn't set if it use :silent!
-  let w = winsaveview()
   " Get first error
   silent! call incsearch#execute_search(keyseq . "\<CR>")
-  call winrestview(w)
+  call winrestview(from)
   if g:incsearch#do_not_save_error_message_history
     if v:errmsg != ''
       call s:Error(v:errmsg)
@@ -497,10 +476,35 @@ function! s:emulate_search_error(direction) abort
         call s:Error(last_error, 'echom')
       endif
     finally
-      call winrestview(w)
+      call winrestview(from)
     endtry
     if v:errmsg == ''
       let v:errmsg = old_errmsg
+    endif
+  endif
+endfunction
+
+function! s:emulate_search_warning(direction, from, to) abort
+  " NOTE:
+  " - It should use :h echomsg considering emulation of default
+  "   warning messages remain in the :h message-history, but it'll mess
+  "   up the message-history unnecessary, so it use :h echo
+  " - See :h shortmess
+  " if &shortmess !~# 's' && g:incsearch#do_not_save_error_message_history
+  if &shortmess !~# 's' && g:incsearch#do_not_save_error_message_history
+    let from = [a:from.lnum, a:from.col]
+    let to = [a:to.lnum, a:to.col]
+    let old_warningmsg = v:warningmsg
+    let v:warningmsg =
+    \   ( a:direction == s:DIRECTION.forward && !s:U.is_pos_less_equal(from, to)
+    \   ? 'search hit BOTTOM, continuing at TOP'
+    \   : a:direction == s:DIRECTION.backward && s:U.is_pos_less_equal(from, to)
+    \   ? 'search hit TOP, continuing at BOTTOM'
+    \   : '' )
+    if v:warningmsg !=# ''
+      call s:Warning(v:warningmsg)
+    else
+      let v:warningmsg = old_warningmsg
     endif
   endif
 endfunction
