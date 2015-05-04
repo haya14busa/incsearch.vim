@@ -177,7 +177,7 @@ function! incsearch#stay(cli) abort
       call s:cleanup_cmdline()
     elseif !empty(offset) && mode(1) !=# 'no'
       let cmd = incsearch#with_ignore_foldopen(
-      \   function('s:generate_command'), a:cli, input, '/')
+      \   function('s:generate_command'), a:cli, input)
       call feedkeys(cmd, 'n')
       " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
       call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(a:cli._w) . ")\<CR>", 'winrestview', 'n')
@@ -189,7 +189,7 @@ function! incsearch#stay(cli) abort
     return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
   else " exit stay mode while searching
     call incsearch#auto_nohlsearch(1)
-    return s:generate_command(a:cli, input, '/') " assume '/'
+    return s:generate_command(a:cli, input)
   endif
 endfunction
 
@@ -198,7 +198,7 @@ function! incsearch#search(cli) abort
   let [pattern, offset] = incsearch#parse_pattern(input, a:cli._base_key)
   call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
   return s:generate_command(
-  \   a:cli, incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset), a:cli._base_key)
+  \   a:cli, incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset))
 endfunction
 
 function! s:get_input(cli) abort
@@ -218,7 +218,7 @@ function! s:get_input(cli) abort
   return input
 endfunction
 
-function! s:generate_command(cli, pattern, search_key) abort
+function! s:generate_command(cli, pattern) abort
   let is_cancel = a:cli.exit_code()
   if is_cancel
     return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
@@ -231,7 +231,7 @@ function! s:generate_command(cli, pattern, search_key) abort
       call winrestview(v)
     endtry
     call a:cli.callevent('on_execute') " XXX: side-effect!
-    return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern, a:search_key)
+    return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern, a:cli._base_key)
   endif
 endfunction
 
