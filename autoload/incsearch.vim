@@ -83,7 +83,6 @@ call s:cli.connect('Delete')
 call s:cli.connect('DrawCommandline')
 call s:cli.connect('ExceptionExit')
 call s:cli.connect('LiteralInsert')
-call s:cli.connect('AsyncUpdate')
 " call s:cli.connect('Exit')
 " NOTE:
 " <CR> in {rhs} wil be remapped even after exiting vital-over comman line
