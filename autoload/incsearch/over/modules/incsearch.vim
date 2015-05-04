@@ -249,7 +249,7 @@ function! s:move_cursor(cli, pattern, ...) abort
     let is_visual_mode = s:U.is_visual(mode(1))
     let cmd = incsearch#with_ignore_foldopen(
     \   function('incsearch#build_search_cmd'),
-    \   a:cli, 'n', incsearch#combine_pattern(a:cli, a:pattern, offset), a:cli._base_key)
+    \   a:cli, 'n', incsearch#combine_pattern(a:cli, a:pattern, offset))
     " NOTE:
     " :silent!
     "   Shut up errors! because this is just for the cursor emulation

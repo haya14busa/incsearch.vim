@@ -231,11 +231,11 @@ function! s:generate_command(cli, pattern) abort
       call winrestview(v)
     endtry
     call a:cli.callevent('on_execute') " XXX: side-effect!
-    return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern, a:cli._base_key)
+    return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern)
   endif
 endfunction
 
-function! incsearch#build_search_cmd(cli, mode, pattern, search_key) abort
+function! incsearch#build_search_cmd(cli, mode, pattern) abort
   let op = (a:mode == 'no')      ? v:operator
   \      : s:U.is_visual(a:mode) ? 'gv'
   \      : ''
@@ -246,7 +246,7 @@ function! incsearch#build_search_cmd(cli, mode, pattern, search_key) abort
   "   but, if you do not move the cursor while incremental searching,
   "   there are no need to use <Esc>.
   return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
-  \   v:register, op, a:cli._vcount1, a:search_key, a:pattern, zv)
+  \   v:register, op, a:cli._vcount1, a:cli._base_key, a:pattern, zv)
 endfunction
 
 " Assume the cursor move is already done.
