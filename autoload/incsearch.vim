@@ -158,47 +158,46 @@ endfunction
 " @return: command which is excutable with expr-mappings or `exec 'normal!'`
 function! incsearch#stay(cli) abort
   let input = s:get_input(a:cli)
+  let l:F = function(a:cli._flag is# 'n' ? 's:stay' : 's:search')
+  return l:F(a:cli, input)
+endfunction
 
+function! s:stay(cli, input) abort
   let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
   let pattern = incsearch#convert(raw_pattern)
 
-  " execute histadd manually
-  if a:cli._flag ==# 'n' && input !=# '' && (a:cli._is_expr || empty(offset))
-    call histadd('/', input)
-    let @/ = pattern
-  endif
-
-  if a:cli._flag ==# 'n' " stay
-    " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
-    " FIXME: cannot set {offset} if in operator-pending mode because this
-    " have to use feedkeys()
-    let is_cancel = a:cli.exit_code()
-    if is_cancel
-      call s:cleanup_cmdline()
-    elseif !empty(offset) && mode(1) !=# 'no'
-      let cmd = incsearch#with_ignore_foldopen(
-      \   function('s:generate_command'), a:cli, input)
-      call feedkeys(cmd, 'n')
-      " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
-      call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(a:cli._w) . ")\<CR>", 'winrestview', 'n')
-      call incsearch#auto_nohlsearch(2)
-    else
-      call incsearch#auto_nohlsearch(0)
+  " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
+  " FIXME: cannot set {offset} if in operator-pending mode because this
+  " have to use feedkeys()
+  let is_cancel = a:cli.exit_code()
+  if is_cancel
+    call s:cleanup_cmdline()
+  elseif !empty(offset) && mode(1) !=# 'no'
+    let cmd = incsearch#with_ignore_foldopen(
+    \   function('s:generate_command'), a:cli, a:input)
+    call feedkeys(cmd, 'n')
+    " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
+    call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(a:cli._w) . ")\<CR>", 'winrestview', 'n')
+    call incsearch#auto_nohlsearch(2)
+  else
+    " Handle last-pattern
+    if a:input isnot# ''
+      call histadd('/', a:input)
+      let @/ = pattern
     endif
-    " }}}
-    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
-  else " exit stay mode while searching
-    call incsearch#auto_nohlsearch(1)
-    return s:generate_command(a:cli, input)
+    call incsearch#auto_nohlsearch(0)
   endif
+  " }}}
+  return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
 endfunction
 
 function! incsearch#search(cli) abort
-  let input = s:get_input(a:cli)
-  let [pattern, offset] = incsearch#parse_pattern(input, a:cli._base_key)
+  return s:search(a:cli, s:get_input(a:cli))
+endfunction
+
+function! s:search(cli, input) abort
   call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
-  return s:generate_command(
-  \   a:cli, incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset))
+  return s:generate_command(a:cli, a:input)
 endfunction
 
 function! s:get_input(cli) abort
@@ -218,21 +217,31 @@ function! s:get_input(cli) abort
   return input
 endfunction
 
-function! s:generate_command(cli, pattern) abort
+function! s:generate_command(cli, input) abort
   let is_cancel = a:cli.exit_code()
   if is_cancel
     return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
   else
-    let v = winsaveview()
-    try
-      call winrestview(a:cli._w)
-      call a:cli.callevent('on_execute_pre') " XXX: side-effect!
-    finally
-      call winrestview(v)
-    endtry
-    call a:cli.callevent('on_execute') " XXX: side-effect!
-    return incsearch#build_search_cmd(a:cli, a:cli._mode, a:pattern)
+    call s:call_execute_event(a:cli)
+    let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
+    " TODO: implement convert input method
+    let p = incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset)
+    return incsearch#build_search_cmd(a:cli, a:cli._mode, p)
   endif
+endfunction
+
+"" Call on_execute_pre and on_execute event
+" assume current position is the destination and a:cli._w is the position to
+" start search
+function! s:call_execute_event(cli, ...) abort
+  let view = get(a:, 1, winsaveview())
+  try
+    call winrestview(a:cli._w)
+    call a:cli.callevent('on_execute_pre')
+  finally
+    call winrestview(view)
+  endtry
+  call a:cli.callevent('on_execute')
 endfunction
 
 function! incsearch#build_search_cmd(cli, mode, pattern) abort
