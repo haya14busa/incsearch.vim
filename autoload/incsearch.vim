@@ -131,8 +131,8 @@ function! incsearch#_go(config) abort
     normal! gv
   endif
   let cli = incsearch#cli#make(a:config)
-  let Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
-  let cmd = Search(cli)
+  let l:Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
+  let cmd = l:Search(cli)
   if !a:config.is_expr
     let should_set_jumplist = (cli._flag !=# 'n')
     call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
