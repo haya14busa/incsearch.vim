@@ -17,7 +17,7 @@ function! incsearch#cli#get() abort
     return s:Doautocmd.get_cmdline()
   catch /vital-over(_incsearch) Exception/
     " If there are no current cli object, return default one
-    return s:cli
+    return incsearch#cli#make(incsearch#config#make({}))
   endtry
 endfunction
 
