@@ -23,6 +23,7 @@ let s:config = {
 \   'pattern': '',
 \   'mode': 'n',
 \   'count1': 1,
+\   'prompt': '',
 \   'modules': []
 \ }
 
@@ -36,6 +37,9 @@ endfunction
 function! incsearch#config#make(additional) abort
   let default = extend(copy(s:config), s:lazy_config())
   let c = extend(default, a:additional)
+  if c.prompt is# ''
+    let c.prompt = c.command
+  endif
   return c
 endfunction
 
