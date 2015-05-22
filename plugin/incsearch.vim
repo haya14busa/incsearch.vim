@@ -50,9 +50,9 @@ noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 
 "   - Make sure calling this mapping __before__ moving commands
 "     e.g. `<Plug>(incsearch-nohl)n` works but `n<Plug>(incsearch-nohl)` doesn't
 "     work
-noremap <expr> <Plug>(incsearch-nohl) incsearch#auto_nohlsearch(1)
-noremap <expr> <Plug>(incsearch-nohl0) incsearch#auto_nohlsearch(0)
-noremap <expr> <Plug>(incsearch-nohl2) incsearch#auto_nohlsearch(2)
+noremap <expr> <Plug>(incsearch-nohl)  incsearch#autocmd#auto_nohlsearch(1)
+noremap <expr> <Plug>(incsearch-nohl0) incsearch#autocmd#auto_nohlsearch(0)
+noremap <expr> <Plug>(incsearch-nohl2) incsearch#autocmd#auto_nohlsearch(2)
 
 
 map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-n)

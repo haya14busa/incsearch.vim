@@ -178,14 +178,14 @@ function! s:stay(cli, input) abort
     call feedkeys(cmd, 'n')
     " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
     call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(a:cli._w) . ")\<CR>", 'winrestview', 'n')
-    call incsearch#auto_nohlsearch(2)
+    call incsearch#autocmd#auto_nohlsearch(2)
   else
     " Handle last-pattern
     if a:input isnot# ''
       call histadd('/', a:input)
       let @/ = pattern
     endif
-    call incsearch#auto_nohlsearch(0)
+    call incsearch#autocmd#auto_nohlsearch(0)
   endif
   " }}}
   return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
@@ -196,7 +196,7 @@ function! incsearch#search(cli) abort
 endfunction
 
 function! s:search(cli, input) abort
-  call incsearch#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
+  call incsearch#autocmd#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
   return s:generate_command(a:cli, a:input)
 endfunction
 
@@ -316,37 +316,6 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
   endif
 endfunction
 
-" Make sure move cursor by search related action __after__ calling this
-" function because the first move event just set nested autocmd which
-" does :nohlsearch
-" @expr
-function! incsearch#auto_nohlsearch(nest) abort
-  " NOTE: see this value inside this function in order to toggle auto
-  " :nohlsearch feature easily with g:incsearch#auto_nohlsearch option
-  if !g:incsearch#auto_nohlsearch | return '' | endif
-  let cmd = s:U.is_visual(mode(1))
-  \   ? 'call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "n")
-  \     '
-  \   : 'call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "nohlsearch", "n")
-  \     '
-  " NOTE: :h autocmd-searchpat
-  "   You cannot implement this feature without feedkeys() bacause of
-  "   :h autocmd-searchpat
-  augroup incsearch-auto-nohlsearch
-    autocmd!
-    " NOTE: this break . unit with c{text-object}
-    " side-effect: InsertLeave & InsertEnter are called with i_CTRL-\_CTRL-O
-    " autocmd InsertEnter * call feedkeys("\<C-\>\<C-o>:nohlsearch\<CR>", "n")
-    " \   | autocmd! incsearch-auto-nohlsearch
-    execute join([
-    \   'autocmd CursorMoved *'
-    \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
-    \ , cmd
-    \ , '| autocmd! incsearch-auto-nohlsearch'
-    \ ], ' ')
-  augroup END
-  return ''
-endfunction
 
 "}}}
 
