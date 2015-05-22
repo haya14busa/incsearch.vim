@@ -226,7 +226,7 @@ function! s:generate_command(cli, input) abort
     let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
     " TODO: implement convert input method
     let p = incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset)
-    return incsearch#build_search_cmd(a:cli, a:cli._mode, p)
+    return a:cli._build_search_cmd(p)
   endif
 endfunction
 

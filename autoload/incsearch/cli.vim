@@ -21,25 +21,36 @@ function! incsearch#cli#get() abort
   endtry
 endfunction
 
+" @config: whole configuration
 function! incsearch#cli#make(config) abort
   let cli = s:copy_cli(s:cli)
-  let cli._base_key = a:config.command
-  let cli._vcount1 = a:config.count1
-  let cli._is_expr = a:config.is_expr
-  let cli._mode = a:config.mode
-  let cli._pattern = a:config.pattern
-  let cli._prompt = a:config.prompt
-  let cli._flag =  a:config.is_stay         ? 'n'
-  \              : a:config.command is# '/' ? ''
-  \              : a:config.command is# '?' ? 'b'
-  \              : ''
-  let cli._direction =
-  \ (cli._base_key is# '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
-  for module in a:config.modules
-    call cli.connect(module)
-  endfor
-  call cli.set_prompt(cli._prompt)
+  call incsearch#cli#set(cli, a:config)
   return cli
+endfunction
+
+" To reuse cli object, you should re-set configuration
+" @config: whole configuration
+function! incsearch#cli#set(cli, config) abort
+  let a:cli._base_key = a:config.command
+  let a:cli._vcount1 = a:config.count1
+  let a:cli._is_expr = a:config.is_expr
+  let a:cli._mode = a:config.mode
+  let a:cli._pattern = a:config.pattern
+  let a:cli._prompt = a:config.prompt
+  let a:cli._flag = a:config.is_stay         ? 'n'
+  \               : a:config.command is# '/' ? ''
+  \               : a:config.command is# '?' ? 'b'
+  \               : ''
+  let a:cli._direction =
+  \ (a:cli._base_key is# '/' ? s:DIRECTION.forward : s:DIRECTION.backward)
+  " TODO: provide config? but it may conflict with <expr> mapping
+  " NOTE: _w: default cursor view
+  let a:cli._w = winsaveview()
+  for module in a:config.modules
+    call a:cli.connect(module)
+  endfor
+  call a:cli.set_prompt(a:cli._prompt)
+  return a:cli
 endfunction
 
 "" partial deepcopy() for cli.connect(module) instead of copy()
@@ -132,6 +143,8 @@ endif
 function! s:cli.keymapping(...) abort
   return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
 endfunction
+
+call incsearch#over#extend#enrich(s:cli)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
