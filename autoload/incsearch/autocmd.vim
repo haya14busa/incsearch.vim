@@ -17,6 +17,10 @@ function! incsearch#autocmd#auto_nohlsearch(nest) abort
   " NOTE: see this value inside this function in order to toggle auto
   " :nohlsearch feature easily with g:incsearch#autocmd#auto_nohlsearch option
   if !g:incsearch#auto_nohlsearch | return '' | endif
+  return s:auto_nohlsearch(a:nest)
+endfunction
+
+function! s:auto_nohlsearch(nest) abort
   let cmd = s:U.is_visual(mode(1))
   \   ? 'call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "n")
   \     '
@@ -27,10 +31,7 @@ function! incsearch#autocmd#auto_nohlsearch(nest) abort
   "   :h autocmd-searchpat
   augroup incsearch-auto-nohlsearch
     autocmd!
-    " NOTE: this break . unit with c{text-object}
-    " side-effect: InsertLeave & InsertEnter are called with i_CTRL-\_CTRL-O
-    " autocmd InsertEnter * call feedkeys("\<C-\>\<C-o>:nohlsearch\<CR>", "n")
-    " \   | autocmd! incsearch-auto-nohlsearch
+    autocmd InsertEnter * :call <SID>on_insert_enter() | autocmd! incsearch-auto-nohlsearch
     execute join([
     \   'autocmd CursorMoved *'
     \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
@@ -39,6 +40,39 @@ function! incsearch#autocmd#auto_nohlsearch(nest) abort
     \ ], ' ')
   augroup END
   return ''
+endfunction
+
+" Auto nohlsearch on insert
+let s:noi = {}
+
+function! s:noi.on_insert_enter() abort
+  " NOTE:
+  " Ideally, it should be :nohlsearch but it use `set nohlsearch` instead
+  " to avoid :h autocmd-searchpat
+  let self.hlsearch = &hlsearch
+  set nohlsearch
+endfunction
+
+" :set hlsearch just before :nohlsearch not to blink highlight
+" NOTE: should I use s:U.silent_feedkeys()? But something go wrong...
+nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
+
+function! s:noi.on_insert_leave() abort
+  if self.hlsearch
+    call feedkeys("\<Plug>(_incsearch-sethlsearch)", 'm')
+  endif
+endfunction
+
+function! s:on_insert_enter() abort
+  call s:noi.on_insert_enter()
+  augroup incsearch-auto-nohlsearch-on-insert-leave
+    autocmd!
+    autocmd InsertLeave * :call <SID>on_insert_leave() | autocmd! incsearch-auto-nohlsearch-on-insert-leave
+  augroup END
+endfunction
+
+function! s:on_insert_leave() abort
+  call s:noi.on_insert_leave()
 endfunction
 
 let &cpo = s:save_cpo

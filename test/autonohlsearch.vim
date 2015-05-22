@@ -105,14 +105,19 @@ function! s:suite.nolsearch_with_cursormove_2()
   call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
 endfunction
 
-" This breaks dot repeat ><
-" function! s:suite.nolsearch_with_insert_enter()
-"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
-"     call incsearch#autocmd#auto_nohlsearch(10)
-"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
-"     doautocmd InsertEnter
-"     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
-" endfunction
+function! s:suite.nolsearch_with_insert_enter()
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+  call incsearch#autocmd#auto_nohlsearch(10)
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#InsertEnter'), 1)
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#InsertLeave'), 0, 'do not set InsertLeave until InsertEnter')
+  doautocmd InsertEnter
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch-on-insert-leave#InsertLeave'), 1)
+  doautocmd InsertLeave
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch-on-insert-leave#InsertLeave'), 0)
+endfunction
 
 function! s:suite.work_with_search()
   for key in ['/', '?', 'g/']
