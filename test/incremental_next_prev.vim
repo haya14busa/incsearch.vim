@@ -134,3 +134,14 @@ function! s:suite.match_at_cursor_pos_with_nowrapscan() abort
   exec "normal" "/pattern\<Tab>\<Tab>\<Tab>\<CR>"
   call s:assert.equals(getline('.'), s:line_texts[1])
 endfunction
+
+function! s:suite.match_at_cursor_pos_with_nowrapscan_backward() abort
+  set nowrapscan
+  :5
+  exec "normal" "?pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[1])
+  set wrapscan
+  :5
+  exec "normal" "?pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[5])
+endfunction
