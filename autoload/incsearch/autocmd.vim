@@ -7,6 +7,9 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! incsearch#autocmd#load() abort
+endfunction
+
 noremap  <silent> <Plug>(_incsearch-nohlsearch) <Nop>
 noremap! <silent> <Plug>(_incsearch-nohlsearch) <Nop>
 nnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>

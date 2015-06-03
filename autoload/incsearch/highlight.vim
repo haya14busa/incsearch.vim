@@ -28,6 +28,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+function! incsearch#highlight#load() abort
+endfunction
+
 let s:TRUE = !0
 let s:FALSE = 0
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward

@@ -7,6 +7,9 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! incsearch#cli#load() abort
+endfunction
+
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
 let s:V = incsearch#vital()

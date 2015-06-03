@@ -28,6 +28,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+function! incsearch#util#load() abort
+endfunction
+
 " Utilities:
 
 function! incsearch#util#import() abort

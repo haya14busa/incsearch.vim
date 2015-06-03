@@ -34,6 +34,17 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+function! incsearch#load() abort
+endfunction
+
+function! incsearch#preload() abort
+  call incsearch#autocmd#load()
+  call incsearch#cli#load()
+  call incsearch#config#load()
+  call incsearch#highlight#load()
+  call incsearch#util#load()
+endfunction
+
 let s:TRUE = !0
 let s:FALSE = 0
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward

@@ -7,6 +7,9 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! incsearch#config#load() abort
+endfunction
+
 let s:TRUE = !0
 let s:FALSE = 0
 lockvar s:TRUE s:FALSE
