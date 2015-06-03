@@ -82,10 +82,10 @@ function! s:suite.nowrapscan_scroll_reverse_move_cursor_to_the_last_pattern()
   call s:assert.equals(s:get_pos_char(), 'p')
   exec "normal /pattern\\zs\\d\<C-k>\<CR>"
   call s:assert.not_equals(s:get_pos_char(), '3')
-  call s:assert.equals(s:get_pos_char(), '6')
+  call s:assert.equals(s:get_pos_char(), '4')
   normal! gg$
   call s:assert.equals(s:get_pos_char(), '3')
   exec "normal ?pattern\\zs\\d\<C-j>\<CR>"
   call s:assert.not_equals(s:get_pos_char(), '4')
-  call s:assert.equals(s:get_pos_char(), '1')
+  call s:assert.equals(s:get_pos_char(), '2')
 endfunction
