@@ -7,7 +7,16 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:U = incsearch#util#import()
+noremap  <silent> <Plug>(_incsearch-nohlsearch) <Nop>
+noremap! <silent> <Plug>(_incsearch-nohlsearch) <Nop>
+nnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
+xnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
+
+" :set hlsearch just before :nohlsearch not to blink highlight
+noremap  <silent> <Plug>(_incsearch-sethlsearch) <Nop>
+noremap! <silent> <Plug>(_incsearch-sethlsearch) <Nop>
+nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
+xnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
 
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which
@@ -21,13 +30,8 @@ function! incsearch#autocmd#auto_nohlsearch(nest) abort
 endfunction
 
 function! s:auto_nohlsearch(nest) abort
-  let cmd = s:U.is_visual(mode(1))
-  \   ? 'call feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "n")
-  \     '
-  \   : 'call s:U.silent_feedkeys(":\<C-u>nohlsearch\<CR>" . (mode(1) =~# "[vV\<C-v>]" ? "gv" : ""), "nohlsearch", "n")
-  \     '
   " NOTE: :h autocmd-searchpat
-  "   You cannot implement this feature without feedkeys() bacause of
+  "   You cannot implement this feature without feedkeys() because of
   "   :h autocmd-searchpat
   augroup incsearch-auto-nohlsearch
     autocmd!
@@ -35,7 +39,7 @@ function! s:auto_nohlsearch(nest) abort
     execute join([
     \   'autocmd CursorMoved *'
     \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
-    \ , cmd
+    \ , 'call feedkeys("\<Plug>(_incsearch-nohlsearch)", "m")'
     \ , '| autocmd! incsearch-auto-nohlsearch'
     \ ], ' ')
   augroup END
@@ -52,10 +56,6 @@ function! s:noi.on_insert_enter() abort
   let self.hlsearch = &hlsearch
   set nohlsearch
 endfunction
-
-" :set hlsearch just before :nohlsearch not to blink highlight
-" NOTE: should I use s:U.silent_feedkeys()? But something go wrong...
-nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
 
 function! s:noi.on_insert_leave() abort
   if self.hlsearch

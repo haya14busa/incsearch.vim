@@ -126,6 +126,7 @@ function! s:count_pattern(pattern, ...) abort
 endfunction
 
 " NOTE: support vmap?
+" It doesn't handle feedkeys() on incsert or command-line mode
 function! s:silent_feedkeys(expr, name, ...) abort
   " Ref:
   " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6
