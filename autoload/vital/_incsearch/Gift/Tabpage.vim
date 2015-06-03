@@ -4,6 +4,9 @@ set cpo&vim
 
 
 let s:prefix = expand("<sfile>:p:h:h:t")
+function! s:set_prefix(prefix)
+	let s:prefix = a:prefix
+endfunction
 
 
 let s:uniq_counter = 0
