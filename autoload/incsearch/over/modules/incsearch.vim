@@ -132,9 +132,6 @@ function! s:on_char_pre(cmdline) abort
       let a:cmdline._flag = ''
     endif
     let a:cmdline._vcount1 -= 1
-    if a:cmdline._vcount1 < 1
-      let a:cmdline._vcount1 += s:U.count_pattern(pattern)
-    endif
   elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
   \ &&   (a:cmdline._flag ==# '' || a:cmdline._flag ==# 'n'))
   \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && a:cmdline._flag ==# 'b')
@@ -160,27 +157,31 @@ function! s:on_char_pre(cmdline) abort
     let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
     let cnt = s:U.count_pattern(pattern, from, to)
     let a:cmdline._vcount1 -= cnt
-    if a:cmdline._vcount1 < 1
-      let a:cmdline._vcount1 += s:U.count_pattern(pattern)
-    endif
   endif
 
   " Handle nowrapscan:
   "   if you `:set nowrapscan`, you can't move to the reversed direction
-  if &wrapscan == s:FALSE && (
+  if !&wrapscan && (
   \    a:cmdline.is_input("<Over>(incsearch-next)")
   \ || a:cmdline.is_input("<Over>(incsearch-prev)")
   \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
   \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
   \ )
-    call a:cmdline.setchar('')
-    let [from, to] = [[a:cmdline._w.lnum, a:cmdline._w.col],
-    \       a:cmdline._flag !=# 'b'
-    \       ? [line('$'), s:U.get_max_col('$')]
-    \       : [1, 1]
-    \   ]
-    let max_cnt = s:U.count_pattern(pattern, from, to)
-    let a:cmdline._vcount1 = min([max_cnt, a:cmdline._vcount1])
+    if a:cmdline._vcount1 < 1
+      let a:cmdline._vcount1 = 1
+    else
+      call a:cmdline.setchar('')
+      let [from, to] = [[a:cmdline._w.lnum, a:cmdline._w.col + 1],
+      \       a:cmdline._flag !=# 'b'
+      \       ? [line('$'), s:U.get_max_col('$')]
+      \       : [1, 1]
+      \   ]
+      let max_cnt = s:U.count_pattern(pattern, from, to, s:TRUE)
+      let a:cmdline._vcount1 = min([max_cnt, a:cmdline._vcount1])
+    endif
+  endif
+  if &wrapscan && a:cmdline._vcount1 < 1
+    let a:cmdline._vcount1 += s:U.count_pattern(pattern)
   endif
 endfunction
 
