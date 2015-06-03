@@ -13,8 +13,8 @@ nnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
 xnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
 
 " :set hlsearch just before :nohlsearch not to blink highlight
-noremap  <silent> <Plug>(_incsearch-sethlsearch) <Nop>
-noremap! <silent> <Plug>(_incsearch-sethlsearch) <Nop>
+noremap  <silent><expr> <Plug>(_incsearch-sethlsearch) <SID>attach_on_leave()
+noremap! <silent><expr> <Plug>(_incsearch-sethlsearch) <SID>attach_on_leave()
 nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
 xnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>gv
 
@@ -58,6 +58,10 @@ function! s:noi.on_insert_enter() abort
 endfunction
 
 function! s:noi.on_insert_leave() abort
+  return s:noi.restore_sethlsearch()
+endfunction
+
+function! s:noi.restore_sethlsearch() abort
   if self.hlsearch
     call feedkeys("\<Plug>(_incsearch-sethlsearch)", 'm')
   endif
@@ -65,14 +69,19 @@ endfunction
 
 function! s:on_insert_enter() abort
   call s:noi.on_insert_enter()
-  augroup incsearch-auto-nohlsearch-on-insert-leave
-    autocmd!
-    autocmd InsertLeave * :call <SID>on_insert_leave() | autocmd! incsearch-auto-nohlsearch-on-insert-leave
-  augroup END
+  call s:attach_on_leave()
 endfunction
 
 function! s:on_insert_leave() abort
   call s:noi.on_insert_leave()
+endfunction
+
+function! s:attach_on_leave() abort
+  augroup incsearch-auto-nohlsearch-on-insert-leave
+    autocmd!
+    autocmd InsertLeave * :call <SID>on_insert_leave() | autocmd! incsearch-auto-nohlsearch-on-insert-leave
+  augroup END
+  return ''
 endfunction
 
 let &cpo = s:save_cpo
