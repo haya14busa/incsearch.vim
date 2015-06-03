@@ -16,7 +16,7 @@ xnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
 noremap  <silent> <Plug>(_incsearch-sethlsearch) <Nop>
 noremap! <silent> <Plug>(_incsearch-sethlsearch) <Nop>
 nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
-xnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
+xnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>gv
 
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which

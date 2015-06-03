@@ -226,7 +226,7 @@ endfunction
 function! s:generate_command(cli, input) abort
   let is_cancel = a:cli.exit_code()
   if is_cancel
-    return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
+    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>"
   else
     call s:call_execute_event(a:cli)
     let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
@@ -288,7 +288,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     call winrestview(a:cli._w)
     call feedkeys(a:cmd, 'n')
     if g:incsearch#consistent_n_direction
-      call s:_silent_searchforward()
+      call feedkeys("\<Plug>(_incsearch-searchforward)", 'm')
     endif
   else
     " Add history if necessary
@@ -399,11 +399,13 @@ function! s:silent_after_search(...) abort " arg: mode(1)
   " :h function-search-undo
   let m = get(a:, 1, mode(1))
   if m !=# 'no' " guard for operator-mapping
-    call s:_silent_hlsearch()
-    call s:_silent_searchforward()
-    if s:U.is_visual(m)
-      call feedkeys("\<Plug>(_incsearch-gv)", 'm')
-    endif
+    let cmd = join([
+    \   (s:U.is_visual(m) ? "\<Plug>(_incsearch-esc)" : ''),
+    \   "\<Plug>(_incsearch-hlsearch)",
+    \   "\<Plug>(_incsearch-searchforward)",
+    \   (s:U.is_visual(m) ? "\<Plug>(_incsearch-gv)" : '')
+    \ ], '')
+    call feedkeys(cmd, 'm')
   endif
 endfunction
 
@@ -411,14 +413,14 @@ noremap  <silent> <Plug>(_incsearch-gv) <Nop>
 noremap! <silent> <Plug>(_incsearch-gv) <Nop>
 nnoremap <silent> <Plug>(_incsearch-gv) gv
 
+noremap  <silent> <Plug>(_incsearch-esc) <Nop>
+noremap! <silent> <Plug>(_incsearch-esc) <Nop>
+xnoremap <silent> <Plug>(_incsearch-esc) <Esc>
+
 noremap  <silent> <Plug>(_incsearch-hlsearch) <Nop>
 noremap! <silent> <Plug>(_incsearch-hlsearch) <Nop>
 nnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
 xnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
-function! s:_silent_hlsearch() abort
-  " Handle :set hlsearch
-  call feedkeys("\<Plug>(_incsearch-hlsearch)", 'm')
-endfunction
 
 noremap  <silent>       <Plug>(_incsearch-searchforward) <Nop>
 noremap! <silent>       <Plug>(_incsearch-searchforward) <Nop>
@@ -427,11 +429,6 @@ xnoremap <silent><expr> <Plug>(_incsearch-searchforward) <SID>_searchforward_cmd
 function! s:_searchforward_cmd() abort
   let d = (g:incsearch#consistent_n_direction ? s:DIRECTION.forward : v:searchforward)
   return printf(":\<C-u>let v:searchforward=%d\<CR>", d)
-endfunction
-function! s:_silent_searchforward() abort
-  " NOTE: You have to 'exec normal! `/` or `?`' before calling this
-  " function to update v:searchforward
-  call feedkeys("\<Plug>(_incsearch-searchforward)", 'm')
 endfunction
 
 function! s:emulate_search_error(direction, ...) abort
