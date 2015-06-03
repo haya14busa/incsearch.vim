@@ -110,11 +110,12 @@ function! s:count_pattern(pattern, ...) abort
   \   get(a:, 1, [1, 1]),
   \   get(a:, 2, [line('$'), s:get_max_col('$')])
   \ ])
+  let ignore_at_cursor_pos = get(a:, 3, 0)
   call cursor(from)
   let cnt = 0
   try
     " first: accept a match at the cursor position
-    let pos = searchpos(a:pattern, 'cW')
+    let pos = searchpos(a:pattern, (ignore_at_cursor_pos ? '' : 'c' ) . 'W')
     while (pos != [0, 0] && s:is_pos_less_equal(pos, to))
       let cnt += 1
       let pos = searchpos(a:pattern, 'W')
