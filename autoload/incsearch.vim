@@ -162,6 +162,12 @@ function! incsearch#stay(cli) abort
   return l:F(a:cli, input)
 endfunction
 
+let g:incsearch#_view = get(g:, 'incsearch#_view', {})
+noremap  <silent> <Plug>(_incsearch-winrestview) <Nop>
+noremap! <silent> <Plug>(_incsearch-winrestview) <Nop>
+nnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsearch#_view)<CR>
+xnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsearch#_view)<CR>gv
+
 function! s:stay(cli, input) abort
   let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
   let pattern = incsearch#convert(raw_pattern)
@@ -176,8 +182,8 @@ function! s:stay(cli, input) abort
     let cmd = incsearch#with_ignore_foldopen(
     \   function('s:generate_command'), a:cli, a:input)
     call feedkeys(cmd, 'n')
-    " XXX: string()... use <SNR> or <SID>? But it doesn't work well.
-    call s:U.silent_feedkeys(":\<C-u>call winrestview(". string(a:cli._w) . ")\<CR>", 'winrestview', 'n')
+    let g:incsearch#_view = a:cli._w
+    call feedkeys("\<Plug>(_incsearch-winrestview)", 'm')
     call incsearch#autocmd#auto_nohlsearch(2)
   else
     " Handle last-pattern
@@ -220,7 +226,7 @@ endfunction
 function! s:generate_command(cli, input) abort
   let is_cancel = a:cli.exit_code()
   if is_cancel
-    return s:U.is_visual(a:cli._mode) ? '\<ESC>gv' : "\<ESC>"
+    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>"
   else
     call s:call_execute_event(a:cli)
     let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
@@ -282,7 +288,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     call winrestview(a:cli._w)
     call feedkeys(a:cmd, 'n')
     if g:incsearch#consistent_n_direction
-      call s:_silent_searchforward(s:DIRECTION.forward)
+      call feedkeys("\<Plug>(_incsearch-searchforward)", 'm')
     endif
   else
     " Add history if necessary
@@ -391,26 +397,38 @@ endfunction
 
 function! s:silent_after_search(...) abort " arg: mode(1)
   " :h function-search-undo
-  if get(a:, 1, mode(1)) !=# 'no' " guard for operator-mapping
-    call s:_silent_hlsearch()
-    call s:_silent_searchforward()
+  let m = get(a:, 1, mode(1))
+  if m !=# 'no' " guard for operator-mapping
+    let cmd = join([
+    \   (s:U.is_visual(m) ? "\<Plug>(_incsearch-esc)" : ''),
+    \   "\<Plug>(_incsearch-hlsearch)",
+    \   "\<Plug>(_incsearch-searchforward)",
+    \   (s:U.is_visual(m) ? "\<Plug>(_incsearch-gv)" : '')
+    \ ], '')
+    call feedkeys(cmd, 'm')
   endif
 endfunction
 
-function! s:_silent_hlsearch() abort
-  " Handle :set hlsearch
-  call s:U.silent_feedkeys(":let &hlsearch=&hlsearch\<CR>", 'hlsearch', 'n')
-endfunction
+noremap  <silent> <Plug>(_incsearch-gv) <Nop>
+noremap! <silent> <Plug>(_incsearch-gv) <Nop>
+nnoremap <silent> <Plug>(_incsearch-gv) gv
 
-function! s:_silent_searchforward(...) abort
-  " NOTE: You have to 'exec normal! `/` or `?`' before calling this
-  " function to update v:searchforward
-  let direction = get(a:, 1,
-  \   (g:incsearch#consistent_n_direction == s:TRUE)
-  \   ? s:DIRECTION.forward : v:searchforward)
-  call s:U.silent_feedkeys(
-  \   ":let v:searchforward=" . direction . "\<CR>",
-  \   'searchforward', 'n')
+noremap  <silent> <Plug>(_incsearch-esc) <Nop>
+noremap! <silent> <Plug>(_incsearch-esc) <Nop>
+xnoremap <silent> <Plug>(_incsearch-esc) <Esc>
+
+noremap  <silent> <Plug>(_incsearch-hlsearch) <Nop>
+noremap! <silent> <Plug>(_incsearch-hlsearch) <Nop>
+nnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
+xnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
+
+noremap  <silent>       <Plug>(_incsearch-searchforward) <Nop>
+noremap! <silent>       <Plug>(_incsearch-searchforward) <Nop>
+nnoremap <silent><expr> <Plug>(_incsearch-searchforward) <SID>_searchforward_cmd()
+xnoremap <silent><expr> <Plug>(_incsearch-searchforward) <SID>_searchforward_cmd()
+function! s:_searchforward_cmd() abort
+  let d = (g:incsearch#consistent_n_direction ? s:DIRECTION.forward : v:searchforward)
+  return printf(":\<C-u>let v:searchforward=%d\<CR>", d)
 endfunction
 
 function! s:emulate_search_error(direction, ...) abort
