@@ -7,16 +7,10 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
-noremap  <silent> <Plug>(_incsearch-nohlsearch) <Nop>
-noremap! <silent> <Plug>(_incsearch-nohlsearch) <Nop>
-nnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
-xnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
-
-" :set hlsearch just before :nohlsearch not to blink highlight
-noremap  <silent><expr> <Plug>(_incsearch-sethlsearch) <SID>attach_on_leave()
-noremap! <silent><expr> <Plug>(_incsearch-sethlsearch) <SID>attach_on_leave()
-nnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>
-xnoremap <silent> <Plug>(_incsearch-sethlsearch) :<C-u>set hlsearch <Bar> nohlsearch<CR>gv
+noremap  <silent><expr> <Plug>(_incsearch-nohlsearch) incsearch#autocmd#auto_nohlsearch(0)
+noremap! <silent><expr> <Plug>(_incsearch-nohlsearch) incsearch#autocmd#auto_nohlsearch(0)
+nnoremap <silent>       <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
+xnoremap <silent>       <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
 
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which
@@ -35,7 +29,7 @@ function! s:auto_nohlsearch(nest) abort
   "   :h autocmd-searchpat
   augroup incsearch-auto-nohlsearch
     autocmd!
-    autocmd InsertEnter * :call <SID>on_insert_enter() | autocmd! incsearch-auto-nohlsearch
+    autocmd InsertEnter * :call <SID>attach_on_insert_leave() | autocmd! incsearch-auto-nohlsearch
     execute join([
     \   'autocmd CursorMoved *'
     \ , repeat('autocmd incsearch-auto-nohlsearch CursorMoved * ', a:nest)
@@ -46,40 +40,11 @@ function! s:auto_nohlsearch(nest) abort
   return ''
 endfunction
 
-" Auto nohlsearch on insert
-let s:noi = {}
-
-function! s:noi.on_insert_enter() abort
-  " NOTE:
-  " Ideally, it should be :nohlsearch but it use `set nohlsearch` instead
-  " to avoid :h autocmd-searchpat
-  let self.hlsearch = &hlsearch
-  set nohlsearch
-endfunction
-
-function! s:noi.on_insert_leave() abort
-  return s:noi.restore_sethlsearch()
-endfunction
-
-function! s:noi.restore_sethlsearch() abort
-  if self.hlsearch
-    call feedkeys("\<Plug>(_incsearch-sethlsearch)", 'm')
-  endif
-endfunction
-
-function! s:on_insert_enter() abort
-  call s:noi.on_insert_enter()
-  call s:attach_on_leave()
-endfunction
-
-function! s:on_insert_leave() abort
-  call s:noi.on_insert_leave()
-endfunction
-
-function! s:attach_on_leave() abort
+function! s:attach_on_insert_leave() abort
   augroup incsearch-auto-nohlsearch-on-insert-leave
     autocmd!
-    autocmd InsertLeave * :call <SID>on_insert_leave() | autocmd! incsearch-auto-nohlsearch-on-insert-leave
+    autocmd InsertLeave * :call incsearch#autocmd#auto_nohlsearch(1)
+    \ | autocmd! incsearch-auto-nohlsearch-on-insert-leave
   augroup END
   return ''
 endfunction

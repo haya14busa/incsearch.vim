@@ -115,6 +115,11 @@ function! s:suite.nolsearch_with_insert_enter()
   call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
   call s:assert.equals(exists('#incsearch-auto-nohlsearch-on-insert-leave#InsertLeave'), 1)
   doautocmd InsertLeave
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1, 'trigger auto nohlsearch again')
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch-on-insert-leave#InsertLeave'), 0, 'remove insert leave')
+  doautocmd CursorMoved
+  call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
+  doautocmd CursorMoved
   call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
   call s:assert.equals(exists('#incsearch-auto-nohlsearch-on-insert-leave#InsertLeave'), 0)
 endfunction
