@@ -7,10 +7,10 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
-noremap  <silent> <Plug>(_incsearch-nohlsearch) <Nop>
-noremap! <silent> <Plug>(_incsearch-nohlsearch) <Nop>
-nnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
-xnoremap <silent> <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
+noremap  <silent><expr> <Plug>(_incsearch-nohlsearch) incsearch#autocmd#auto_nohlsearch(0)
+noremap! <silent><expr> <Plug>(_incsearch-nohlsearch) incsearch#autocmd#auto_nohlsearch(0)
+nnoremap <silent>       <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>
+xnoremap <silent>       <Plug>(_incsearch-nohlsearch) :<C-u>nohlsearch<CR>gv
 
 " Make sure move cursor by search related action __after__ calling this
 " function because the first move event just set nested autocmd which
