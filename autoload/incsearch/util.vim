@@ -106,18 +106,22 @@ endfunction
 " parameter: pattern, from, to
 function! s:count_pattern(pattern, ...) abort
   let w = winsaveview()
-  let [from, to] = s:sort_pos([
+  let [from, to] = [
   \   get(a:, 1, [1, 1]),
   \   get(a:, 2, [line('$'), s:get_max_col('$')])
-  \ ])
+  \ ]
+  let ignore_at_cursor_pos = get(a:, 3, 0)
+  " direction flag
+  let d_flag = s:compare_pos(from, to) > 0 ? 'b' : ''
   call cursor(from)
   let cnt = 0
+  let base_flag = d_flag . 'W'
   try
     " first: accept a match at the cursor position
-    let pos = searchpos(a:pattern, 'cW')
-    while (pos != [0, 0] && s:is_pos_less_equal(pos, to))
+    let pos = searchpos(a:pattern, (ignore_at_cursor_pos ? '' : 'c' ) . base_flag)
+    while (pos != [0, 0] && s:compare_pos(pos, to) isnot# (d_flag is# 'b' ? -1 : 1))
       let cnt += 1
-      let pos = searchpos(a:pattern, 'W')
+      let pos = searchpos(a:pattern, base_flag)
     endwhile
   finally
     call winrestview(w)
@@ -126,6 +130,7 @@ function! s:count_pattern(pattern, ...) abort
 endfunction
 
 " NOTE: support vmap?
+" It doesn't handle feedkeys() on incsert or command-line mode
 function! s:silent_feedkeys(expr, name, ...) abort
   " Ref:
   " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6

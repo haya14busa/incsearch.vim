@@ -38,6 +38,7 @@ endfunction
 
 function! s:suite.before_each()
   :1
+  set wrapscan&
 endfunction
 
 function! s:suite.after()
@@ -123,3 +124,24 @@ function! s:suite.inc_last_pattern_reset()
   call s:assert.equals(getline('.'), s:line_texts[0])
 endfunction
 
+function! s:suite.match_at_cursor_pos_with_nowrapscan() abort
+  set nowrapscan
+  :3
+  exec "normal" "/pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[5])
+  set wrapscan
+  :3
+  exec "normal" "/pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[1])
+endfunction
+
+function! s:suite.match_at_cursor_pos_with_nowrapscan_backward() abort
+  set nowrapscan
+  :5
+  exec "normal" "?pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[1])
+  set wrapscan
+  :5
+  exec "normal" "?pattern\<Tab>\<Tab>\<Tab>\<CR>"
+  call s:assert.equals(getline('.'), s:line_texts[5])
+endfunction

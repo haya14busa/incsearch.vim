@@ -87,8 +87,12 @@ function! s:find(expr)
 endfunction
 
 
-function! s:find_by(func)
-	return filter(s:tabpagewinnr_list(), "a:func(s:bufnr([v:val[0], v:val[1]), v:val[0], v:val[1])")
+function! s:find_by(expr)
+	if type(a:expr) == type(function("tr"))
+		return filter(s:tabpagewinnr_list(), "a:expr(s:bufnr([v:val[0], v:val[1]]), v:val[0], v:val[1])")
+	else
+		return s:find(a:expr)
+	endif
 endfunction
 
 

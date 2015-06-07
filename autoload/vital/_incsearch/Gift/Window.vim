@@ -21,7 +21,6 @@ function! s:set_prefix(prefix)
 	let s:prefix = a:prefix
 endfunction
 
-
 function! s:flatten(list)
 	return eval(join(a:list, "+"))
 endfunction
@@ -32,7 +31,9 @@ function! s:tabpagewinnr_list()
 endfunction
 
 
-let s:uniq_counter = 0
+if !exists("s:uniq_counter")
+	let s:uniq_counter = 0
+endif
 function! s:make_uniq_nr()
 	let s:uniq_counter += 1
 	return s:uniq_counter

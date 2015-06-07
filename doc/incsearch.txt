@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 1.1.0
+Version : 1.2.0
 License : MIT license {{{
 
 	Copyright (c) 2014-2015 haya14busa
@@ -454,6 +454,13 @@ pattern						*incsearch-config-pattern*
 	  Example: >
 	  noremap <expr> <Space>/ incsearch#go({'pattern': histget('/', -1)})
 
+prompt						*incsearch-config-prompt*
+	Prompt string.
+	  Type: |string|
+	  Default: same as |incsearch-config-command| ('/' or '?')
+	  Example: >
+	  noremap <expr> <Space>/ incsearch#go({'prompt': '>>>'})
+
 modules						*incsearch-config-modules*
 	Additional |Vital.Over.Commandline-modules| to connect.
 	  Type: |list| of |Vital.Over.Commandline-modules|
@@ -490,6 +497,16 @@ Version 2.0(?) Roadmap~
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
 
+1.2.0	2015-06-06
+	1. Now, fix unexpected key input with |feedkeys()| by auto-nohlsearch
+	   feature (|incsearch-additional-usage|) #82
+	2. Avoid Unneeded loading for mappings like |<Plug>(incsearch-nohl)|
+	   related with #81
+	3. Fix |nowrapscan| handling #83
+	4. Add |incsearch-config-prompt| option
+	5. auto-nohlsearch on |CursorMoved| after |InsertLeave| related with #80
+	6. Some refactoring
+
 1.1.0	2015-05-03
 	1. Add experimental API |incsearch-api|.
 	    - Now you can pass a default pattern |incsearch-config-pattern|
@@ -498,7 +515,6 @@ Version 2.0(?) Roadmap~
 	    - vim-repeat support if needed |incsearch-config-is_expr|
 	    - You can pass additional vital-over module to connect
 	      |incsearch-config-modules|
-
 
 1.0.3	2015-05-03
 	1. Fix 'hlsearch' handling #74
@@ -512,7 +528,6 @@ Version 2.0(?) Roadmap~
 	4. Fix to redraw commandline when leaving with <Esc> #67
 	5. Fix <SID> handling for <expr> mappings #51
 	6. Fix flicker at entering incsearch's commands #73
-
 
 1.0.1	2015-01-04
 	1. Fix keymapping escape
