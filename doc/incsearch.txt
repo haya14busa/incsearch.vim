@@ -371,7 +371,7 @@ NOTE:
 
 ==============================================================================
 API							*incsearch-api*
-	incsearch.vim's API. It may changes because it's EXPERIMENTAL but I
+	incsearch.vim's API. It may change because it's EXPERIMENTAL but I
 	try to keep it as much as possible.
 
 ------------------------------------------------------------------------------
