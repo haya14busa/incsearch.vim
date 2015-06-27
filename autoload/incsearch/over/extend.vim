@@ -84,13 +84,13 @@ function! s:cli._convert(pattern) abort
     return incsearch#magic() . a:pattern
   else
     let ps = [incsearch#magic() . a:pattern]
-    for Converter in self._converters
-      if type(Converter) is type(function('function'))
-        let ps += [Converter(a:pattern)]
+    for l:Converter in self._converters
+      if type(l:Converter) is type(function('function'))
+        let ps += [l:Converter(a:pattern)]
       else
-        let ps += [Converter.convert(a:pattern)]
+        let ps += [l:Converter.convert(a:pattern)]
       endif
-      unlet Converter
+      unlet l:Converter
     endfor
     return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
   endif
