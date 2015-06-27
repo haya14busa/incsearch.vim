@@ -78,14 +78,11 @@ endfunction
 
 function! s:cli._convert(pattern) abort
   " TODO: convert pattern if required in addition to appending magic flag
-  return a:pattern is# '' ? a:pattern : s:convert(a:pattern)
-endfunction
-
-" convert implementation. assume pattern is not empty
-function! s:convert(pattern) abort
+  if a:pattern is# ''
+    return a:pattern
+  endif
   return incsearch#magic() . a:pattern
 endfunction
-
 
 
 let &cpo = s:save_cpo
