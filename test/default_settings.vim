@@ -78,9 +78,12 @@ endfunction
 " https://github.com/haya14busa/incsearch.vim/issues/69
 function! s:suite.handle_keymapping_option()
   call s:assert.equals(g:incsearch_cli_key_mappings, {})
-  let d = copy(incsearch#cli().keymapping())
-  let g:incsearch_cli_key_mappings['a'] = 'b'
-  call s:assert.equals(incsearch#cli().keymapping(), extend(copy(d), {'a': 'b'}))
-  unlet g:incsearch_cli_key_mappings['a']
-  call s:assert.equals(incsearch#cli().keymapping(), d)
+  let d = copy(incsearch#make().keymapping())
+  try
+    let g:incsearch_cli_key_mappings['a'] = 'b'
+    call s:assert.equals(incsearch#make().keymapping(), extend(copy(d), {'a': 'b'}))
+  finally
+    unlet g:incsearch_cli_key_mappings['a']
+  endtry
+  call s:assert.equals(incsearch#make().keymapping(), d)
 endfunction

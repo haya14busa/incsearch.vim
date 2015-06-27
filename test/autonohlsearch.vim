@@ -137,18 +137,18 @@ function! s:suite.work_with_search_offset()
   for key in ['/', '?', 'g/']
     silent! autocmd! incsearch-auto-nohlsearch
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
-    exec "normal" key . "pattern/e\<CR>"
+    exec "silent! normal" key . "pattern/e\<CR>"
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
   endfor
 endfunction
 
 function! s:suite.work_with_other_search_mappings()
   for key in ['n', 'N', '*', '#', 'g*', 'g#']
-    silent! autocmd! incsearch-auto-nohlsearch
+    autocmd! incsearch-auto-nohlsearch
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
-    exec "normal!" key
+    exec "silent! normal!" key
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 0)
-    exec "normal" key
+    exec "silent! normal" key
     call s:assert.equals(exists('#incsearch-auto-nohlsearch#CursorMoved'), 1)
   endfor
 endfunction

@@ -263,6 +263,29 @@ Command line interface~
 		<C-d>  | |<Del>|
 		<A-d>  | |<C-w>|
 
+g:incsearch_cli_key_mappings			*g:incsearch_cli_key_mappings*
+	Define keymapping by dictionary instead of |:IncSearchNoreMap|.
+	You can use following expression. >
+
+	'{lhs}': '{rhs}'
+
+<	or >
+
+	'{lhs}': {
+	  'key': '{rhs}',
+	  'noremap': (1 or 0)
+	}
+
+<	Example: >
+
+	let g:incsearch_cli_key_mappings = {
+	\   "\<Tab>": {
+	\     'key': '<Over>(buffer-complete)',
+	\     'noremap': 1
+	\   },
+	\   "\<C-j>": "\<CR>",
+	\ }
+
 Buffer completion			*incsearch-<Over>(buffer-complete)*
 					*incsearch-<Over>(buffer-complete-prev)*
 	Completion with the buffer text.
@@ -478,6 +501,25 @@ modules						*incsearch-config-modules*
 
 	  noremap <expr> z/ incsearch#go(<SID>config())
 
+keymap						*incsearch-config-keymap*
+	Additional keymappings for commandline interface. See also
+	|g:incsearch_cli_key_mappings|.
+
+	Example: >
+
+	function! s:config() abort
+	  return {
+	  \   'keymap': {
+	  \      "\<Tab>": {
+	  \        'key': '<Over>(buffer-complete)',
+	  \        'noremap': 1
+	  \      },
+	  \      "\<C-j>": "\<CR>"
+	  \   }
+	  \ }
+	endfunction
+
+	noremap <expr> z/ incsearch#go(<SID>config())
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*
 

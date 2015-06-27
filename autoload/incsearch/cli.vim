@@ -23,7 +23,7 @@ endfunction
 
 " @config: whole configuration
 function! incsearch#cli#make(config) abort
-  let cli = s:copy_cli(s:cli)
+  let cli = deepcopy(s:cli)
   call incsearch#cli#set(cli, a:config)
   return cli
 endfunction
@@ -37,6 +37,7 @@ function! incsearch#cli#set(cli, config) abort
   let a:cli._mode = a:config.mode
   let a:cli._pattern = a:config.pattern
   let a:cli._prompt = a:config.prompt
+  let a:cli._keymap = a:config.keymap
   let a:cli._flag = a:config.is_stay         ? 'n'
   \               : a:config.command is# '/' ? ''
   \               : a:config.command is# '?' ? 'b'
@@ -51,13 +52,6 @@ function! incsearch#cli#set(cli, config) abort
   endfor
   call a:cli.set_prompt(a:cli._prompt)
   return a:cli
-endfunction
-
-"" partial deepcopy() for cli.connect(module) instead of copy()
-function! s:copy_cli(cli) abort
-  let cli = copy(a:cli)
-  let cli.variables = deepcopy(a:cli.variables)
-  return cli
 endfunction
 
 let s:cli = s:V.import('Over.Commandline').make_default("/")
@@ -102,46 +96,8 @@ unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword
 call s:cli.connect(incsearch#over#modules#pattern_saver#make())
 call s:cli.connect(incsearch#over#modules#incsearch#make())
 
-let s:default_keymappings = {
-\   "\<Tab>"   : {
-\       "key" : "<Over>(incsearch-next)",
-\       "noremap" : 1,
-\   },
-\   "\<S-Tab>"   : {
-\       "key" : "<Over>(incsearch-prev)",
-\       "noremap" : 1,
-\   },
-\   "\<C-j>"   : {
-\       "key" : "<Over>(incsearch-scroll-f)",
-\       "noremap" : 1,
-\   },
-\   "\<C-k>"   : {
-\       "key" : "<Over>(incsearch-scroll-b)",
-\       "noremap" : 1,
-\   },
-\   "\<C-l>"   : {
-\       "key" : "<Over>(buffer-complete)",
-\       "noremap" : 1,
-\   },
-\   "\<CR>"   : {
-\       "key": "\<CR>",
-\       "noremap": 1
-\   },
-\ }
-
-" https://github.com/haya14busa/incsearch.vim/issues/35
-if has('mac')
-  call extend(s:default_keymappings, {
-  \   '"+gP'   : {
-  \       'key': "\<C-r>+",
-  \       'noremap': 1
-  \   },
-  \ })
-endif
-
-" FIXME: arguments?
-function! s:cli.keymapping(...) abort
-  return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
+function! s:cli.__keymapping__() abort
+  return copy(self._keymap)
 endfunction
 
 call incsearch#over#extend#enrich(s:cli)

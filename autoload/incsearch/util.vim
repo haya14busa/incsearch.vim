@@ -52,6 +52,7 @@ let s:functions = [
 \   , 'sort_pos'
 \   , 'count_pattern'
 \   , 'silent_feedkeys'
+\   , 'deepextend'
 \ ]
 
 
@@ -149,6 +150,19 @@ function! s:silent_feedkeys(expr, name, ...) abort
     "        https://github.com/kana/vim-vspec/issues/27
     call feedkeys(printf("\<Plug>(%s)", name))
   endif
+endfunction
+
+" deepextend (nest: 1)
+function! s:deepextend(expr1, expr2) abort
+  let expr2 = copy(a:expr2)
+  for [k, V] in items(a:expr1)
+    if (type(V) is type({}) || type(V) is type([])) && has_key(expr2, k)
+      let a:expr1[k] = extend(a:expr1[k], expr2[k])
+      unlet expr2[k]
+    endif
+    unlet V
+  endfor
+  return extend(a:expr1, expr2)
 endfunction
 
 " Restore 'cpoptions' {{{

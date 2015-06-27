@@ -77,9 +77,14 @@ let s:U = incsearch#util#import()
 
 " Main: {{{
 
-" @return vital-over command-line interface object. it's experimental!!!
+" @return vital-over command-line interface object. [experimental]
 function! incsearch#cli() abort
   return incsearch#cli#get()
+endfunction
+
+"" Make vital-over command-line interface object and return it [experimental]
+function! incsearch#make(...) abort
+  return incsearch#cli#make(incsearch#config#make(get(a:, 1, {})))
 endfunction
 
 "" NOTE: this global variable is only for handling config from go_wrap func
