@@ -228,20 +228,6 @@ function! s:get_input(cli) abort
   return input
 endfunction
 
-"" Call on_execute_pre and on_execute event
-" assume current position is the destination and a:cli._w is the position to
-" start search
-function! s:call_execute_event(cli, ...) abort
-  let view = get(a:, 1, winsaveview())
-  try
-    call winrestview(a:cli._w)
-    call a:cli.callevent('on_execute_pre')
-  finally
-    call winrestview(view)
-  endtry
-  call a:cli.callevent('on_execute')
-endfunction
-
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.

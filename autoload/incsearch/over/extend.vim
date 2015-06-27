@@ -44,6 +44,9 @@ function! s:cli._build_search_cmd(pattern, ...) abort
   \   v:register, op, self._vcount1, self._base_key, a:pattern, zv)
 endfunction
 
+"" Call on_execute_pre and on_execute event
+" assume current position is the destination and a:cli._w is the position to
+" start search
 function! s:cli._call_execute_event(...) abort
   let view = get(a:, 1, winsaveview())
   try
