@@ -104,7 +104,8 @@ endfunction
 function! s:on_char_pre(cmdline) abort
   " NOTE:
   " `:call a:cmdline.setchar('')` as soon as possible!
-  let [pattern, offset] = incsearch#cli_parse_pattern(a:cmdline)
+  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cmdline)
+  let pattern = incsearch#convert(raw_pattern)
 
   " Interactive :h last-pattern if pattern is empty
   if ( a:cmdline.is_input("<Over>(incsearch-next)")
