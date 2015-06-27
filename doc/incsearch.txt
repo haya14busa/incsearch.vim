@@ -501,6 +501,25 @@ modules						*incsearch-config-modules*
 
 	  noremap <expr> z/ incsearch#go(<SID>config())
 
+keymap						*incsearch-config-keymap*
+	Additional keymappings for commandline interface. See also
+	|g:incsearch_cli_key_mappings|.
+
+	Example: >
+
+	function! s:config() abort
+	  return {
+	  \   'keymap': {
+	  \      "\<Tab>": {
+	  \        'key': '<Over>(buffer-complete)',
+	  \        'noremap': 1
+	  \      },
+	  \      "\<C-j>": "\<CR>"
+	  \   }
+	  \ }
+	endfunction
+
+	noremap <expr> z/ incsearch#go(<SID>config())
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*
 
