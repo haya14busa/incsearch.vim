@@ -263,6 +263,29 @@ Command line interface~
 		<C-d>  | |<Del>|
 		<A-d>  | |<C-w>|
 
+g:incsearch_cli_key_mappings			*g:incsearch_cli_key_mappings*
+	Define keymapping by dictionary instead of |:IncSearchNoreMap|.
+	You can use following expression. >
+
+	'{lhs}': '{rhs}'
+
+<	or >
+
+	'{lhs}': {
+	  'key': '{rhs}',
+	  'noremap': (1 or 0)
+	}
+
+<	Example: >
+
+	let g:incsearch_cli_key_mappings = {
+	\   "\<Tab>": {
+	\     'key': '<Over>(buffer-complete)',
+	\     'noremap': 1
+	\   },
+	\   "\<C-j>": "\<CR>",
+	\ }
+
 Buffer completion			*incsearch-<Over>(buffer-complete)*
 					*incsearch-<Over>(buffer-complete-prev)*
 	Completion with the buffer text.
