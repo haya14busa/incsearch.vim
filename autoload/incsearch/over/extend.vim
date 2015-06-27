@@ -58,6 +58,19 @@ function! s:cli._call_execute_event(...) abort
   call self.callevent('on_execute')
 endfunction
 
+function! s:cli._parse_pattern() abort
+  if v:version == 704 && !has('patch421')
+    " Ignore \ze* which clash vim 7.4 without 421 patch
+    " Assume `\m`
+    let [p, o] = incsearch#parse_pattern(self.getline(), self._base_key)
+    let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
+    return [p, o]
+  else
+    return incsearch#parse_pattern(self.getline(), self._base_key)
+  endif
+endfunction
+
+
 let &cpo = s:save_cpo
 unlet s:save_cpo
 " __END__
