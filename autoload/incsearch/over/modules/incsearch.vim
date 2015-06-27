@@ -105,7 +105,7 @@ function! s:on_char_pre(cmdline) abort
   " NOTE:
   " `:call a:cmdline.setchar('')` as soon as possible!
   let [raw_pattern, offset] = a:cmdline._parse_pattern()
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cmdline._convert(raw_pattern)
 
   " Interactive :h last-pattern if pattern is empty
   if ( a:cmdline.is_input('<Over>(incsearch-next)')
@@ -206,7 +206,7 @@ function! s:on_char(cmdline) abort
     call winrestview(w)
   endif
 
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cmdline._convert(raw_pattern)
 
   " Improved Incremental cursor move!
   call s:move_cursor(a:cmdline, pattern, offset)

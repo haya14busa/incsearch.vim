@@ -25,7 +25,7 @@ function! s:cli._generate_command(input) abort
     call self._call_execute_event()
     let [pattern, offset] = incsearch#parse_pattern(a:input, self._base_key)
     " TODO: implement convert input method
-    let p = self._combine_pattern(incsearch#convert(pattern), offset)
+    let p = self._combine_pattern(self._convert(pattern), offset)
     return self._build_search_cmd(p)
   endif
 endfunction
@@ -75,6 +75,17 @@ endfunction
 function! s:cli._combine_pattern(pattern, offset) abort
   return empty(a:offset) ? a:pattern : a:pattern . self._base_key . a:offset
 endfunction
+
+function! s:cli._convert(pattern) abort
+  " TODO: convert pattern if required in addition to appending magic flag
+  return a:pattern is# '' ? a:pattern : s:convert(a:pattern)
+endfunction
+
+" convert implementation. assume pattern is not empty
+function! s:convert(pattern) abort
+  return incsearch#magic() . a:pattern
+endfunction
+
 
 
 let &cpo = s:save_cpo
