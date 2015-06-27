@@ -97,7 +97,7 @@ call s:cli.connect(incsearch#over#modules#pattern_saver#make())
 call s:cli.connect(incsearch#over#modules#incsearch#make())
 
 function! s:cli.__keymapping__() abort
-  return self._keymap
+  return copy(self._keymap)
 endfunction
 
 call incsearch#over#extend#enrich(s:cli)
