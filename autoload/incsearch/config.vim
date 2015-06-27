@@ -11,6 +11,8 @@ let s:TRUE = !0
 let s:FALSE = 0
 lockvar s:TRUE s:FALSE
 
+let s:U = incsearch#util#import()
+
 "" incsearch config
 " TODO: more detail documentation
 " @command is equivalent with base_key TODO: fix this inconsistence
@@ -42,7 +44,7 @@ endfunction
 " @return config with default value
 function! incsearch#config#make(additional) abort
   let default = extend(copy(s:config), s:lazy_config())
-  let c = extend(default, a:additional)
+  let c = s:U.deepextend(default, a:additional)
   if c.prompt is# ''
     let c.prompt = c.command
   endif
