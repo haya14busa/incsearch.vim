@@ -258,7 +258,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     " Add history if necessary
     " Do not save converted pattern to history
     let pattern = incsearch#convert(raw_pattern)
-    let input = incsearch#combine_pattern(a:cli, raw_pattern, offset)
+    let input = a:cli._combine_pattern(raw_pattern, offset)
     call histadd(a:cli._base_key, input)
     let @/ = pattern
 
@@ -308,10 +308,6 @@ function! incsearch#parse_pattern(expr, search_key) abort
   endif
   unlet result[1]
   return result
-endfunction
-
-function! incsearch#combine_pattern(cli, pattern, offset) abort
-  return empty(a:offset) ? a:pattern : a:pattern . a:cli._base_key . a:offset
 endfunction
 
 " convert implementation. assume pattern is not empty
