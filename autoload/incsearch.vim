@@ -185,7 +185,7 @@ function! s:stay(cli, input) abort
     call s:cleanup_cmdline()
   elseif !empty(offset) && mode(1) !=# 'no'
     let cmd = incsearch#with_ignore_foldopen(
-    \   function('s:generate_command'), a:cli, a:input)
+    \   s:U.dictfunction(a:cli._generate_command, a:cli), a:input)
     call feedkeys(cmd, 'n')
     let g:incsearch#_view = a:cli._w
     call feedkeys("\<Plug>(_incsearch-winrestview)", 'm')
@@ -208,7 +208,7 @@ endfunction
 
 function! s:search(cli, input) abort
   call incsearch#autocmd#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
-  return s:generate_command(a:cli, a:input)
+  return a:cli._generate_command(a:input)
 endfunction
 
 function! s:get_input(cli) abort
@@ -226,19 +226,6 @@ function! s:get_input(cli) abort
     let input = a:cli.get(a:cli._pattern)
   endif
   return input
-endfunction
-
-function! s:generate_command(cli, input) abort
-  let is_cancel = a:cli.exit_code()
-  if is_cancel
-    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>"
-  else
-    call s:call_execute_event(a:cli)
-    let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
-    " TODO: implement convert input method
-    let p = incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset)
-    return a:cli._build_search_cmd(p)
-  endif
 endfunction
 
 "" Call on_execute_pre and on_execute event
