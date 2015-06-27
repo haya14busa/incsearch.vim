@@ -174,7 +174,7 @@ nnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsea
 xnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsearch#_view)<CR>gv
 
 function! s:stay(cli, input) abort
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
+  let [raw_pattern, offset] = a:cli._parse_pattern()
   let pattern = incsearch#convert(raw_pattern)
 
   " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
@@ -242,7 +242,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     call s:cleanup_cmdline()
     return
   endif
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
+  let [raw_pattern, offset] = a:cli._parse_pattern()
   let should_execute = !empty(offset) || empty(raw_pattern)
   if should_execute
     " Execute with feedkeys() to work with
@@ -258,7 +258,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     " Add history if necessary
     " Do not save converted pattern to history
     let pattern = incsearch#convert(raw_pattern)
-    let input = incsearch#combine_pattern(a:cli, raw_pattern, offset)
+    let input = a:cli._combine_pattern(raw_pattern, offset)
     call histadd(a:cli._base_key, input)
     let @/ = pattern
 
@@ -308,24 +308,6 @@ function! incsearch#parse_pattern(expr, search_key) abort
   endif
   unlet result[1]
   return result
-endfunction
-
-" CommandLine Interface parse pattern wrapper
-" function! s:cli_parse_pattern(cli) abort
-function! incsearch#cli_parse_pattern(cli) abort
-  if v:version == 704 && !has('patch421')
-    " Ignore \ze* which clash vim 7.4 without 421 patch
-    " Assume `\m`
-    let [p, o] = incsearch#parse_pattern(a:cli.getline(), a:cli._base_key)
-    let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
-    return [p, o]
-  else
-    return incsearch#parse_pattern(a:cli.getline(), a:cli._base_key)
-  endif
-endfunction
-
-function! incsearch#combine_pattern(cli, pattern, offset) abort
-  return empty(a:offset) ? a:pattern : a:pattern . a:cli._base_key . a:offset
 endfunction
 
 " convert implementation. assume pattern is not empty

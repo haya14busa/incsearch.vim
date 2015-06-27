@@ -23,7 +23,7 @@ function! s:cli._generate_command(input) abort
     call self._call_execute_event()
     let [pattern, offset] = incsearch#parse_pattern(a:input, self._base_key)
     " TODO: implement convert input method
-    let p = incsearch#combine_pattern(self, incsearch#convert(pattern), offset)
+    let p = self._combine_pattern(incsearch#convert(pattern), offset)
     return self._build_search_cmd(p)
   endif
 endfunction
@@ -57,6 +57,23 @@ function! s:cli._call_execute_event(...) abort
   endtry
   call self.callevent('on_execute')
 endfunction
+
+function! s:cli._parse_pattern() abort
+  if v:version == 704 && !has('patch421')
+    " Ignore \ze* which clash vim 7.4 without 421 patch
+    " Assume `\m`
+    let [p, o] = incsearch#parse_pattern(self.getline(), self._base_key)
+    let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
+    return [p, o]
+  else
+    return incsearch#parse_pattern(self.getline(), self._base_key)
+  endif
+endfunction
+
+function! s:cli._combine_pattern(pattern, offset) abort
+  return empty(a:offset) ? a:pattern : a:pattern . self._base_key . a:offset
+endfunction
+
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

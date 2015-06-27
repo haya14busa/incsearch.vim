@@ -104,7 +104,7 @@ endfunction
 function! s:on_char_pre(cmdline) abort
   " NOTE:
   " `:call a:cmdline.setchar('')` as soon as possible!
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cmdline)
+  let [raw_pattern, offset] = a:cmdline._parse_pattern()
   let pattern = incsearch#convert(raw_pattern)
 
   " Interactive :h last-pattern if pattern is empty
@@ -187,7 +187,7 @@ function! s:on_char_pre(cmdline) abort
 endfunction
 
 function! s:on_char(cmdline) abort
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cmdline)
+  let [raw_pattern, offset] = a:cmdline._parse_pattern()
 
   if raw_pattern ==# ''
     call s:hi.disable_all()
@@ -251,7 +251,7 @@ function! s:move_cursor(cli, pattern, ...) abort
     let is_visual_mode = s:U.is_visual(mode(1))
     let cmd = incsearch#with_ignore_foldopen(
     \   s:U.dictfunction(a:cli._build_search_cmd, a:cli),
-    \   incsearch#combine_pattern(a:cli, a:pattern, offset), 'n')
+    \   a:cli._combine_pattern(a:pattern, offset), 'n')
     " NOTE:
     " :silent!
     "   Shut up errors! because this is just for the cursor emulation
