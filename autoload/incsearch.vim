@@ -242,20 +242,6 @@ function! s:call_execute_event(cli, ...) abort
   call a:cli.callevent('on_execute')
 endfunction
 
-function! incsearch#build_search_cmd(cli, mode, pattern) abort
-  let op = (a:mode == 'no')      ? v:operator
-  \      : s:U.is_visual(a:mode) ? 'gv'
-  \      : ''
-  let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
-  " NOTE:
-  "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
-  "   <Esc>? <Esc> exists for flexible v:count with using s:cli._vcount1,
-  "   but, if you do not move the cursor while incremental searching,
-  "   there are no need to use <Esc>.
-  return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
-  \   v:register, op, a:cli._vcount1, a:cli._base_key, a:pattern, zv)
-endfunction
-
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.
