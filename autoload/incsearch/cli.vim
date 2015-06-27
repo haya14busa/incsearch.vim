@@ -37,6 +37,7 @@ function! incsearch#cli#set(cli, config) abort
   let a:cli._mode = a:config.mode
   let a:cli._pattern = a:config.pattern
   let a:cli._prompt = a:config.prompt
+  let a:cli._keymap = a:config.keymap
   let a:cli._flag = a:config.is_stay         ? 'n'
   \               : a:config.command is# '/' ? ''
   \               : a:config.command is# '?' ? 'b'
@@ -95,45 +96,8 @@ unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword
 call s:cli.connect(incsearch#over#modules#pattern_saver#make())
 call s:cli.connect(incsearch#over#modules#incsearch#make())
 
-let s:default_keymappings = {
-\   "\<Tab>"   : {
-\       "key" : "<Over>(incsearch-next)",
-\       "noremap" : 1,
-\   },
-\   "\<S-Tab>"   : {
-\       "key" : "<Over>(incsearch-prev)",
-\       "noremap" : 1,
-\   },
-\   "\<C-j>"   : {
-\       "key" : "<Over>(incsearch-scroll-f)",
-\       "noremap" : 1,
-\   },
-\   "\<C-k>"   : {
-\       "key" : "<Over>(incsearch-scroll-b)",
-\       "noremap" : 1,
-\   },
-\   "\<C-l>"   : {
-\       "key" : "<Over>(buffer-complete)",
-\       "noremap" : 1,
-\   },
-\   "\<CR>"   : {
-\       "key": "\<CR>",
-\       "noremap": 1
-\   },
-\ }
-
-" https://github.com/haya14busa/incsearch.vim/issues/35
-if has('mac')
-  call extend(s:default_keymappings, {
-  \   '"+gP'   : {
-  \       'key': "\<C-r>+",
-  \       'noremap': 1
-  \   },
-  \ })
-endif
-
 function! s:cli.__keymapping__() abort
-  return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
+  return self._keymap
 endfunction
 
 call incsearch#over#extend#enrich(s:cli)
