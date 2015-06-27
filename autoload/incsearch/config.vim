@@ -27,6 +27,7 @@ let s:config = {
 \   'count1': 1,
 \   'prompt': '',
 \   'modules': [],
+\   'converters': [],
 \   'keymap': {}
 \ }
 

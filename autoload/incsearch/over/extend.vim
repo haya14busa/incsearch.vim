@@ -80,8 +80,20 @@ function! s:cli._convert(pattern) abort
   " TODO: convert pattern if required in addition to appending magic flag
   if a:pattern is# ''
     return a:pattern
+  elseif empty(self._converters)
+    return incsearch#magic() . a:pattern
+  else
+    let ps = [incsearch#magic() . a:pattern]
+    for Converter in self._converters
+      if type(Converter) is type(function('function'))
+        let ps += [Converter(a:pattern)]
+      else
+        let ps += [Converter.convert(a:pattern)]
+      endif
+      unlet Converter
+    endfor
+    return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
   endif
-  return incsearch#magic() . a:pattern
 endfunction
 
 
