@@ -29,11 +29,12 @@ function! s:cli._generate_command(input) abort
 endfunction
 
 " @return search cmd
-function! s:cli._build_search_cmd(pattern) abort
-  let op = (self._mode == 'no')      ? v:operator
-  \      : s:U.is_visual(self._mode) ? 'gv'
+function! s:cli._build_search_cmd(pattern, ...) abort
+  let mode = get(a:, 1, self._mode)
+  let op = (mode == 'no')      ? v:operator
+  \      : s:U.is_visual(mode) ? 'gv'
   \      : ''
-  let zv = (&foldopen =~# '\vsearch|all' && self._mode !=# 'no' ? 'zv' : '')
+  let zv = (&foldopen =~# '\vsearch|all' && mode !=# 'no' ? 'zv' : '')
   " NOTE:
   "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
   "   <Esc>? <Esc> exists for flexible v:count with using s:cli._vcount1,
@@ -43,6 +44,9 @@ function! s:cli._build_search_cmd(pattern) abort
   \   v:register, op, self._vcount1, self._base_key, a:pattern, zv)
 endfunction
 
+"" Call on_execute_pre and on_execute event
+" assume current position is the destination and a:cli._w is the position to
+" start search
 function! s:cli._call_execute_event(...) abort
   let view = get(a:, 1, winsaveview())
   try
