@@ -44,7 +44,7 @@ endfunction
 
 " @return config with default value
 function! incsearch#config#make(additional) abort
-  let default = extend(copy(s:config), s:lazy_config())
+  let default = extend(deepcopy(s:config), s:lazy_config())
   let c = s:U.deepextend(default, a:additional)
   if c.prompt is# ''
     let c.prompt = c.command
