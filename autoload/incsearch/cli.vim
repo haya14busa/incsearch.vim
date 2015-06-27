@@ -23,7 +23,7 @@ endfunction
 
 " @config: whole configuration
 function! incsearch#cli#make(config) abort
-  let cli = s:copy_cli(s:cli)
+  let cli = deepcopy(s:cli)
   call incsearch#cli#set(cli, a:config)
   return cli
 endfunction
@@ -51,13 +51,6 @@ function! incsearch#cli#set(cli, config) abort
   endfor
   call a:cli.set_prompt(a:cli._prompt)
   return a:cli
-endfunction
-
-"" partial deepcopy() for cli.connect(module) instead of copy()
-function! s:copy_cli(cli) abort
-  let cli = copy(a:cli)
-  let cli.variables = deepcopy(a:cli.variables)
-  return cli
 endfunction
 
 let s:cli = s:V.import('Over.Commandline').make_default("/")
@@ -139,8 +132,7 @@ if has('mac')
   \ })
 endif
 
-" FIXME: arguments?
-function! s:cli.keymapping(...) abort
+function! s:cli.__keymapping__() abort
   return extend(copy(s:default_keymappings), g:incsearch_cli_key_mappings)
 endfunction
 
