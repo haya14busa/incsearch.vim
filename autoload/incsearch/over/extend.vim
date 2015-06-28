@@ -77,7 +77,6 @@ function! s:cli._combine_pattern(pattern, offset) abort
 endfunction
 
 function! s:cli._convert(pattern) abort
-  " TODO: convert pattern if required in addition to appending magic flag
   if a:pattern is# ''
     return a:pattern
   elseif empty(self._converters)
@@ -85,11 +84,9 @@ function! s:cli._convert(pattern) abort
   else
     let ps = [incsearch#magic() . a:pattern]
     for l:Converter in self._converters
-      if type(l:Converter) is type(function('function'))
-        let ps += [l:Converter(a:pattern)]
-      else
-        let ps += [l:Converter.convert(a:pattern)]
-      endif
+      let l:Convert = type(l:Converter) is type(function('function'))
+      \ ? l:Converter : l:Converter.convert
+      let ps += [l:Convert(a:pattern)]
       unlet l:Converter
     endfor
     return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
