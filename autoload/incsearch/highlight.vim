@@ -217,12 +217,11 @@ function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos) a
     let [min_c, max_c] = s:U.sort_num([v_start[1], v_end[1]])
     let max_c += 1 " increment needed
     let max_c = max_c < 0 ? s:INT.MAX : max_c
-    return '\v'.join(map(range(v_start[0], v_end[0]), '
-    \               printf("%%%dl%%%dc.*%%%dc",
-    \                      v:val,
-    \                      min_c,
-    \                      min([max_c, s:U.get_max_col(v:val)]))
-    \      '), "|")
+    let mapfunc = "
+    \ printf('%%%dl%%%dc.*%%%dc',
+    \        v:val, min_c, min([max_c, s:U.get_max_col(v:val)]))
+    \ "
+    return '\v'.join(map(range(v_start[0], v_end[0]), mapfunc), '|')
   else
     throw 'incsearch.vim: unexpected mode ' . a:mode
   endif
