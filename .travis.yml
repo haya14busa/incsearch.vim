@@ -8,15 +8,18 @@ install:
   - if [ x"$PPA" == "xyes" ] ; then sudo add-apt-repository ppa:pi-rho/dev -y; fi
   - sudo apt-get update -q
   - sudo apt-get install vim-nox
-
-before_script:
-  - vim --version
+  - sudo pip install vim-vint
   - git clone https://github.com/thinca/vim-themis
   - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
   - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
+
+before_script:
+  - vim --version
+  - vint --version
 
 script:
   - vim-themis/bin/themis --reporter spec
   - vim --cmd "try | helptags doc/ | catch | cquit | endtry" --cmd quit
   - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 -c func_abort=1 autoload/incsearch.vim
   - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 -c func_abort=1 autoload/incsearch
+  - vint autoload/incsearch autoload/incsearch.vim plugin

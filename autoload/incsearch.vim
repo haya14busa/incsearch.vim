@@ -391,7 +391,7 @@ function! s:emulate_search_error(direction, ...) abort
   silent! call incsearch#execute_search(keyseq . "\<CR>")
   call winrestview(from)
   if g:incsearch#do_not_save_error_message_history
-    if v:errmsg != ''
+    if v:errmsg !=# ''
       call s:Error(v:errmsg)
     else
       let v:errmsg = old_errmsg
@@ -405,13 +405,13 @@ function! s:emulate_search_error(direction, ...) abort
     catch /^Vim\%((\a\+)\)\=:E/
       let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
       call s:Error(first_error, 'echom')
-      if last_error != '' && last_error !=# first_error
+      if last_error !=# '' && last_error !=# first_error
         call s:Error(last_error, 'echom')
       endif
     finally
       call winrestview(from)
     endtry
-    if v:errmsg == ''
+    if v:errmsg ==# ''
       let v:errmsg = old_errmsg
     endif
   endif

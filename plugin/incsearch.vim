@@ -82,8 +82,7 @@ function! s:key_mapping(lhs, rhs, noremap) abort
 endfunction
 
 function! s:as_keymapping(key) abort
-  execute 'let result = "' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"'
-  return result
+  return eval('"' . substitute(escape(a:key, '\"'), '\(<.\{-}>\)', '\\\1', 'g') . '"')
 endfunction
 
 command! -nargs=* IncSearchNoreMap

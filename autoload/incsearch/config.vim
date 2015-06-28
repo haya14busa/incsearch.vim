@@ -53,28 +53,28 @@ endfunction
 
 let s:default_keymappings = {
 \   "\<Tab>"   : {
-\       "key" : "<Over>(incsearch-next)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-next)',
+\       'noremap' : 1,
 \   },
 \   "\<S-Tab>"   : {
-\       "key" : "<Over>(incsearch-prev)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-prev)',
+\       'noremap' : 1,
 \   },
 \   "\<C-j>"   : {
-\       "key" : "<Over>(incsearch-scroll-f)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-scroll-f)',
+\       'noremap' : 1,
 \   },
 \   "\<C-k>"   : {
-\       "key" : "<Over>(incsearch-scroll-b)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-scroll-b)',
+\       'noremap' : 1,
 \   },
 \   "\<C-l>"   : {
-\       "key" : "<Over>(buffer-complete)",
-\       "noremap" : 1,
+\       'key' : '<Over>(buffer-complete)',
+\       'noremap' : 1,
 \   },
 \   "\<CR>"   : {
-\       "key": "\<CR>",
-\       "noremap": 1
+\       'key': "\<CR>",
+\       'noremap': 1
 \   },
 \ }
 
