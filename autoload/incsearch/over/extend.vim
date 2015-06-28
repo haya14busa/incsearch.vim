@@ -93,6 +93,8 @@ function! s:cli._convert(pattern) abort
       unlet l:Converter
     endfor
     return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
+    " XXX: something wrong with case handling when using migemo converter.
+    " return printf('%s\m\%%(%s\m\)', incsearch#detect_case(a:pattern), join(ps, '\m\|'))
   endif
 endfunction
 
