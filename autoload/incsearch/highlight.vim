@@ -214,6 +214,7 @@ function! incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos) a
   elseif a:mode ==# 'V'
     return printf('\v%%%dl\_.*%%%dl', v_start[0], v_end[0])
   elseif a:mode ==# "\<C-v>"
+    " @vimlint(EVL102, 1, l:min_c)
     let [min_c, max_c] = s:U.sort_num([v_start[1], v_end[1]])
     let max_c += 1 " increment needed
     let max_c = max_c < 0 ? s:INT.MAX : max_c
