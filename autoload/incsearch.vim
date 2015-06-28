@@ -137,18 +137,23 @@ function! incsearch#_go(config) abort
   endif
   let cli = incsearch#cli#make(a:config)
   let input = s:get_input(cli)
-  " After getting input, generate command, take aftercare, and return
-  " command.
-  let l:F = function(cli._flag is# 'n' ? 's:stay' : 's:search')
-  let cmd = l:F(cli, input)
-  if !a:config.is_expr
-    let should_set_jumplist = (cli._flag !=# 'n')
-    call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
-    if a:config.mode is# 'no'
-      call s:set_vimrepeat(cmd)
+  if cli._does_exit_from_incsearch
+    " Outer incsearch-plugin handle it so do not something in paticular
+    return cli._return_cmd
+  else
+    " After getting input, generate command, take aftercare, and return
+    " command.
+    let l:F = function(cli._flag is# 'n' ? 's:stay' : 's:search')
+    let cmd = l:F(cli, input)
+    if !a:config.is_expr
+      let should_set_jumplist = (cli._flag !=# 'n')
+      call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
+      if a:config.mode is# 'no'
+        call s:set_vimrepeat(cmd)
+      endif
     endif
+    return cmd
   endif
-  return cmd
 endfunction
 
 "" To handle recursive mapping, map command to <Plug>(_incsearch-dotrepeat)

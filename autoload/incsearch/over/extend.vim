@@ -7,6 +7,8 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:TRUE = !0
+let s:FALSE = 0
 let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 
 let s:U = incsearch#util#import()
@@ -15,7 +17,10 @@ function! incsearch#over#extend#enrich(cli) abort
   return extend(a:cli, s:cli)
 endfunction
 
-let s:cli = {}
+let s:cli = {
+\   '_does_exit_from_incsearch': s:FALSE,
+\   '_return_cmd': ''
+\ }
 
 function! s:cli._generate_command(input) abort
   let is_cancel = self.exit_code()
@@ -95,6 +100,12 @@ function! s:cli._convert(pattern) abort
   endif
 endfunction
 
+function! s:cli._exit_incsearch(...) abort
+  let cmd = get(a:, 1, '')
+  let self._return_cmd = cmd
+  let self._does_exit_from_incsearch = s:TRUE
+  call self.exit()
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

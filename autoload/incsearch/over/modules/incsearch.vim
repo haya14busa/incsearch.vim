@@ -187,6 +187,9 @@ function! s:on_char_pre(cmdline) abort
 endfunction
 
 function! s:on_char(cmdline) abort
+  if a:cmdline._does_exit_from_incsearch
+    return
+  endif
   let [raw_pattern, offset] = a:cmdline._parse_pattern()
 
   if raw_pattern ==# ''
