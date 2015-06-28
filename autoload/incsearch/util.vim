@@ -52,6 +52,8 @@ let s:functions = [
 \   , 'sort_pos'
 \   , 'count_pattern'
 \   , 'silent_feedkeys'
+\   , 'deepextend'
+\   , 'dictfunction'
 \ ]
 
 
@@ -150,6 +152,41 @@ function! s:silent_feedkeys(expr, name, ...) abort
     call feedkeys(printf("\<Plug>(%s)", name))
   endif
 endfunction
+
+" deepextend (nest: 1)
+function! s:deepextend(expr1, expr2) abort
+  let expr2 = copy(a:expr2)
+  for [k, V] in items(a:expr1)
+    if (type(V) is type({}) || type(V) is type([])) && has_key(expr2, k)
+      let a:expr1[k] = extend(a:expr1[k], expr2[k])
+      unlet expr2[k]
+    endif
+    unlet V
+  endfor
+  return extend(a:expr1, expr2)
+endfunction
+
+let s:funcmanage = {}
+function! s:funcmanage() abort
+  return s:funcmanage
+endfunction
+
+function! s:dictfunction(dictfunc, dict) abort
+  let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
+  let s:funcmanage[funcname] = {
+  \   'func': a:dictfunc,
+  \   'dict': a:dict
+  \ }
+  let prefix = '<SNR>' . s:SID() . '_'
+  let fm = printf("%sfuncmanage()['%s']", prefix, funcname)
+  execute join([
+  \   printf("function! s:%s(...) abort", funcname),
+  \   printf("  return call(%s['func'], a:000, %s['dict'])", fm, fm),
+  \          "endfunction"
+  \ ], "\n")
+  return function(printf('%s%s', prefix, funcname))
+endfunction
+
 
 " Restore 'cpoptions' {{{
 let &cpo = s:save_cpo

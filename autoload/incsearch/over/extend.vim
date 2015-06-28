@@ -7,6 +7,8 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
+
 let s:U = incsearch#util#import()
 
 function! incsearch#over#extend#enrich(cli) abort
@@ -23,17 +25,18 @@ function! s:cli._generate_command(input) abort
     call self._call_execute_event()
     let [pattern, offset] = incsearch#parse_pattern(a:input, self._base_key)
     " TODO: implement convert input method
-    let p = incsearch#combine_pattern(self, incsearch#convert(pattern), offset)
+    let p = self._combine_pattern(incsearch#convert(pattern), offset)
     return self._build_search_cmd(p)
   endif
 endfunction
 
 " @return search cmd
-function! s:cli._build_search_cmd(pattern) abort
-  let op = (self._mode == 'no')      ? v:operator
-  \      : s:U.is_visual(self._mode) ? 'gv'
+function! s:cli._build_search_cmd(pattern, ...) abort
+  let mode = get(a:, 1, self._mode)
+  let op = (mode == 'no')      ? v:operator
+  \      : s:U.is_visual(mode) ? 'gv'
   \      : ''
-  let zv = (&foldopen =~# '\vsearch|all' && self._mode !=# 'no' ? 'zv' : '')
+  let zv = (&foldopen =~# '\vsearch|all' && mode !=# 'no' ? 'zv' : '')
   " NOTE:
   "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
   "   <Esc>? <Esc> exists for flexible v:count with using s:cli._vcount1,
@@ -43,6 +46,9 @@ function! s:cli._build_search_cmd(pattern) abort
   \   v:register, op, self._vcount1, self._base_key, a:pattern, zv)
 endfunction
 
+"" Call on_execute_pre and on_execute event
+" assume current position is the destination and a:cli._w is the position to
+" start search
 function! s:cli._call_execute_event(...) abort
   let view = get(a:, 1, winsaveview())
   try
@@ -53,6 +59,23 @@ function! s:cli._call_execute_event(...) abort
   endtry
   call self.callevent('on_execute')
 endfunction
+
+function! s:cli._parse_pattern() abort
+  if v:version == 704 && !has('patch421')
+    " Ignore \ze* which clash vim 7.4 without 421 patch
+    " Assume `\m`
+    let [p, o] = incsearch#parse_pattern(self.getline(), self._base_key)
+    let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
+    return [p, o]
+  else
+    return incsearch#parse_pattern(self.getline(), self._base_key)
+  endif
+endfunction
+
+function! s:cli._combine_pattern(pattern, offset) abort
+  return empty(a:offset) ? a:pattern : a:pattern . self._base_key . a:offset
+endfunction
+
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

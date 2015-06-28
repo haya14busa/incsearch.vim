@@ -77,9 +77,14 @@ let s:U = incsearch#util#import()
 
 " Main: {{{
 
-" @return vital-over command-line interface object. it's experimental!!!
+" @return vital-over command-line interface object. [experimental]
 function! incsearch#cli() abort
   return incsearch#cli#get()
+endfunction
+
+"" Make vital-over command-line interface object and return it [experimental]
+function! incsearch#make(...) abort
+  return incsearch#cli#make(incsearch#config#make(get(a:, 1, {})))
 endfunction
 
 "" NOTE: this global variable is only for handling config from go_wrap func
@@ -169,7 +174,7 @@ nnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsea
 xnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsearch#_view)<CR>gv
 
 function! s:stay(cli, input) abort
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
+  let [raw_pattern, offset] = a:cli._parse_pattern()
   let pattern = incsearch#convert(raw_pattern)
 
   " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
@@ -180,7 +185,7 @@ function! s:stay(cli, input) abort
     call s:cleanup_cmdline()
   elseif !empty(offset) && mode(1) !=# 'no'
     let cmd = incsearch#with_ignore_foldopen(
-    \   function('s:generate_command'), a:cli, a:input)
+    \   s:U.dictfunction(a:cli._generate_command, a:cli), a:input)
     call feedkeys(cmd, 'n')
     let g:incsearch#_view = a:cli._w
     call feedkeys("\<Plug>(_incsearch-winrestview)", 'm')
@@ -203,7 +208,7 @@ endfunction
 
 function! s:search(cli, input) abort
   call incsearch#autocmd#auto_nohlsearch(1) " NOTE: `.` repeat doesn't handle this
-  return s:generate_command(a:cli, a:input)
+  return a:cli._generate_command(a:input)
 endfunction
 
 function! s:get_input(cli) abort
@@ -223,47 +228,6 @@ function! s:get_input(cli) abort
   return input
 endfunction
 
-function! s:generate_command(cli, input) abort
-  let is_cancel = a:cli.exit_code()
-  if is_cancel
-    return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>"
-  else
-    call s:call_execute_event(a:cli)
-    let [pattern, offset] = incsearch#parse_pattern(a:input, a:cli._base_key)
-    " TODO: implement convert input method
-    let p = incsearch#combine_pattern(a:cli, incsearch#convert(pattern), offset)
-    return a:cli._build_search_cmd(p)
-  endif
-endfunction
-
-"" Call on_execute_pre and on_execute event
-" assume current position is the destination and a:cli._w is the position to
-" start search
-function! s:call_execute_event(cli, ...) abort
-  let view = get(a:, 1, winsaveview())
-  try
-    call winrestview(a:cli._w)
-    call a:cli.callevent('on_execute_pre')
-  finally
-    call winrestview(view)
-  endtry
-  call a:cli.callevent('on_execute')
-endfunction
-
-function! incsearch#build_search_cmd(cli, mode, pattern) abort
-  let op = (a:mode == 'no')      ? v:operator
-  \      : s:U.is_visual(a:mode) ? 'gv'
-  \      : ''
-  let zv = (&foldopen =~# '\vsearch|all' && a:mode !=# 'no' ? 'zv' : '')
-  " NOTE:
-  "   Should I consider o_v, o_V, and o_CTRL-V cases and do not
-  "   <Esc>? <Esc> exists for flexible v:count with using s:cli._vcount1,
-  "   but, if you do not move the cursor while incremental searching,
-  "   there are no need to use <Esc>.
-  return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
-  \   v:register, op, a:cli._vcount1, a:cli._base_key, a:pattern, zv)
-endfunction
-
 " Assume the cursor move is already done.
 " This function handle search related stuff which doesn't be set by :execute
 " in function like @/, hisory, jumplist, offset, error & warning emulation.
@@ -278,7 +242,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     call s:cleanup_cmdline()
     return
   endif
-  let [raw_pattern, offset] = incsearch#cli_parse_pattern(a:cli)
+  let [raw_pattern, offset] = a:cli._parse_pattern()
   let should_execute = !empty(offset) || empty(raw_pattern)
   if should_execute
     " Execute with feedkeys() to work with
@@ -294,7 +258,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
     " Add history if necessary
     " Do not save converted pattern to history
     let pattern = incsearch#convert(raw_pattern)
-    let input = incsearch#combine_pattern(a:cli, raw_pattern, offset)
+    let input = a:cli._combine_pattern(raw_pattern, offset)
     call histadd(a:cli._base_key, input)
     let @/ = pattern
 
@@ -344,24 +308,6 @@ function! incsearch#parse_pattern(expr, search_key) abort
   endif
   unlet result[1]
   return result
-endfunction
-
-" CommandLine Interface parse pattern wrapper
-" function! s:cli_parse_pattern(cli) abort
-function! incsearch#cli_parse_pattern(cli) abort
-  if v:version == 704 && !has('patch421')
-    " Ignore \ze* which clash vim 7.4 without 421 patch
-    " Assume `\m`
-    let [p, o] = incsearch#parse_pattern(a:cli.getline(), a:cli._base_key)
-    let p = (p =~# s:non_escaped_backslash . 'z[se]\%(\*\|\\+\)' ? '' : p)
-    return [p, o]
-  else
-    return incsearch#parse_pattern(a:cli.getline(), a:cli._base_key)
-  endif
-endfunction
-
-function! incsearch#combine_pattern(cli, pattern, offset) abort
-  return empty(a:offset) ? a:pattern : a:pattern . a:cli._base_key . a:offset
 endfunction
 
 " convert implementation. assume pattern is not empty
