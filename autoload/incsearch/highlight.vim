@@ -39,7 +39,7 @@ let s:U = incsearch#util#import()
 " Management:
 
 let s:V = vital#of('incsearch')
-let s:hi = s:V.import("Coaster.Highlight").make()
+let s:hi = s:V.import('Coaster.Highlight').make()
 let g:incsearch#highlight#_hi = s:hi
 
 function! incsearch#highlight#update() abort
@@ -168,13 +168,13 @@ function! incsearch#highlight#emulate_visual_highlight(...) abort
   " Note: the default pos value assume visual selection is not cleared.
   " It uses curswant to emulate visual-block
   let v_start_pos = get(a:, 3,
-  \   (is_visual_now ? [line("v"),col("v")] : [line("'<"), col("'<")]))
+  \   (is_visual_now ? [line('v'),col('v')] : [line("'<"), col("'<")]))
   " See: https://github.com/vim-jp/issues/issues/604
   " getcurpos() could be negative value, so use winsaveview() instead
   let end_curswant_pos =
   \   (exists('*getcurpos') ? getcurpos()[4] : winsaveview().curswant + 1)
   let v_end_pos = get(a:, 4, (is_visual_now
-  \   ? [line("."), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ]
+  \   ? [line('.'), end_curswant_pos < 0 ? s:INT.MAX : end_curswant_pos ]
   \   : [line("'>"), col("'>")]))
   let pattern = incsearch#highlight#get_visual_pattern(mode, v_start_pos, v_end_pos)
   let hgm = incsearch#highlight#hgm()

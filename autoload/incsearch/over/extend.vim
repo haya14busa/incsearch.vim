@@ -33,7 +33,7 @@ endfunction
 " @return search cmd
 function! s:cli._build_search_cmd(pattern, ...) abort
   let mode = get(a:, 1, self._mode)
-  let op = (mode == 'no')      ? v:operator
+  let op = (mode ==# 'no')      ? v:operator
   \      : s:U.is_visual(mode) ? 'gv'
   \      : ''
   let zv = (&foldopen =~# '\vsearch|all' && mode !=# 'no' ? 'zv' : '')

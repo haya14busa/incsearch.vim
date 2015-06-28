@@ -54,7 +54,7 @@ function! incsearch#cli#set(cli, config) abort
   return a:cli
 endfunction
 
-let s:cli = s:V.import('Over.Commandline').make_default("/")
+let s:cli = s:V.import('Over.Commandline').make_default('/')
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules

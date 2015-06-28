@@ -136,15 +136,15 @@ endfunction
 function! s:silent_feedkeys(expr, name, ...) abort
   " Ref:
   " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6
-  let mode = get(a:, 1, "m")
-  let name = "incsearch-" . a:name
-  let map = printf("<Plug>(%s)", name)
-  if mode == "n"
-    let command = "nnoremap"
+  let mode = get(a:, 1, 'm')
+  let name = 'incsearch-' . a:name
+  let map = printf('<Plug>(%s)', name)
+  if mode ==# 'n'
+    let command = 'nnoremap'
   else
-    let command = "nmap"
+    let command = 'nmap'
   endif
-  execute command "<silent>" map printf("%s:nunmap %s<CR>", a:expr, map)
+  execute command '<silent>' map printf('%s:nunmap %s<CR>', a:expr, map)
   if mode(1) !=# 'ce'
     " FIXME: mode(1) !=# 'ce' exists only for the test
     "        :h feedkeys() doesn't work while runnning a test script
@@ -180,9 +180,9 @@ function! s:dictfunction(dictfunc, dict) abort
   let prefix = '<SNR>' . s:SID() . '_'
   let fm = printf("%sfuncmanage()['%s']", prefix, funcname)
   execute join([
-  \   printf("function! s:%s(...) abort", funcname),
+  \   printf('function! s:%s(...) abort', funcname),
   \   printf("  return call(%s['func'], a:000, %s['dict'])", fm, fm),
-  \          "endfunction"
+  \          'endfunction'
   \ ], "\n")
   return function(printf('%s%s', prefix, funcname))
 endfunction
