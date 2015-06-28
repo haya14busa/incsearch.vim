@@ -539,6 +539,10 @@ Version 2.0(?) Roadmap~
 	3. More configurable options
 	    - e.g. option for prompt format including right prompt feature
 
+1.2.1	2015-06-26
+	1. Add |incsearch-config-keymap| option to |incsearch-config|
+	2. Some refactoring
+
 1.2.0	2015-06-06
 	1. Now, fix unexpected key input with |feedkeys()| by auto-nohlsearch
 	   feature (|incsearch-additional-usage|) #82
