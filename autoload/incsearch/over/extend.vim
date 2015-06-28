@@ -25,7 +25,7 @@ function! s:cli._generate_command(input) abort
     call self._call_execute_event()
     let [pattern, offset] = incsearch#parse_pattern(a:input, self._base_key)
     " TODO: implement convert input method
-    let p = self._combine_pattern(incsearch#convert(pattern), offset)
+    let p = self._combine_pattern(self._convert(pattern), offset)
     return self._build_search_cmd(p)
   endif
 endfunction
@@ -74,6 +74,25 @@ endfunction
 
 function! s:cli._combine_pattern(pattern, offset) abort
   return empty(a:offset) ? a:pattern : a:pattern . self._base_key . a:offset
+endfunction
+
+function! s:cli._convert(pattern) abort
+  if a:pattern is# ''
+    return a:pattern
+  elseif empty(self._converters)
+    return incsearch#magic() . a:pattern
+  else
+    let ps = [incsearch#magic() . a:pattern]
+    for l:Converter in self._converters
+      let l:Convert = type(l:Converter) is type(function('function'))
+      \ ? l:Converter : l:Converter.convert
+      let ps += [l:Convert(a:pattern)]
+      unlet l:Converter
+    endfor
+    return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
+    " XXX: something wrong with case handling when using migemo converter.
+    " return printf('%s\m\%%(%s\m\)', incsearch#detect_case(a:pattern), join(ps, '\m\|'))
+  endif
 endfunction
 
 

@@ -38,6 +38,7 @@ function! incsearch#cli#set(cli, config) abort
   let a:cli._pattern = a:config.pattern
   let a:cli._prompt = a:config.prompt
   let a:cli._keymap = a:config.keymap
+  let a:cli._converters = a:config.converters
   let a:cli._flag = a:config.is_stay         ? 'n'
   \               : a:config.command is# '/' ? ''
   \               : a:config.command is# '?' ? 'b'

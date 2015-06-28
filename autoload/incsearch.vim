@@ -175,7 +175,7 @@ xnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsea
 
 function! s:stay(cli, input) abort
   let [raw_pattern, offset] = a:cli._parse_pattern()
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cli._convert(raw_pattern)
 
   " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
   " FIXME: cannot set {offset} if in operator-pending mode because this
@@ -257,7 +257,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
   else
     " Add history if necessary
     " Do not save converted pattern to history
-    let pattern = incsearch#convert(raw_pattern)
+    let pattern = a:cli._convert(raw_pattern)
     let input = a:cli._combine_pattern(raw_pattern, offset)
     call histadd(a:cli._base_key, input)
     let @/ = pattern
@@ -308,16 +308,6 @@ function! incsearch#parse_pattern(expr, search_key) abort
   endif
   unlet result[1]
   return result
-endfunction
-
-" convert implementation. assume pattern is not empty
-function! s:_convert(pattern) abort
-  return incsearch#magic() . a:pattern
-endfunction
-
-function! incsearch#convert(pattern) abort
-  " TODO: convert pattern if required in addition to appending magic flag
-  return a:pattern is# '' ? a:pattern : s:_convert(a:pattern)
 endfunction
 
 function! incsearch#detect_case(pattern) abort
