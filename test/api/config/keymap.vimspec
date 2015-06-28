@@ -38,5 +38,13 @@ Describe api.config.keymap
     Assert Equals(injected, extend(copy(default), map))
   End
 
+  It 'should not affect other object'
+    let map = {'a': 'b'}
+    let config = {'keymap': map}
+    let cli = incsearch#make(config)
+    let d = copy(cli.keymapping())
+    Assert NotEquals(incsearch#make().keymapping(), d)
+  End
+
 End
 
