@@ -67,7 +67,6 @@ function! s:suite.test_autoload_function()
   endtry
   call s:assert.exists('*incsearch#go')
   call s:assert.exists('*incsearch#_go')
-  call s:assert.exists('*incsearch#stay')
   call s:assert.exists('*incsearch#parse_pattern')
 endfunction
 
