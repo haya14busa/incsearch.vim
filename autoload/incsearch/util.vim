@@ -28,6 +28,11 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+" Public Utilities:
+function! incsearch#util#deepextend(...) abort
+  return call(function('s:deepextend'), a:000)
+endfunction
+
 " Utilities:
 
 function! incsearch#util#import() abort
