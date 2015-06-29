@@ -136,16 +136,24 @@ function! incsearch#_go(config) abort
     normal! gv
   endif
   let cli = incsearch#cli#make(a:config)
-  let l:Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
-  let cmd = l:Search(cli)
-  if !a:config.is_expr
-    let should_set_jumplist = (cli._flag !=# 'n')
-    call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
-    if a:config.mode is# 'no'
-      call s:set_vimrepeat(cmd)
+  let input = s:get_input(cli)
+  if cli._does_exit_from_incsearch
+    " Outer incsearch-plugin handle it so do not something in paticular
+    return cli._return_cmd
+  else
+    " After getting input, generate command, take aftercare, and return
+    " command.
+    let l:F = function(cli._flag is# 'n' ? 's:stay' : 's:search')
+    let cmd = l:F(cli, input)
+    if !a:config.is_expr
+      let should_set_jumplist = (cli._flag !=# 'n')
+      call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
+      if a:config.mode is# 'no'
+        call s:set_vimrepeat(cmd)
+      endif
     endif
+    return cmd
   endif
-  return cmd
 endfunction
 
 "" To handle recursive mapping, map command to <Plug>(_incsearch-dotrepeat)
@@ -155,16 +163,6 @@ endfunction
 function! s:set_vimrepeat(cmd) abort
   execute 'noremap' '<Plug>(_incsearch-dotrepeat)' a:cmd
   silent! call repeat#set("\<Plug>(_incsearch-dotrepeat)")
-endfunction
-
-" similar to incsearch#forward() but do not move the cursor unless explicitly
-" move the cursor while searching
-" @expr but sometimes called by non-<expr>
-" @return: command which is excutable with expr-mappings or `exec 'normal!'`
-function! incsearch#stay(cli) abort
-  let input = s:get_input(a:cli)
-  let l:F = function(a:cli._flag is# 'n' ? 's:stay' : 's:search')
-  return l:F(a:cli, input)
 endfunction
 
 let g:incsearch#_view = get(g:, 'incsearch#_view', {})
@@ -200,10 +198,6 @@ function! s:stay(cli, input) abort
   endif
   " }}}
   return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
-endfunction
-
-function! incsearch#search(cli) abort
-  return s:search(a:cli, s:get_input(a:cli))
 endfunction
 
 function! s:search(cli, input) abort
