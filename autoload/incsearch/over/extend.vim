@@ -19,7 +19,8 @@ endfunction
 
 let s:cli = {
 \   '_does_exit_from_incsearch': s:FALSE,
-\   '_return_cmd': ''
+\   '_return_cmd': '',
+\   '_converter_cache': {}
 \ }
 
 function! s:cli._generate_command(input) abort
@@ -86,6 +87,8 @@ function! s:cli._convert(pattern) abort
     return a:pattern
   elseif empty(self._converters)
     return incsearch#magic() . a:pattern
+  elseif has_key(self._converter_cache, a:pattern)
+    return self._converter_cache[a:pattern]
   else
     let ps = [incsearch#magic() . a:pattern]
     for l:Converter in self._converters
@@ -94,7 +97,8 @@ function! s:cli._convert(pattern) abort
       let ps += [l:Convert(a:pattern)]
       unlet l:Converter
     endfor
-    return printf('\m\%%(%s\m\)', join(ps, '\m\|'))
+    let self._converter_cache[a:pattern] = printf('\m\%%(%s\m\)', join(ps, '\m\|'))
+    return self._converter_cache[a:pattern]
     " XXX: something wrong with case handling when using migemo converter.
     " return printf('%s\m\%%(%s\m\)', incsearch#detect_case(a:pattern), join(ps, '\m\|'))
   endif
