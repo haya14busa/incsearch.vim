@@ -43,8 +43,24 @@ let s:hi = s:V.import('Coaster.Highlight').make()
 let g:incsearch#highlight#_hi = s:hi
 
 function! incsearch#highlight#update() abort
+  " it's intuiive to call incsearch#highlight#on() & off() but there are no
+  " need to execute `:nohlsearch` when updating.
   call s:hi.disable_all()
   call s:hi.enable_all()
+endfunction
+
+function! incsearch#highlight#on() abort
+  call s:hi.enable_all()
+  if ! g:incsearch#no_inc_hlsearch
+    let &hlsearch = &hlsearch
+  endif
+endfunction
+
+function! incsearch#highlight#off() abort
+  call s:hi.disable_all()
+  if ! g:incsearch#no_inc_hlsearch
+    nohlsearch
+  endif
 endfunction
 
 function! s:init_hl() abort
