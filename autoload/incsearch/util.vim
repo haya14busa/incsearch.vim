@@ -28,6 +28,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+let s:TRUE = !0
+let s:FALSE = 0
+
 " Public Utilities:
 function! incsearch#util#deepextend(...) abort
   return call(function('s:deepextend'), a:000)
@@ -59,6 +62,7 @@ let s:functions = [
 \   , 'silent_feedkeys'
 \   , 'deepextend'
 \   , 'dictfunction'
+\   , 'regexp_join'
 \ ]
 
 
@@ -191,6 +195,81 @@ function! s:dictfunction(dictfunc, dict) abort
   \ ], "\n")
   return function(printf('%s%s', prefix, funcname))
 endfunction
+
+
+"--- regexp
+
+let s:escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\zs'
+
+function! s:regexp_join(ps) abort
+  let rs = map(filter(copy(a:ps), 's:_is_valid_regexp(v:val)'), 's:escape_unbalanced_left_r(v:val)')
+  return printf('\m\%%(%s\m\)', join(rs, '\m\|'))
+endfunction
+
+function! s:_is_valid_regexp(pattern) abort
+  try
+    if '' =~# a:pattern
+    endif
+    return s:TRUE
+  catch
+    return s:FALSE
+  endtry
+endfunction
+
+" \m,\v:  [ -> \[
+" \M,\V:  \[ -> [
+function! s:escape_unbalanced_left_r(pattern) abort
+  let rs = []
+  let cs = split(a:pattern, '\zs')
+  " escape backslash (\, \\\, \\\\\, ...)
+  let escape_bs = s:FALSE
+  let flag = &magic ? 'm' : 'M'
+  let i = 0
+  while i < len(cs)
+    let c = cs[i]
+    " characters to add to rs
+    let addcs = [c]
+    if escape_bs && s:_is_flag(c)
+      let flag = c
+    elseif c is# '[' && s:_may_replace_left_r_cond(escape_bs, flag)
+      let idx = s:_find_right_r(cs, i)
+      if idx is# -1
+        if s:_is_flag(flag, 'MV')
+          " Remove `\` before unbalanced `[`
+          let rs = rs[:-2]
+        else
+          " Escape unbalanced `[`
+          let addcs = ['\' . c]
+        endif
+      else
+        let addcs = cs[(i):(i+idx)]
+        let i += idx
+      endif
+    endif
+    let escape_bs = (escape_bs || c isnot# '\') ? s:FALSE : s:TRUE
+    let rs += addcs
+    let i += 1
+  endwhile
+  return join(rs, '')
+endfunction
+
+" @ return boolean
+function! s:_is_flag(flag, ...) abort
+  let chars = get(a:, 1, 'mMvV')
+  return a:flag =~# printf('\m[%s]', chars)
+endfunction
+
+" @ return boolean
+function! s:_may_replace_left_r_cond(escape_bs, flag) abort
+  return (a:escape_bs && s:_is_flag(a:flag, 'MV')) || (!a:escape_bs && s:_is_flag(a:flag, 'mv'))
+endfunction
+
+" @return index
+function! s:_find_right_r(cs, i) abort
+  return match(join(a:cs[(a:i+1):], ''), s:escaped_backslash . ']')
+endfunction
+
+"--- end of regexp
 
 
 " Restore 'cpoptions' {{{
