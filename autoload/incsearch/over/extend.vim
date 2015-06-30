@@ -97,7 +97,7 @@ function! s:cli._convert(pattern) abort
       let ps += [l:Convert(a:pattern)]
       unlet l:Converter
     endfor
-    let self._converter_cache[a:pattern] = printf('\m\%%(%s\m\)', join(ps, '\m\|'))
+    let self._converter_cache[a:pattern] = s:U.regexp_join(ps)
     return self._converter_cache[a:pattern]
     " XXX: something wrong with case handling when using migemo converter.
     " return printf('%s\m\%%(%s\m\)', incsearch#detect_case(a:pattern), join(ps, '\m\|'))

@@ -1,4 +1,6 @@
 call themis#option('recursive', 1)
+" For development
+call themis#option('runtimepath', expand('~/.vim/bundle/vital.vim'))
 
 let g:Expect = themis#helper('expect')
 call themis#helper('command').with(themis#helper('assert')).with({'Expect': g:Expect})
