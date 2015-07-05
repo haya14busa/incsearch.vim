@@ -16,7 +16,7 @@ let s:hi = g:incsearch#highlight#_hi
 let s:U = incsearch#util#import()
 
 let s:inc = {
-\   "name" : "incsearch",
+\   'name' : 'incsearch',
 \}
 
 " NOTE: for InsertRegister handling
@@ -58,7 +58,7 @@ function! s:inc.on_leave(cmdline) abort
   "   push rest of keymappings with feedkeys()
   "   FIXME: assume 'noremap' but it should take care wheter or not the
   "   mappings should be remapped or not
-  if a:cmdline.input_key_stack_string() != ''
+  if a:cmdline.input_key_stack_string() !=# ''
     call feedkeys(a:cmdline.input_key_stack_string(), 'n')
   endif
 endfunction
@@ -97,7 +97,7 @@ function! s:on_searching(func, ...) abort
   catch /E888:/ " E888: (NFA regexp) cannot repeat (with /\ze*)
     call s:hi.disable_all()
   catch
-    echohl ErrorMsg | echom v:throwpoint . " " . v:exception | echohl None
+    echohl ErrorMsg | echom v:throwpoint . ' ' . v:exception | echohl None
   endtry
 endfunction
 
@@ -105,11 +105,11 @@ function! s:on_char_pre(cmdline) abort
   " NOTE:
   " `:call a:cmdline.setchar('')` as soon as possible!
   let [raw_pattern, offset] = a:cmdline._parse_pattern()
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cmdline._convert(raw_pattern)
 
   " Interactive :h last-pattern if pattern is empty
-  if ( a:cmdline.is_input("<Over>(incsearch-next)")
-  \ || a:cmdline.is_input("<Over>(incsearch-prev)")
+  if ( a:cmdline.is_input('<Over>(incsearch-next)')
+  \ || a:cmdline.is_input('<Over>(incsearch-prev)')
   \ ) && empty(pattern)
     call a:cmdline.setchar('')
     " Use history instead of @/ to work with magic option and converter
@@ -117,43 +117,43 @@ function! s:on_char_pre(cmdline) abort
     " Just insert last-pattern and do not count up, but the incsearch-prev
     " should move the cursor to reversed directly, so do not return if the
     " command is prev
-    if a:cmdline.is_input("<Over>(incsearch-next)") | return | endif
+    if a:cmdline.is_input('<Over>(incsearch-next)') | return | endif
   endif
 
-  if a:cmdline.is_input("<Over>(incsearch-next)")
+  if a:cmdline.is_input('<Over>(incsearch-next)')
     call a:cmdline.setchar('')
     if a:cmdline._flag ==# 'n' " exit stay mode
       let a:cmdline._flag = ''
     else
       let a:cmdline._vcount1 += 1
     endif
-  elseif a:cmdline.is_input("<Over>(incsearch-prev)")
+  elseif a:cmdline.is_input('<Over>(incsearch-prev)')
     call a:cmdline.setchar('')
     if a:cmdline._flag ==# 'n' " exit stay mode
       let a:cmdline._flag = ''
     endif
     let a:cmdline._vcount1 -= 1
-  elseif (a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+  elseif (a:cmdline.is_input('<Over>(incsearch-scroll-f)')
   \ &&   (a:cmdline._flag ==# '' || a:cmdline._flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-b)") && a:cmdline._flag ==# 'b')
+  \ ||   (a:cmdline.is_input('<Over>(incsearch-scroll-b)') && a:cmdline._flag ==# 'b')
     call a:cmdline.setchar('')
     if a:cmdline._flag ==# 'n' | let a:cmdline._flag = '' | endif
-    let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
-    let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    let pos_expr = a:cmdline.is_input('<Over>(incsearch-scroll-f)') ? 'w$' : 'w0'
+    let to_col = a:cmdline.is_input('<Over>(incsearch-scroll-f)')
     \          ? s:U.get_max_col(pos_expr) : 1
     let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
     let cnt = s:U.count_pattern(pattern, from, to)
     let a:cmdline._vcount1 += cnt
-  elseif (a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+  elseif (a:cmdline.is_input('<Over>(incsearch-scroll-b)')
   \ &&   (a:cmdline._flag ==# '' || a:cmdline._flag ==# 'n'))
-  \ ||   (a:cmdline.is_input("<Over>(incsearch-scroll-f)") && a:cmdline._flag ==# 'b')
+  \ ||   (a:cmdline.is_input('<Over>(incsearch-scroll-f)') && a:cmdline._flag ==# 'b')
     call a:cmdline.setchar('')
     if a:cmdline._flag ==# 'n'
       let a:cmdline._flag = ''
       let a:cmdline._vcount1 -= 1
     endif
-    let pos_expr = a:cmdline.is_input("<Over>(incsearch-scroll-f)") ? 'w$' : 'w0'
-    let to_col = a:cmdline.is_input("<Over>(incsearch-scroll-f)")
+    let pos_expr = a:cmdline.is_input('<Over>(incsearch-scroll-f)') ? 'w$' : 'w0'
+    let to_col = a:cmdline.is_input('<Over>(incsearch-scroll-f)')
     \          ? s:U.get_max_col(pos_expr) : 1
     let [from, to] = [getpos('.')[1:2], [line(pos_expr), to_col]]
     let cnt = s:U.count_pattern(pattern, from, to)
@@ -163,10 +163,10 @@ function! s:on_char_pre(cmdline) abort
   " Handle nowrapscan:
   "   if you `:set nowrapscan`, you can't move to the reversed direction
   if !&wrapscan && (
-  \    a:cmdline.is_input("<Over>(incsearch-next)")
-  \ || a:cmdline.is_input("<Over>(incsearch-prev)")
-  \ || a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-  \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)")
+  \    a:cmdline.is_input('<Over>(incsearch-next)')
+  \ || a:cmdline.is_input('<Over>(incsearch-prev)')
+  \ || a:cmdline.is_input('<Over>(incsearch-scroll-f)')
+  \ || a:cmdline.is_input('<Over>(incsearch-scroll-b)')
   \ )
     if a:cmdline._vcount1 < 1
       let a:cmdline._vcount1 = 1
@@ -187,6 +187,9 @@ function! s:on_char_pre(cmdline) abort
 endfunction
 
 function! s:on_char(cmdline) abort
+  if a:cmdline._does_exit_from_incsearch
+    return
+  endif
   let [raw_pattern, offset] = a:cmdline._parse_pattern()
 
   if raw_pattern ==# ''
@@ -206,7 +209,7 @@ function! s:on_char(cmdline) abort
     call winrestview(w)
   endif
 
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cmdline._convert(raw_pattern)
 
   " Improved Incremental cursor move!
   call s:move_cursor(a:cmdline, pattern, offset)
@@ -222,8 +225,8 @@ function! s:on_char(cmdline) abort
   \   [a:cmdline._w.lnum, a:cmdline._w.col])
 
   " functional `normal! zz` after scroll for <expr> mappings
-  if ( a:cmdline.is_input("<Over>(incsearch-scroll-f)")
-  \ || a:cmdline.is_input("<Over>(incsearch-scroll-b)"))
+  if ( a:cmdline.is_input('<Over>(incsearch-scroll-f)')
+  \ || a:cmdline.is_input('<Over>(incsearch-scroll-b)'))
     call winrestview({'topline': max([1, line('.') - winheight(0) / 2])})
   endif
 endfunction

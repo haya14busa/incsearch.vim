@@ -7,6 +7,8 @@ scriptencoding utf-8
 let s:save_cpo = &cpo
 set cpo&vim
 
+let s:TRUE = !0
+let s:FALSE = 0
 let s:non_escaped_backslash = '\m\%(\%(^\|[^\\]\)\%(\\\\\)*\)\@<=\\'
 
 let s:U = incsearch#util#import()
@@ -15,7 +17,11 @@ function! incsearch#over#extend#enrich(cli) abort
   return extend(a:cli, s:cli)
 endfunction
 
-let s:cli = {}
+let s:cli = {
+\   '_does_exit_from_incsearch': s:FALSE,
+\   '_return_cmd': '',
+\   '_converter_cache': {}
+\ }
 
 function! s:cli._generate_command(input) abort
   let is_cancel = self.exit_code()
@@ -25,7 +31,7 @@ function! s:cli._generate_command(input) abort
     call self._call_execute_event()
     let [pattern, offset] = incsearch#parse_pattern(a:input, self._base_key)
     " TODO: implement convert input method
-    let p = self._combine_pattern(incsearch#convert(pattern), offset)
+    let p = self._combine_pattern(self._convert(pattern), offset)
     return self._build_search_cmd(p)
   endif
 endfunction
@@ -33,7 +39,7 @@ endfunction
 " @return search cmd
 function! s:cli._build_search_cmd(pattern, ...) abort
   let mode = get(a:, 1, self._mode)
-  let op = (mode == 'no')      ? v:operator
+  let op = (mode ==# 'no')      ? v:operator
   \      : s:U.is_visual(mode) ? 'gv'
   \      : ''
   let zv = (&foldopen =~# '\vsearch|all' && mode !=# 'no' ? 'zv' : '')
@@ -76,6 +82,36 @@ function! s:cli._combine_pattern(pattern, offset) abort
   return empty(a:offset) ? a:pattern : a:pattern . self._base_key . a:offset
 endfunction
 
+function! s:cli._convert(pattern) abort
+  if a:pattern is# ''
+    return a:pattern
+  elseif empty(self._converters)
+    return incsearch#magic() . a:pattern
+  elseif has_key(self._converter_cache, a:pattern)
+    return self._converter_cache[a:pattern]
+  else
+    let ps = [incsearch#magic() . a:pattern]
+    for l:Converter in self._converters
+      let l:Convert = type(l:Converter) is type(function('function'))
+      \ ? l:Converter : l:Converter.convert
+      let ps += [l:Convert(a:pattern)]
+      unlet l:Converter
+    endfor
+    " Converters may return upper case even if a:pattern doesn't contain upper
+    " case letter, so prepend case flag explicitly
+    " let case = incsearch#detect_case(a:pattern)
+    let case = incsearch#detect_case(a:pattern)
+    let self._converter_cache[a:pattern] =  case . s:U.regexp_join(ps)
+    return self._converter_cache[a:pattern]
+  endif
+endfunction
+
+function! s:cli._exit_incsearch(...) abort
+  let cmd = get(a:, 1, '')
+  let self._return_cmd = cmd
+  let self._does_exit_from_incsearch = s:TRUE
+  call self.exit()
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

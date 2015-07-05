@@ -28,6 +28,14 @@ let s:save_cpo = &cpo
 set cpo&vim
 " }}}
 
+let s:TRUE = !0
+let s:FALSE = 0
+
+" Public Utilities:
+function! incsearch#util#deepextend(...) abort
+  return call(function('s:deepextend'), a:000)
+endfunction
+
 " Utilities:
 
 function! incsearch#util#import() abort
@@ -54,6 +62,7 @@ let s:functions = [
 \   , 'silent_feedkeys'
 \   , 'deepextend'
 \   , 'dictfunction'
+\   , 'regexp_join'
 \ ]
 
 
@@ -136,15 +145,15 @@ endfunction
 function! s:silent_feedkeys(expr, name, ...) abort
   " Ref:
   " https://github.com/osyo-manga/vim-over/blob/d51b028c29661d4a5f5b79438ad6d69266753711/autoload/over.vim#L6
-  let mode = get(a:, 1, "m")
-  let name = "incsearch-" . a:name
-  let map = printf("<Plug>(%s)", name)
-  if mode == "n"
-    let command = "nnoremap"
+  let mode = get(a:, 1, 'm')
+  let name = 'incsearch-' . a:name
+  let map = printf('<Plug>(%s)', name)
+  if mode ==# 'n'
+    let command = 'nnoremap'
   else
-    let command = "nmap"
+    let command = 'nmap'
   endif
-  execute command "<silent>" map printf("%s:nunmap %s<CR>", a:expr, map)
+  execute command '<silent>' map printf('%s:nunmap %s<CR>', a:expr, map)
   if mode(1) !=# 'ce'
     " FIXME: mode(1) !=# 'ce' exists only for the test
     "        :h feedkeys() doesn't work while runnning a test script
@@ -180,12 +189,87 @@ function! s:dictfunction(dictfunc, dict) abort
   let prefix = '<SNR>' . s:SID() . '_'
   let fm = printf("%sfuncmanage()['%s']", prefix, funcname)
   execute join([
-  \   printf("function! s:%s(...) abort", funcname),
+  \   printf('function! s:%s(...) abort', funcname),
   \   printf("  return call(%s['func'], a:000, %s['dict'])", fm, fm),
-  \          "endfunction"
+  \          'endfunction'
   \ ], "\n")
   return function(printf('%s%s', prefix, funcname))
 endfunction
+
+
+"--- regexp
+
+let s:escaped_backslash = '\m\%(^\|[^\\]\)\%(\\\\\)*\zs'
+
+function! s:regexp_join(ps) abort
+  let rs = map(filter(copy(a:ps), 's:_is_valid_regexp(v:val)'), 's:escape_unbalanced_left_r(v:val)')
+  return printf('\m\%%(%s\m\)', join(rs, '\m\|'))
+endfunction
+
+function! s:_is_valid_regexp(pattern) abort
+  try
+    if '' =~# a:pattern
+    endif
+    return s:TRUE
+  catch
+    return s:FALSE
+  endtry
+endfunction
+
+" \m,\v:  [ -> \[
+" \M,\V:  \[ -> [
+function! s:escape_unbalanced_left_r(pattern) abort
+  let rs = []
+  let cs = split(a:pattern, '\zs')
+  " escape backslash (\, \\\, \\\\\, ...)
+  let escape_bs = s:FALSE
+  let flag = &magic ? 'm' : 'M'
+  let i = 0
+  while i < len(cs)
+    let c = cs[i]
+    " characters to add to rs
+    let addcs = [c]
+    if escape_bs && s:_is_flag(c)
+      let flag = c
+    elseif c is# '[' && s:_may_replace_left_r_cond(escape_bs, flag)
+      let idx = s:_find_right_r(cs, i)
+      if idx is# -1
+        if s:_is_flag(flag, 'MV')
+          " Remove `\` before unbalanced `[`
+          let rs = rs[:-2]
+        else
+          " Escape unbalanced `[`
+          let addcs = ['\' . c]
+        endif
+      else
+        let addcs = cs[(i):(i+idx)]
+        let i += idx
+      endif
+    endif
+    let escape_bs = (escape_bs || c isnot# '\') ? s:FALSE : s:TRUE
+    let rs += addcs
+    let i += 1
+  endwhile
+  return join(rs, '')
+endfunction
+
+" @ return boolean
+function! s:_is_flag(flag, ...) abort
+  let chars = get(a:, 1, 'mMvV')
+  return a:flag =~# printf('\m[%s]', chars)
+endfunction
+
+" @ return boolean
+function! s:_may_replace_left_r_cond(escape_bs, flag) abort
+  return (a:escape_bs && s:_is_flag(a:flag, 'MV')) || (!a:escape_bs && s:_is_flag(a:flag, 'mv'))
+endfunction
+
+" @return index
+function! s:_find_right_r(cs, i) abort
+  return match(join(a:cs[(a:i+1):], ''), s:escaped_backslash . ']')
+endfunction
+
+"--- end of regexp
 
 
 " Restore 'cpoptions' {{{

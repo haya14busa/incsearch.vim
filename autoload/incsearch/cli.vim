@@ -38,6 +38,7 @@ function! incsearch#cli#set(cli, config) abort
   let a:cli._pattern = a:config.pattern
   let a:cli._prompt = a:config.prompt
   let a:cli._keymap = a:config.keymap
+  let a:cli._converters = a:config.converters
   let a:cli._flag = a:config.is_stay         ? 'n'
   \               : a:config.command is# '/' ? ''
   \               : a:config.command is# '?' ? 'b'
@@ -54,7 +55,7 @@ function! incsearch#cli#set(cli, config) abort
   return a:cli
 endfunction
 
-let s:cli = s:V.import('Over.Commandline').make_default("/")
+let s:cli = s:V.import('Over.Commandline').make_default('/')
 let s:modules = s:V.import('Over.Commandline.Modules')
 
 " Add modules

@@ -136,16 +136,24 @@ function! incsearch#_go(config) abort
     normal! gv
   endif
   let cli = incsearch#cli#make(a:config)
-  let l:Search = function(a:config.is_stay ? 'incsearch#stay' : 'incsearch#search')
-  let cmd = l:Search(cli)
-  if !a:config.is_expr
-    let should_set_jumplist = (cli._flag !=# 'n')
-    call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
-    if a:config.mode is# 'no'
-      call s:set_vimrepeat(cmd)
+  let input = s:get_input(cli)
+  if cli._does_exit_from_incsearch
+    " Outer incsearch-plugin handle it so do not something in paticular
+    return cli._return_cmd
+  else
+    " After getting input, generate command, take aftercare, and return
+    " command.
+    let l:F = function(cli._flag is# 'n' ? 's:stay' : 's:search')
+    let cmd = l:F(cli, input)
+    if !a:config.is_expr
+      let should_set_jumplist = (cli._flag !=# 'n')
+      call s:set_search_related_stuff(cli, cmd, should_set_jumplist)
+      if a:config.mode is# 'no'
+        call s:set_vimrepeat(cmd)
+      endif
     endif
+    return cmd
   endif
-  return cmd
 endfunction
 
 "" To handle recursive mapping, map command to <Plug>(_incsearch-dotrepeat)
@@ -157,16 +165,6 @@ function! s:set_vimrepeat(cmd) abort
   silent! call repeat#set("\<Plug>(_incsearch-dotrepeat)")
 endfunction
 
-" similar to incsearch#forward() but do not move the cursor unless explicitly
-" move the cursor while searching
-" @expr but sometimes called by non-<expr>
-" @return: command which is excutable with expr-mappings or `exec 'normal!'`
-function! incsearch#stay(cli) abort
-  let input = s:get_input(a:cli)
-  let l:F = function(a:cli._flag is# 'n' ? 's:stay' : 's:search')
-  return l:F(a:cli, input)
-endfunction
-
 let g:incsearch#_view = get(g:, 'incsearch#_view', {})
 noremap  <silent> <Plug>(_incsearch-winrestview) <Nop>
 noremap! <silent> <Plug>(_incsearch-winrestview) <Nop>
@@ -175,7 +173,7 @@ xnoremap <silent> <Plug>(_incsearch-winrestview) :<C-u>call winrestview(g:incsea
 
 function! s:stay(cli, input) abort
   let [raw_pattern, offset] = a:cli._parse_pattern()
-  let pattern = incsearch#convert(raw_pattern)
+  let pattern = a:cli._convert(raw_pattern)
 
   " NOTE: do not move cursor but need to handle {offset} for n & N ...! {{{
   " FIXME: cannot set {offset} if in operator-pending mode because this
@@ -200,10 +198,6 @@ function! s:stay(cli, input) abort
   endif
   " }}}
   return s:U.is_visual(a:cli._mode) ? "\<ESC>gv" : "\<ESC>" " just exit
-endfunction
-
-function! incsearch#search(cli) abort
-  return s:search(a:cli, s:get_input(a:cli))
 endfunction
 
 function! s:search(cli, input) abort
@@ -257,7 +251,7 @@ function! s:set_search_related_stuff(cli, cmd, ...) abort
   else
     " Add history if necessary
     " Do not save converted pattern to history
-    let pattern = incsearch#convert(raw_pattern)
+    let pattern = a:cli._convert(raw_pattern)
     let input = a:cli._combine_pattern(raw_pattern, offset)
     call histadd(a:cli._base_key, input)
     let @/ = pattern
@@ -308,16 +302,6 @@ function! incsearch#parse_pattern(expr, search_key) abort
   endif
   unlet result[1]
   return result
-endfunction
-
-" convert implementation. assume pattern is not empty
-function! s:_convert(pattern) abort
-  return incsearch#magic() . a:pattern
-endfunction
-
-function! incsearch#convert(pattern) abort
-  " TODO: convert pattern if required in addition to appending magic flag
-  return a:pattern is# '' ? a:pattern : s:_convert(a:pattern)
 endfunction
 
 function! incsearch#detect_case(pattern) abort
@@ -391,7 +375,7 @@ function! s:emulate_search_error(direction, ...) abort
   silent! call incsearch#execute_search(keyseq . "\<CR>")
   call winrestview(from)
   if g:incsearch#do_not_save_error_message_history
-    if v:errmsg != ''
+    if v:errmsg !=# ''
       call s:Error(v:errmsg)
     else
       let v:errmsg = old_errmsg
@@ -405,13 +389,13 @@ function! s:emulate_search_error(direction, ...) abort
     catch /^Vim\%((\a\+)\)\=:E/
       let first_error = matchlist(v:exception, '\v^Vim%(\(\a+\))=:(E.*)$')[1]
       call s:Error(first_error, 'echom')
-      if last_error != '' && last_error !=# first_error
+      if last_error !=# '' && last_error !=# first_error
         call s:Error(last_error, 'echom')
       endif
     finally
       call winrestview(from)
     endtry
-    if v:errmsg == ''
+    if v:errmsg ==# ''
       let v:errmsg = old_errmsg
     endif
   endif

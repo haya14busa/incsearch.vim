@@ -27,6 +27,7 @@ let s:config = {
 \   'count1': 1,
 \   'prompt': '',
 \   'modules': [],
+\   'converters': [],
 \   'keymap': {}
 \ }
 
@@ -43,7 +44,7 @@ endfunction
 
 " @return config with default value
 function! incsearch#config#make(additional) abort
-  let default = extend(copy(s:config), s:lazy_config())
+  let default = extend(deepcopy(s:config), s:lazy_config())
   let c = s:U.deepextend(default, a:additional)
   if c.prompt is# ''
     let c.prompt = c.command
@@ -53,28 +54,28 @@ endfunction
 
 let s:default_keymappings = {
 \   "\<Tab>"   : {
-\       "key" : "<Over>(incsearch-next)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-next)',
+\       'noremap' : 1,
 \   },
 \   "\<S-Tab>"   : {
-\       "key" : "<Over>(incsearch-prev)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-prev)',
+\       'noremap' : 1,
 \   },
 \   "\<C-j>"   : {
-\       "key" : "<Over>(incsearch-scroll-f)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-scroll-f)',
+\       'noremap' : 1,
 \   },
 \   "\<C-k>"   : {
-\       "key" : "<Over>(incsearch-scroll-b)",
-\       "noremap" : 1,
+\       'key' : '<Over>(incsearch-scroll-b)',
+\       'noremap' : 1,
 \   },
 \   "\<C-l>"   : {
-\       "key" : "<Over>(buffer-complete)",
-\       "noremap" : 1,
+\       'key' : '<Over>(buffer-complete)',
+\       'noremap' : 1,
 \   },
 \   "\<CR>"   : {
-\       "key": "\<CR>",
-\       "noremap": 1
+\       'key': "\<CR>",
+\       'noremap': 1
 \   },
 \ }
 
