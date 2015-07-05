@@ -564,14 +564,14 @@ KNOWN ISSUES						*incsearch-issues*
 ==============================================================================
 CHANGELOG						*incsearch-changelog*
 
-Version 2.0(?) Roadmap~
-2.0.0	1. Pattern converter feature
-	    - https://github.com/haya14busa/incsearch.vim/tree/converter
-	    - Implement fuzzy-search, migemo, spellcheck and other feature
-	    - Make public pattern converter API for customization
-	    - Write test for converer feature
-	3. More configurable options
-	    - e.g. option for prompt format including right prompt feature
+Version 2.0~
+
+2.0.0	2015-07-06
+	1. |incsearch#go()| and |incsearch-config| as a API
+	1. Pattern converter feature |incsearch-config-converters|
+	1. Injection of vital-over module |incsearch-config-modules|
+	1. External extention plugins like fuzzy, easymotion, migemo...
+	    - https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim
 
 1.2.1	2015-06-26
 	1. Add |incsearch-config-keymap| option to |incsearch-config|
