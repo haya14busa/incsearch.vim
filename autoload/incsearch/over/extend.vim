@@ -97,10 +97,12 @@ function! s:cli._convert(pattern) abort
       let ps += [l:Convert(a:pattern)]
       unlet l:Converter
     endfor
-    let self._converter_cache[a:pattern] = s:U.regexp_join(ps)
+    " Converters may return upper case even if a:pattern doesn't contain upper
+    " case letter, so prepend case flag explicitly
+    " let case = incsearch#detect_case(a:pattern)
+    let case = incsearch#detect_case(a:pattern)
+    let self._converter_cache[a:pattern] =  case . s:U.regexp_join(ps)
     return self._converter_cache[a:pattern]
-    " XXX: something wrong with case handling when using migemo converter.
-    " return printf('%s\m\%%(%s\m\)', incsearch#detect_case(a:pattern), join(ps, '\m\|'))
   endif
 endfunction
 
