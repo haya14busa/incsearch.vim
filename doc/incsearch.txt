@@ -486,6 +486,8 @@ prompt						*incsearch-config-prompt*
 
 modules						*incsearch-config-modules*
 	Additional |Vital.Over.Commandline-modules| to connect.
+	  The list of module extentions:
+	    https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#module-extensions
 	  Type: |list| of |Vital.Over.Commandline-modules|
 	  Default: []
 	  Example: >
@@ -504,7 +506,8 @@ modules						*incsearch-config-modules*
 keymap						*incsearch-config-keymap*
 	Additional keymappings for commandline interface. See also
 	|g:incsearch_cli_key_mappings|.
-
+	Type: |dict|
+	Default: {}
 	Example: >
 
 	function! s:config() abort
@@ -520,6 +523,37 @@ keymap						*incsearch-config-keymap*
 	endfunction
 
 	noremap <expr> z/ incsearch#go(<SID>config())
+
+converters					*incsearch-config-converters*
+	The list of pattern converters to add internal additional patterns to
+	search. Converters is |Funcref| or converter object (|Dictionary| with a
+	|Dictionary-function| named "convert" right now). The converter
+	feature is experimental, so converter objects will have to have more
+	required methods or fields later.
+
+	Converter Feature~
+	incsearch.vim calls the list of convert functions with pattern. The
+	patterns don't contain |search-offset| nor search command(|/|, |?|).
+	The convert functions should return valid |regular-expression| and
+	incsearch.vim use their returned patterns in addition to the default
+	input pattern as |regular-expression| to search.
+
+	The list of converter extensions:
+	  https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#converter-extensions
+	Type: |list| of converter
+	Default: []
+	Example: >
+
+	function! s:noregexp(pattern) abort
+	  return '\V' . escape(a:pattern, '\')
+	endfunction
+
+	function! s:config() abort
+	  return {'converters': [function('s:noregexp')]}
+	endfunction
+
+	noremap <silent><expr> z/ incsearch#go(<SID>config())
+
 ==============================================================================
 KNOWN ISSUES						*incsearch-issues*
 
