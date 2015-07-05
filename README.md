@@ -102,6 +102,45 @@ Move the cursor to next/previous matches while incremental searching like Emacs.
 | `<Over>(incsearch-scroll-f)` | scroll to the next page match. default: `<C-j>`     |
 | `<Over>(incsearch-scroll-b)` | scroll to the previous page match. default: `<C-k>` |
 
+:tada: Version 2.0 :tada:
+-------------------------
+Now, incsearch.vim provides some (experimental) API.
+You can implement or use very useful yet another search command :mag_right:
+
+### Experimental API
+- `:h incsearch#go()`
+- `:h incsearch-config`
+
+Starts incsearch.vim with your custom configuration. See help docs for more detail.
+
+### Converter feature
+- `:h incsearch-config-converters`
+- The list of converter extensions: https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#converter-extensions
+
+#### Example
+
+```vim
+function! s:noregexp(pattern) abort
+  return '\V' . escape(a:pattern, '\')
+endfunction
+
+function! s:config() abort
+  return {'converters': [function('s:noregexp')]}
+endfunction
+
+noremap <silent><expr> z/ incsearch#go(<SID>config())
+```
+
+incsearch.vim x fuzzy https://github.com/haya14busa/incsearch-fuzzy.vim
+![incsearch-fuzzy.gif](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/extensions/incsearch-fuzzy.gif)
+
+### Module extension
+- `:h incsearch-config-modules`
+- The list of module extentions: https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#module-extensions
+
+incsearch.vim x fuzzy x vim-easymotion https://github.com/haya14busa/incsearch-easymotion.vim
+![incsearch-fuzzy-easymotion.gif](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/extensions/incsearch-fuzzy-easymotion.gif)
+
 Author
 ------
 haya14busa (https://github.com/haya14busa)
