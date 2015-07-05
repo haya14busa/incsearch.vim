@@ -568,9 +568,9 @@ Version 2.0~
 
 2.0.0	2015-07-06
 	1. |incsearch#go()| and |incsearch-config| as a API
-	1. Pattern converter feature |incsearch-config-converters|
-	1. Injection of vital-over module |incsearch-config-modules|
-	1. External extention plugins like fuzzy, easymotion, migemo...
+	2. Pattern converter feature |incsearch-config-converters|
+	3. Injection of vital-over module |incsearch-config-modules|
+	4. External extention plugins like fuzzy, easymotion, migemo...
 	    - https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim
 
 1.2.1	2015-06-26
