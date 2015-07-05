@@ -486,6 +486,8 @@ prompt						*incsearch-config-prompt*
 
 modules						*incsearch-config-modules*
 	Additional |Vital.Over.Commandline-modules| to connect.
+	  The list of module extentions:
+	    https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#module-extensions
 	  Type: |list| of |Vital.Over.Commandline-modules|
 	  Default: []
 	  Example: >
@@ -504,7 +506,8 @@ modules						*incsearch-config-modules*
 keymap						*incsearch-config-keymap*
 	Additional keymappings for commandline interface. See also
 	|g:incsearch_cli_key_mappings|.
-
+	Type: |dict|
+	Default: {}
 	Example: >
 
 	function! s:config() abort
@@ -537,7 +540,8 @@ converters					*incsearch-config-converters*
 
 	The list of converter extensions:
 	  https://github.com/haya14busa/incsearch.vim/wiki/List-of-plugins-for-incsearch.vim#converter-extensions
-
+	Type: |list| of converter
+	Default: []
 	Example: >
 
 	function! s:noregexp(pattern) abort
