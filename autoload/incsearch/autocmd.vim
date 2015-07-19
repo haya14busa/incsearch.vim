@@ -23,6 +23,10 @@ function! incsearch#autocmd#auto_nohlsearch(nest) abort
   return s:auto_nohlsearch(a:nest)
 endfunction
 
+function! incsearch#autocmd#is_set() abort
+  return exists('#incsearch-auto-nohlsearch#CursorMoved')
+endfunction
+
 function! s:auto_nohlsearch(nest) abort
   " NOTE: :h autocmd-searchpat
   "   You cannot implement this feature without feedkeys() because of
