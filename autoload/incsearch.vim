@@ -357,7 +357,7 @@ noremap! <silent>       <Plug>(_incsearch-searchforward) <Nop>
 nnoremap <silent><expr> <Plug>(_incsearch-searchforward) <SID>_searchforward_cmd()
 xnoremap <silent><expr> <Plug>(_incsearch-searchforward) <SID>_searchforward_cmd()
 function! s:_searchforward_cmd() abort
-  let d = (g:incsearch#consistent_n_direction ? s:DIRECTION.forward : v:searchforward)
+  let d = (g:incsearch#consistent_n_direction ? s:DIRECTION.forward : (incsearch#cli()._base_key is# '/' ? 1 : 0))
   return printf(":\<C-u>let v:searchforward=%d\<CR>", d)
 endfunction
 
