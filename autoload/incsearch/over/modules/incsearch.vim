@@ -218,8 +218,11 @@ function! s:on_char(cmdline) abort
   " case: because matchadd() doesn't handle 'ignorecase' nor 'smartcase'
   let case = incsearch#detect_case(raw_pattern)
   let should_separate = g:incsearch#separate_highlight && a:cmdline._flag !=# 'n'
+  let pattern_for_hi =
+  \ (a:cmdline._flag is# 'b' ? s:unescape_question_for_backward(pattern) : pattern)
+  \ . case
   call incsearch#highlight#incremental_highlight(
-  \   pattern . case,
+  \   pattern_for_hi,
   \   should_separate,
   \   a:cmdline._direction,
   \   [a:cmdline._w.lnum, a:cmdline._w.col])
@@ -275,6 +278,10 @@ endfunction
 
 function! s:inc.on_char(cmdline) abort
   call s:on_searching(function('s:on_char'), a:cmdline)
+endfunction
+
+function! s:unescape_question_for_backward(pattern) abort
+  return substitute(a:pattern, '\\?', '?', 'g')
 endfunction
 
 function! incsearch#over#modules#incsearch#make() abort
