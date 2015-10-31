@@ -1,7 +1,7 @@
 *incsearch.txt*	Incrementally highlight all pattern matches
 
 Author  : haya14busa <hayabusa1419@gmail.com>
-Version : 2.0.0
+Version : 2.0.1
 License : MIT license {{{
 
 	Copyright (c) 2014-2015 haya14busa
@@ -565,6 +565,10 @@ KNOWN ISSUES						*incsearch-issues*
 CHANGELOG						*incsearch-changelog*
 
 Version 2.0~
+
+2.0.1	2015-10-31
+	1. Fix can't turn off |g:incsearch#consistent_n_direction|. ref: #95
+	2. Fix ? pattern handling for backward search. ref: #92
 
 2.0.0	2015-07-06
 	1. |incsearch#go()| and |incsearch-config| as a API
