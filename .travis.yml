@@ -13,6 +13,8 @@ install:
   - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
   - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
   - git clone https://github.com/vim-jp/vital.vim /tmp/vital.vim
+  - git clone https://github.com/haya14busa/vital-vimlcompiler /tmp/vital-vimlcompiler
+  - git clone https://github.com/haya14busa/vital-power-assert /tmp/vital-power-assert
 
 before_script:
   - vim --version
