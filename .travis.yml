@@ -9,7 +9,7 @@ install:
   - sudo apt-get update -q
   - sudo apt-get install vim-nox
   - sudo pip install vim-vint
-  - git clone https://github.com/thinca/vim-themis
+  - git clone https://github.com/thinca/vim-themis --branch v1.5 --single-branch --depth 1 /tmp/vim-themis
   - git clone https://github.com/syngan/vim-vimlint /tmp/vim-vimlint
   - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
   - git clone https://github.com/vim-jp/vital.vim /tmp/vital.vim
