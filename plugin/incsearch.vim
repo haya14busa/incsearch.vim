@@ -58,9 +58,9 @@ noremap <expr> <Plug>(incsearch-nohl2) incsearch#autocmd#auto_nohlsearch(2)
 map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-n)
 map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-nohl)<Plug>(_incsearch-N)
 map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-nohl)<Plug>(_incsearch-*)
-map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-nohl)<Plug>(_incsearch-#):<C-u>let v:searchforward=g:incsearch#consistent_n_direction<CR>
+map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-nohl)<Plug>(_incsearch-#)<Plug>(_incsearch-#-searchforward)
 map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-nohl)<Plug>(_incsearch-g*)
-map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#):<C-u>let v:searchforward=g:incsearch#consistent_n_direction<CR>
+map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)<Plug>(_incsearch-#-searchforward)
 
 " These mappings are just alias to default mappings except they won't be
 " remapped any more
@@ -70,6 +70,8 @@ noremap <Plug>(_incsearch-*)  *
 noremap <Plug>(_incsearch-#)  #
 noremap <Plug>(_incsearch-g*) g*
 noremap <Plug>(_incsearch-g#) g#
+
+noremap <silent> <Plug>(_incsearch-#-searchforward) :<C-u>let v:searchforward=g:incsearch#consistent_n_direction<CR>
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
