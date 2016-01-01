@@ -22,9 +22,10 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before()
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   call s:reset_buffer()
 endfunction
 

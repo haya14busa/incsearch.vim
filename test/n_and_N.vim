@@ -24,9 +24,10 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before()
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   " Explicitly map default `n` and `N`
   " unmap workaround
   noremap n  n

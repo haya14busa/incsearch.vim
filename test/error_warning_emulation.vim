@@ -27,9 +27,10 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before()
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   let s:line_texts = ['1pattern', '2pattern', '3pattern', '4pattern']
   call s:reset_buffer()
 endfunction

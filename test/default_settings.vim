@@ -22,9 +22,10 @@ endfunction
 
 function! s:suite.mappings()
   " Main:
-  call s:assert.equals(maparg('<Plug>(incsearch-forward)' , 'nvo'), "incsearch#go({'command': '/'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-backward)', 'nvo'), "incsearch#go({'command': '?'})")
-  call s:assert.equals(maparg('<Plug>(incsearch-stay)'    , 'nvo'), "incsearch#go({'command': '/', 'is_stay': 1})")
+  call s:assert.equals(maparg('<Plug>(incsearch-/)'      , 'nvo'), "incsearch#go({'command': '/'})")
+  call s:assert.equals(maparg('<Plug>(incsearch-?)'      , 'nvo'), "incsearch#go({'command': '?'})")
+  call s:assert.equals(maparg('<Plug>(incsearch-stay-/)' , 'nvo'), "incsearch#go({'command': '/', 'is_stay': 1})")
+  call s:assert.equals(maparg('<Plug>(incsearch-stay-?)' , 'nvo'), "incsearch#go({'command': '?', 'is_stay': 1})")
   " Additional:
   call s:assert.equals(maparg('<Plug>(incsearch-nohl)', 'nvo'), 'incsearch#autocmd#auto_nohlsearch(1)')
   call s:assert.equals(maparg('<Plug>(incsearch-nohl0)', 'nvo'), 'incsearch#autocmd#auto_nohlsearch(0)')

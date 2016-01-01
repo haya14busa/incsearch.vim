@@ -1,9 +1,10 @@
 let s:suite = themis#suite('fold')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+map /  <Plug>(incsearch-/)
+map ?  <Plug>(incsearch-?)
+map g/ <Plug>(incsearch-stay-/)
+map g? <Plug>(incsearch-stay-?)
 
 function! s:add_lines(lines)
   for line in reverse(a:lines)
@@ -19,9 +20,10 @@ endfunction
 
 function! s:suite.before()
   set foldmethod=marker
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   let s:line_texts = [
   \    '1'
   \  , '2'

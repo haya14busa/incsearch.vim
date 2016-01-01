@@ -1,9 +1,10 @@
 let s:suite = themis#suite('count')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+map /  <Plug>(incsearch-/)
+map ?  <Plug>(incsearch-?)
+map g/ <Plug>(incsearch-stay-/)
+map g? <Plug>(incsearch-stay-?)
 
 " Helper:
 function! s:add_line(str)
