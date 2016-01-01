@@ -53,12 +53,16 @@ git clone https://github.com/haya14busa/incsearch.vim ~/.vim/bundle/incsearch.vi
 
 ### Basic usage
 ```vim
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+map /  <Plug>(incsearch-/)
+map ?  <Plug>(incsearch-?)
+map g/ <Plug>(incsearch-stay-/)
+map g? <Plug>(incsearch-stay-?)
 ```
 
-`<Plug>(incsearch-stay)` doesn't move the cursor.
+```vim
+<Plug>(incsearch-stay-/)` doesn't move the cursor.
+<Plug>(incsearch-stay-?)` doesn't move the cursor.
+```
 
 ### Additional usages
 README introduces some features, but please see [:h incsearch.vim](doc/incsearch.txt) for more information.
