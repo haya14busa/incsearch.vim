@@ -32,7 +32,8 @@ endfunction
 " @config: whole configuration
 function! incsearch#cli#set(cli, config) abort
   let a:cli._base_key = a:config.command
-  let a:cli._vcount1 = a:config.count1
+  let a:cli._vcount1 = max([1, a:config.count])
+  let a:cli._has_count = a:config.count > 0
   let a:cli._is_expr = a:config.is_expr
   let a:cli._mode = a:config.mode
   let a:cli._pattern = a:config.pattern
