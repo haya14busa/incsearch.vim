@@ -16,7 +16,7 @@ let s:U = incsearch#util#import()
 "" incsearch config
 " TODO: more detail documentation
 " @command is equivalent with base_key TODO: fix this inconsistence
-" @count1 default: v:count1 secret
+" @count default: v:count secret
 " @mode default: mode(1) secret
 let s:config = {
 \   'command': '/',
@@ -24,7 +24,7 @@ let s:config = {
 \   'is_expr': s:FALSE,
 \   'pattern': '',
 \   'mode': 'n',
-\   'count1': 1,
+\   'count': 0,
 \   'prompt': '',
 \   'modules': [],
 \   'converters': [],
@@ -35,7 +35,7 @@ let s:config = {
 function! s:lazy_config() abort
   let m = mode(1)
   return {
-  \   'count1': v:count1,
+  \   'count': v:count,
   \   'mode': m,
   \   'is_expr': (m is# 'no'),
   \   'keymap': s:keymap()
