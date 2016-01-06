@@ -48,8 +48,11 @@ function! s:cli._build_search_cmd(pattern, ...) abort
   "   <Esc>? <Esc> exists for flexible v:count with using s:cli._vcount1,
   "   but, if you do not move the cursor while incremental searching,
   "   there are no need to use <Esc>.
-  return printf("\<Esc>\"%s%s%s%s%s\<CR>%s",
-  \   v:register, op, self._vcount1, self._base_key, a:pattern, zv)
+  let esc = self._has_count ? "\<Esc>" : ''
+  let register = esc is# '' ? '' : '"' . v:register
+  let cnt = self._vcount1 is# 1 ? '' : self._vcount1
+  let prefix = esc .  register . (esc is# '' ? '' : op) . cnt
+  return printf("%s%s%s\<CR>%s", prefix, self._base_key, a:pattern, zv)
 endfunction
 
 "" Call on_execute_pre and on_execute event
