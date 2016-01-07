@@ -13,6 +13,11 @@ let g:__vital_power_assert_config = {
 \   '__max_length__': -1
 \ }
 
+" mock
+function! incsearch#over#modules#bulk_input_char#make() abort
+  return {}
+endfunction
+
 language C
 
 " Helper Functions:
