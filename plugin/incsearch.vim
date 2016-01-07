@@ -43,15 +43,6 @@ noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
 noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
 noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
 
-function! s:consistent_n_direction() abort
-  if g:incsearch#consistent_n_direction
-    let @/ = @/ " set v:searchforward to 1
-  endif
-  return ''
-endfunction
-
-noremap <expr> <Plug>(_incsearch-consistent-n-direction) <SID>consistent_n_direction()
-
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:
 "   - This mappings doesn't move the cursor, please use this with other
@@ -70,6 +61,15 @@ map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-nohl)<Plug>(_incsearch-*)
 map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-nohl)<Plug>(_incsearch-#)
 map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-nohl)<Plug>(_incsearch-g*)
 map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)
+
+function! s:consistent_n_direction() abort
+  if g:incsearch#consistent_n_direction
+    let @/ = @/ " set v:searchforward to 1
+  endif
+  return ''
+endfunction
+
+noremap <expr> <Plug>(_incsearch-consistent-n-direction) <SID>consistent_n_direction()
 
 " These mappings are just alias to default mappings except they won't be
 " remapped any more
