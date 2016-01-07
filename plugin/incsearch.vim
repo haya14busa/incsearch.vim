@@ -55,35 +55,21 @@ noremap <expr> <Plug>(incsearch-nohl0) incsearch#autocmd#auto_nohlsearch(0)
 noremap <expr> <Plug>(incsearch-nohl2) incsearch#autocmd#auto_nohlsearch(2)
 
 
-map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-consistent-n-direction)<Plug>(_incsearch-n)
-map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-nohl)<Plug>(_incsearch-consistent-n-direction)<Plug>(_incsearch-N)
+map <Plug>(incsearch-nohl-n)  <Plug>(incsearch-nohl)<Plug>(_incsearch-n)
+map <Plug>(incsearch-nohl-N)  <Plug>(incsearch-nohl)<Plug>(_incsearch-N)
 map <Plug>(incsearch-nohl-*)  <Plug>(incsearch-nohl)<Plug>(_incsearch-*)
 map <Plug>(incsearch-nohl-#)  <Plug>(incsearch-nohl)<Plug>(_incsearch-#)
 map <Plug>(incsearch-nohl-g*) <Plug>(incsearch-nohl)<Plug>(_incsearch-g*)
 map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)
 
-function! s:consistent_n_direction() abort
-  if g:incsearch#consistent_n_direction
-    " set v:searchforward to 1
-    call setreg(
-    \       '/',
-    \       empty(getreg('/', 1, 1)) ? [] : getreg('/', 1, 1),
-    \       getregtype('/')
-    \   )
-  endif
-  return ''
-endfunction
-
-noremap <expr> <Plug>(_incsearch-consistent-n-direction) <SID>consistent_n_direction()
-
 " These mappings are just alias to default mappings except they won't be
 " remapped any more
-noremap <Plug>(_incsearch-n)  n
-noremap <Plug>(_incsearch-N)  N
-noremap <Plug>(_incsearch-*)  *
-noremap <Plug>(_incsearch-#)  #
-noremap <Plug>(_incsearch-g*) g*
-noremap <Plug>(_incsearch-g#) g#
+noremap <expr> <Plug>(_incsearch-n)  g:incsearch#consistent_n_direction && !v:searchforward ? 'N' : 'n'
+noremap <expr> <Plug>(_incsearch-N)  g:incsearch#consistent_n_direction && !v:searchforward ? 'n' : 'N'
+noremap        <Plug>(_incsearch-*)  *
+noremap        <Plug>(_incsearch-#)  #
+noremap        <Plug>(_incsearch-g*) g*
+noremap        <Plug>(_incsearch-g#) g#
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
