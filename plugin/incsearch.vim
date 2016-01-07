@@ -64,7 +64,12 @@ map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)
 
 function! s:consistent_n_direction() abort
   if g:incsearch#consistent_n_direction
-    let @/ = @/ " set v:searchforward to 1
+    " set v:searchforward to 1
+    call setreg(
+    \       '/',
+    \       empty(getreg('/', 1, 1)) ? [] : getreg('/', 1, 1),
+    \       getregtype('/')
+    \   )
   endif
   return ''
 endfunction
