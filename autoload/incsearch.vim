@@ -350,7 +350,7 @@ xnoremap <silent> <Plug>(_incsearch-esc) <Esc>
 noremap  <silent> <Plug>(_incsearch-hlsearch) <Nop>
 noremap! <silent> <Plug>(_incsearch-hlsearch) <Nop>
 nnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
-xnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>
+xnoremap <silent> <Plug>(_incsearch-hlsearch) :<C-u>let &hlsearch=&hlsearch<CR>gv
 
 noremap  <silent>       <Plug>(_incsearch-searchforward) <Nop>
 noremap! <silent>       <Plug>(_incsearch-searchforward) <Nop>
