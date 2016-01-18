@@ -64,11 +64,11 @@ function! incsearch#highlight#off() abort
 endfunction
 
 function! s:init_hl() abort
-  hi link IncSearchMatch Search
-  hi link IncSearchMatchReverse IncSearch
-  hi link IncSearchCursor Cursor
-  hi link IncSearchOnCursor IncSearch
-  hi IncSearchUnderline term=underline cterm=underline gui=underline
+  hi default link IncSearchMatch Search
+  hi default link IncSearchMatchReverse IncSearch
+  hi default link IncSearchCursor Cursor
+  hi default link IncSearchOnCursor IncSearch
+  hi default IncSearchUnderline term=underline cterm=underline gui=underline
 endfunction
 call s:init_hl()
 augroup plugin-incsearch-highlight
