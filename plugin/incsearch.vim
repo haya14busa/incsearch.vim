@@ -64,12 +64,12 @@ map <Plug>(incsearch-nohl-g#) <Plug>(incsearch-nohl)<Plug>(_incsearch-g#)
 
 " These mappings are just alias to default mappings except they won't be
 " remapped any more
-noremap <Plug>(_incsearch-n)  n
-noremap <Plug>(_incsearch-N)  N
-noremap <Plug>(_incsearch-*)  *
-noremap <Plug>(_incsearch-#)  #
-noremap <Plug>(_incsearch-g*) g*
-noremap <Plug>(_incsearch-g#) g#
+noremap <expr> <Plug>(_incsearch-n)  g:incsearch#consistent_n_direction && !v:searchforward ? 'N' : 'n'
+noremap <expr> <Plug>(_incsearch-N)  g:incsearch#consistent_n_direction && !v:searchforward ? 'n' : 'N'
+noremap        <Plug>(_incsearch-*)  *
+noremap        <Plug>(_incsearch-#)  #
+noremap        <Plug>(_incsearch-g*) g*
+noremap        <Plug>(_incsearch-g#) g#
 
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
