@@ -66,7 +66,7 @@ function! incsearch#vital() abort
   if exists('s:V')
     return s:V
   endif
-  let s:V = vital#of(g:incsearch#debug ? 'vital' : 'incsearch')
+  let s:V = vital#incsearch#of()
   return s:V
 endfunction
 
