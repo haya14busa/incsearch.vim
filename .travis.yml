@@ -14,6 +14,7 @@ install:
   - git clone https://github.com/ynkdir/vim-vimlparser /tmp/vim-vimlparser
   - git clone https://github.com/vim-jp/vital.vim /tmp/vital.vim
   - git clone https://github.com/haya14busa/vital-vimlcompiler /tmp/vital-vimlcompiler
+  - git clone https://github.com/haya14busa/vital-safe-string /tmp/vital-safe-string
   - git clone https://github.com/haya14busa/vital-power-assert /tmp/vital-power-assert
 
 before_script:
@@ -21,7 +22,7 @@ before_script:
   - vint --version
 
 script:
-  - /tmp/vim-themis/bin/themis --runtimepath /tmp/vital.vim --runtimepath /tmp/vital-vimlcompiler --runtimepath /tmp/vital-power-assert --reporter spec
+  - /tmp/vim-themis/bin/themis --runtimepath /tmp/vital.vim --runtimepath /tmp/vital-vimlcompiler --runtimepath /tmp/vital-safe-string --runtimepath /tmp/vital-power-assert --reporter spec
   - vim --cmd "try | helptags doc/ | catch | cquit | endtry" --cmd quit
   - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 -c func_abort=1 autoload/incsearch.vim
   - sh /tmp/vim-vimlint/bin/vimlint.sh -l /tmp/vim-vimlint -p /tmp/vim-vimlparser -e EVL102.l:_=1 -c func_abort=1 autoload/incsearch
