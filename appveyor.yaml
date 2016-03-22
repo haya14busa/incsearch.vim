@@ -2,15 +2,15 @@ version: 1.0.{build}
 build: off
 test_script:
 - ps: >-
-    git clone --quiet https://github.com/thinca/vim-themis.git themis
+    git clone --quiet --depth 1 https://github.com/thinca/vim-themis.git themis
 
-    git clone --quiet https://github.com/vim-jp/vital.vim.git vital
+    git clone --quiet --depth 1 https://github.com/vim-jp/vital.vim.git vital
 
-    git clone https://github.com/haya14busa/vital-vimlcompiler vital-vimlcompiler
+    git clone --quiet --depth 1 https://github.com/haya14busa/vital-vimlcompiler vital-vimlcompiler
 
-    git clone https://github.com/haya14busa/vital-safe-string vital-safe-string
+    git clone --quiet --depth 1 https://github.com/haya14busa/vital-safe-string vital-safe-string
 
-    git clone https://github.com/haya14busa/vital-power-assert vital-power-assert
+    git clone --quiet --depth 1 https://github.com/haya14busa/vital-power-assert vital-power-assert
 
 
 
