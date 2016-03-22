@@ -23,10 +23,6 @@ function! s:_vital_loaded(V)
 	let s:V = a:V
 	let s:Cmdline = s:V.import("Over.Commandline.Base")
 	let s:Modules = s:V.import("Over.Commandline.Modules")
-	let s:base.variables.modules = s:Signals.make()
-	function! s:base.variables.modules.get_slot(val)
-		return a:val.slot.module
-	endfunction
 endfunction
 
 

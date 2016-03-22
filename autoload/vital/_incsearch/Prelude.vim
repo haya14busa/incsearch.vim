@@ -27,7 +27,7 @@ let [
 \   s:__TYPE_DICT,
 \   s:__TYPE_FLOAT] = [
       \   type(3),
-      \   type(""),
+      \   type(''),
       \   type(function('tr')),
       \   type([]),
       \   type({}),
@@ -69,7 +69,7 @@ function! s:is_dict(Value) abort
 endfunction
 
 function! s:truncate_skipping(str, max, footer_width, separator) abort
-  call s:_warn_deprecated("truncate_skipping", "Data.String.truncate_skipping")
+  call s:_warn_deprecated('truncate_skipping', 'Data.String.truncate_skipping')
 
   let width = s:wcswidth(a:str)
   if width <= a:max
@@ -87,7 +87,7 @@ function! s:truncate(str, width) abort
   " Original function is from mattn.
   " http://github.com/mattn/googlereader-vim/tree/master
 
-  call s:_warn_deprecated("truncate", "Data.String.truncate")
+  call s:_warn_deprecated('truncate', 'Data.String.truncate')
 
   if a:str =~# '^[\x00-\x7f]*$'
     return len(a:str) < a:width ?
@@ -109,7 +109,7 @@ function! s:truncate(str, width) abort
 endfunction
 
 function! s:strwidthpart(str, width) abort
-  call s:_warn_deprecated("strwidthpart", "Data.String.strwidthpart")
+  call s:_warn_deprecated('strwidthpart', 'Data.String.strwidthpart')
 
   if a:width <= 0
     return ''
@@ -125,7 +125,7 @@ function! s:strwidthpart(str, width) abort
   return ret
 endfunction
 function! s:strwidthpart_reverse(str, width) abort
-  call s:_warn_deprecated("strwidthpart_reverse", "Data.String.strwidthpart_reverse")
+  call s:_warn_deprecated('strwidthpart_reverse', 'Data.String.strwidthpart_reverse')
 
   if a:width <= 0
     return ''
@@ -144,12 +144,12 @@ endfunction
 if v:version >= 703
   " Use builtin function.
   function! s:wcswidth(str) abort
-    call s:_warn_deprecated("wcswidth", "Data.String.wcswidth")
+    call s:_warn_deprecated('wcswidth', 'Data.String.wcswidth')
     return strwidth(a:str)
   endfunction
 else
   function! s:wcswidth(str) abort
-    call s:_warn_deprecated("wcswidth", "Data.String.wcswidth")
+    call s:_warn_deprecated('wcswidth', 'Data.String.wcswidth')
 
     if a:str =~# '^[\x00-\x7f]*$'
       return strlen(a:str)
@@ -218,14 +218,14 @@ endfunction
 function! s:_warn_deprecated(name, alternative) abort
   try
     echohl Error
-    echomsg "Prelude." . a:name . " is deprecated!  Please use " . a:alternative . " instead."
+    echomsg 'Prelude.' . a:name . ' is deprecated!  Please use ' . a:alternative . ' instead.'
   finally
     echohl None
   endtry
 endfunction
 
 function! s:smart_execute_command(action, word) abort
-  execute a:action . ' ' . (a:word == '' ? '' : '`=a:word`')
+  execute a:action . ' ' . (a:word ==# '' ? '' : '`=a:word`')
 endfunction
 
 function! s:escape_file_searching(buffer_name) abort
@@ -243,7 +243,7 @@ endfunction
 
 function! s:getchar_safe(...) abort
   let c = s:input_helper('getchar', a:000)
-  return type(c) == type("") ? c : nr2char(c)
+  return type(c) == type('') ? c : nr2char(c)
 endfunction
 
 function! s:input_safe(...) abort
@@ -253,13 +253,13 @@ endfunction
 function! s:input_helper(funcname, args) abort
   let success = 0
   if inputsave() !=# success
-    throw 'inputsave() failed'
+    throw 'vital: Prelude: inputsave() failed'
   endif
   try
     return call(a:funcname, a:args)
   finally
     if inputrestore() !=# success
-      throw 'inputrestore() failed'
+      throw 'vital: Prelude: inputrestore() failed'
     endif
   endtry
 endfunction
@@ -300,7 +300,7 @@ function! s:_path2project_directory_svn(path) abort
 
   let find_directory = s:escape_file_searching(search_directory)
   let d = finddir('.svn', find_directory . ';')
-  if d == ''
+  if d ==# ''
     return ''
   endif
 
@@ -310,9 +310,9 @@ function! s:_path2project_directory_svn(path) abort
   let parent_directory = s:path2directory(
         \ fnamemodify(directory, ':h'))
 
-  if parent_directory != ''
+  if parent_directory !=# ''
     let d = finddir('.svn', parent_directory . ';')
-    if d != ''
+    if d !=# ''
       let directory = s:_path2project_directory_svn(parent_directory)
     endif
   endif
@@ -325,7 +325,7 @@ function! s:_path2project_directory_others(vcs, path) abort
 
   let find_directory = s:escape_file_searching(search_directory)
   let d = finddir(vcs, find_directory . ';')
-  if d == ''
+  if d ==# ''
     return ''
   endif
   return fnamemodify(d, ':p:h:h')
@@ -345,25 +345,25 @@ function! s:path2project_directory(path, ...) abort
     else
       let directory = s:_path2project_directory_others(vcs, search_directory)
     endif
-    if directory != ''
+    if directory !=# ''
       break
     endif
   endfor
 
   " Search project file.
-  if directory == ''
+  if directory ==# ''
     for d in ['build.xml', 'prj.el', '.project', 'pom.xml', 'package.json',
           \ 'Makefile', 'configure', 'Rakefile', 'NAnt.build',
           \ 'P4CONFIG', 'tags', 'gtags']
       let d = findfile(d, s:escape_file_searching(search_directory) . ';')
-      if d != ''
+      if d !=# ''
         let directory = fnamemodify(d, ':p:h')
         break
       endif
     endfor
   endif
 
-  if directory == ''
+  if directory ==# ''
     " Search /src/ directory.
     let base = s:substitute_path_separator(search_directory)
     if base =~# '/src/'
@@ -371,7 +371,7 @@ function! s:path2project_directory(path, ...) abort
     endif
   endif
 
-  if directory == '' && !is_allow_empty
+  if directory ==# '' && !is_allow_empty
     " Use original path.
     let directory = search_directory
   endif

@@ -4,10 +4,11 @@ set cpo&vim
 function! s:_vital_loaded(V) abort
   let s:V = a:V
   let s:P = s:V.import('Prelude')
+  let s:G = s:V.import('Vim.Guard')
 endfunction
 
 function! s:_vital_depends() abort
-  return ['Prelude']
+  return ['Prelude', 'Vim.Guard']
 endfunction
 
 if exists('*getcmdwintype')
@@ -27,7 +28,7 @@ function! s:open(buffer, opener) abort
     if s:P.is_funcref(a:opener)
       let loaded = !bufloaded(a:buffer)
       call a:opener(a:buffer)
-    elseif a:buffer is 0 || a:buffer is ''
+    elseif a:buffer is 0 || a:buffer is# ''
       let loaded = 1
       silent execute a:opener
       enew
@@ -85,10 +86,58 @@ function! s:get_last_selected() abort
       \         + (end[1] - begin[1] <# 2 ? [] : getline(begin[1]+1, end[1]-1))
       \         + [getline(end[1])[: end[2]-2]]
     endif
-    return join(lines, "\n") . lastchar . (visualmode() ==# "V" ? "\n" : "")
+    return join(lines, "\n") . lastchar . (visualmode() ==# 'V' ? "\n" : '')
   endif
 endfunction
 
+function! s:read_content(content, ...) abort
+  let options = extend({
+        \ 'tempfile': '',
+        \ 'fileformat': '',
+        \ 'encoding': '',
+        \ 'binary': 0,
+        \ 'nobinary': 0,
+        \ 'bad': '',
+        \ 'edit': 0,
+        \}, get(a:000, 0, {}))
+  let tempfile = empty(options.tempfile) ? tempname() : options.tempfile
+  let optnames = [
+        \ empty(options.fileformat) ? '' : '++ff=' . options.fileformat,
+        \ empty(options.encoding) ? '' : '++enc=' . options.encoding,
+        \ empty(options.binary) ? '' : '++bin',
+        \ empty(options.nobinary) ? '' : '++nobin',
+        \ empty(options.bad) ? '' : '++bad=' . options.bad,
+        \ empty(options.edit) ? '' : '++edit',
+        \]
+  let optname = join(filter(optnames, '!empty(v:val)'))
+  try
+    call writefile(a:content, tempfile)
+    execute printf('keepalt keepjumps read %s%s',
+          \ empty(optname) ? '' : optname . ' ',
+          \ fnameescape(tempfile),
+          \)
+  finally
+    call delete(tempfile)
+  endtry
+endfunction
+
+function! s:edit_content(content, ...) abort
+  let options = extend({
+        \ 'edit': 1,
+        \}, get(a:000, 0, {}))
+  let guard = s:G.store('&l:modifiable')
+  let saved_view = winsaveview()
+  try
+    let &l:modifiable=1
+    silent keepjumps %delete _
+    silent call s:read_content(a:content, options)
+    silent keepjumps 1delete _
+  finally
+    keepjump call winrestview(saved_view)
+    call guard.restore()
+  endtry
+  setlocal nomodified
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
