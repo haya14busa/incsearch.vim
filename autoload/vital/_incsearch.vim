@@ -284,6 +284,14 @@ function! s:_redir(cmd) abort
 endfunction
 
 function! vital#{s:self_version}#new() abort
+  if s:self_version is# '__latest__'
+    return vital#{s:self_version}#new_orig()
+  else
+    return vital#{s:self_version[1:]}#of()
+  endif
+endfunction
+
+function! vital#{s:self_version}#new_orig() abort
   let sid = s:_get_sid_by_script(s:self_file)
   return s:_build_module(sid)
 endfunction
