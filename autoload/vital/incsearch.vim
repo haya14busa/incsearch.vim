@@ -1,8 +1,11 @@
-let s:vital_name = expand('<sfile>:t:r')
-let s:base_dir = expand('<sfile>:h')
+let s:plugin_name = expand('<sfile>:t:r')
+let s:vital_base_dir = expand('<sfile>:h')
+let s:project_root = expand('<sfile>:h:h:h')
+let s:has_latest_module = isdirectory(expand('<sfile>:h') . '/__latest__')
+let s:is_vital_vim = s:plugin_name is# '_latest__'
+
 let s:loaded = {}
-let s:__latest__ = expand('<sfile>:h') . '/__latest__'
-let s:has_self_modules = isdirectory(s:__latest__)
+let s:cache_sid = {}
 
 " function() wrapper
 if v:version > 703 || v:version == 703 && has('patch1170')
@@ -19,22 +22,23 @@ else
   endfunction
 endif
 
-function! vital#{s:vital_name}#of() abort
-  return s:new(s:vital_name)
+function! vital#{s:plugin_name}#of() abort
+  return s:new(s:plugin_name)
 endfunction
 
 let s:Vital = {}
 
-function! s:new(vital_name) abort
+function! s:new(plugin_name) abort
   let base = deepcopy(s:Vital)
-  let base.vital_name = a:vital_name
+  let base.plugin_name = a:plugin_name
   return base
 endfunction
 
-function! s:vital_files() abort dict
+function! s:vital_files() abort
   if !exists('s:vital_files')
-    let s:vital_files =
-    \   map(s:_self_vital_files(), 'fnamemodify(v:val, ":p:gs?[\\\\/]?/?")')
+    let s:vital_files = map(
+    \   s:is_vital_vim ? s:_global_vital_files() : s:_self_vital_files(),
+    \   'fnamemodify(v:val, ":p:gs?[\\\\/]?/?")')
   endif
   return copy(s:vital_files)
 endfunction
@@ -99,17 +103,17 @@ endfunction
 let s:Vital.unload = s:_function('s:unload')
 
 function! s:exists(name) abort dict
-  let b = exists(printf('*vital#_%s#%s#import', self.vital_name, substitute(a:name, '\.', '#', 'g')))
+  let b = exists(printf('*vital#_%s#%s#import', self.plugin_name, substitute(a:name, '\.', '#', 'g')))
   if b
     return b
   endif
   let name_path = substitute(a:name, '\.', '/', 'g')
-  let path = printf('%s/_%s/%s.vim', s:base_dir, self.vital_name, name_path)
+  let path = printf('%s/_%s/%s.vim', s:vital_base_dir, self.plugin_name, name_path)
   let b = filereadable(path)
   if b
     return b
   endif
-  let path = printf('%s/_%s/%s.vim', s:base_dir, '_latest__', name_path)
+  let path = printf('%s/_%s/%s.vim', s:vital_base_dir, '_latest__', name_path)
   let b = filereadable(path)
 endfunction
 let s:Vital.exists = s:_function('s:exists')
@@ -122,8 +126,13 @@ endfunction
 let s:Vital.search = s:_function('s:search')
 
 function! s:_self_vital_files() abort
-  let base = s:base_dir . '/*/**/*.vim'
+  let base = s:vital_base_dir . '/*/**/*.vim'
   return split(glob(base, 1), "\n")
+endfunction
+
+function! s:_global_vital_files() abort
+  let pattern = 'autoload/vital/__latest__/**/*.vim'
+  return split(globpath(&runtimepath, pattern, 1), "\n")
 endfunction
 
 function! s:_extract_files(pattern, files) abort
@@ -151,10 +160,11 @@ function! s:_import(name) abort dict
   let export_module = filter(copy(module), 'v:key =~# "^\\a"')
   " Cache module before calling module.vital_loaded() to avoid cyclic
   " dependences but remove the cache if module._vital_loaded() fails.
+  " let s:loaded[a:name] = export_module
   let s:loaded[a:name] = export_module
   if has_key(module, '_vital_loaded')
     try
-      call module._vital_loaded(self)
+      call module._vital_loaded(vital#{s:plugin_name}#of())
     catch
       unlet s:loaded[a:name]
       throw 'vital: fail to call ._vital_loaded(): ' . v:exception
@@ -162,27 +172,124 @@ function! s:_import(name) abort dict
   endif
   return copy(s:loaded[a:name])
 endfunction
-let s:Vital._import = function('s:_import')
+let s:Vital._import = s:_function('s:_import')
 
+" s:_get_module() returns module object wihch has all script local functions.
 function! s:_get_module(name) abort dict
   try
-    let module = vital#_{self.vital_name}#{substitute(a:name, '\.', '#', 'g')}#import()
+    let module = vital#_{self.plugin_name}#{substitute(a:name, '\.', '#', 'g')}#import()
   catch /E117: Unknown function:/
-    if !s:has_self_modules
-      throw 'vital: revitalizer: module not found: ' . a:name
+    if !s:has_latest_module
+      throw 'vital: module not found: ' . a:name
     endif
-    " Retry with original vital to support loading self modules.
-    let module = s:orig_vital().import(a:name)
+    " Retry to support loading self modules.
+    let module = s:_get_latest_module(a:name)
   endtry
   return module
 endfunction
-let s:Vital._get_module = function('s:_get_module')
+let s:Vital._get_module = s:_function('s:_get_module')
 
-function! s:orig_vital() abort
-  if !exists('s:orig_vital')
-    let s:orig_vital = vital#_{s:vital_name}#new_orig()
+function! s:_get_latest_module(name) abort
+ return s:sid2sfuncs(s:_module_sid(a:name))
+endfunction
+
+function! s:_module_sid(name) abort
+  let module_rel_path = 'autoload/vital/__latest__/' . substitute(a:name, '\.', '/', 'g') . '.vim'
+  let module_full_path = s:_unify_path(get(split(globpath(s:_module_sid_base_dir(), module_rel_path, 0), "\n"), 0, ''))
+  if !filereadable(module_full_path)
+    throw 'vital: module not found: ' . a:name
   endif
-  return s:orig_vital
+  let p = substitute(module_rel_path, '/', '[/\\\\]\\+', 'g')
+  let sid = s:_sid(module_full_path, p)
+  if !sid
+    call s:_source(module_full_path)
+    let sid = s:_sid(module_full_path, p)
+    if !sid
+      throw 'vital: cannot get <SID> from path'
+    endif
+  endif
+  return sid
+endfunction
+
+function! s:_module_sid_base_dir() abort
+  return s:is_vital_vim ? &rtp : s:project_root
+endfunction
+
+function! s:_source(path) abort
+  execute 'source' fnameescape(a:path)
+endfunction
+
+function! s:_sid(fullpath, filter_pattern) abort
+  if has_key(s:cache_sid, a:fullpath)
+    return s:cache_sid[a:fullpath]
+  endif
+  for [path, sid] in items(filter(s:_scriptnames(), 'v:key =~# a:filter_pattern'))
+    if s:_unify_path(path) is# a:fullpath
+      let s:cache_sid[a:fullpath] = sid
+      return s:cache_sid[a:fullpath]
+    endif
+  endfor
+  return 0
+endfunction
+
+" @vimlint(EVL102, 1, l:_)
+" @vimlint(EVL102, 1, l:__)
+" @return {path: sid}
+function! s:_scriptnames() abort
+  let sdict = {}
+  for line in split(s:_redir(':scriptnames'), "\n")
+    let [_, sid, path; __] = matchlist(line, '^\s*\(\d\+\):\s\+\(.\+\)\s*$')
+    let sdict[path] = sid
+  endfor
+  return sdict
+endfunction
+
+function! s:_redir(cmd) abort
+  let [save_verbose, save_verbosefile] = [&verbose, &verbosefile]
+  set verbose=0 verbosefile=
+  redir => res
+    silent! execute a:cmd
+  redir END
+  let [&verbose, &verbosefile] = [save_verbose, save_verbosefile]
+  return res
+endfunction
+
+if filereadable(expand('<sfile>:r') . '.VIM')
+  let s:_unify_path_cache = {}
+  " resolve() is slow, so we cache results.
+  " Note: On windows, vim can't expand path names from 8.3 formats.
+  " So if getting full path via <sfile> and $HOME was set as 8.3 format,
+  " vital load duplicated scripts. Below's :~ avoid this issue.
+  function! s:_unify_path(path) abort
+    if has_key(s:_unify_path_cache, a:path)
+      return s:_unify_path_cache[a:path]
+    endif
+    let value = tolower(fnamemodify(resolve(fnamemodify(
+    \                   a:path, ':p')), ':~:gs?[\\/]?/?'))
+    let s:_unify_path_cache[a:path] = value
+    return value
+  endfunction
+else
+  function! s:_unify_path(path) abort
+    return resolve(fnamemodify(a:path, ':p:gs?[\\/]?/?'))
+  endfunction
+endif
+
+" copied and modified from Vim.ScriptLocal
+let s:SNR = join(map(range(len("\<SNR>")), '"[\\x" . printf("%0x", char2nr("\<SNR>"[v:val])) . "]"'), '')
+function! s:sid2sfuncs(sid) abort
+  let fs = split(s:_redir(printf(':function /^%s%s_', s:SNR, a:sid)), "\n")
+  let r = {}
+  let pattern = printf('\m^function\s<SNR>%d_\zs\w\{-}\ze(', a:sid)
+  for fname in map(fs, 'matchstr(v:val, pattern)')
+    let r[fname] = function(s:_sfuncname(a:sid, fname))
+  endfor
+  return r
+endfunction
+
+"" Return funcname of script local functions with SID
+function! s:_sfuncname(sid, funcname) abort
+  return printf('<SNR>%s_%s', a:sid, a:funcname)
 endfunction
 
 if exists('*uniq')
