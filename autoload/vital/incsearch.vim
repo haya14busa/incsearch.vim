@@ -1,7 +1,6 @@
 let s:plugin_name = expand('<sfile>:t:r')
 let s:vital_base_dir = expand('<sfile>:h')
 let s:project_root = expand('<sfile>:h:h:h')
-let s:has_latest_module = isdirectory(expand('<sfile>:h') . '/__latest__')
 let s:is_vital_vim = s:plugin_name is# '_latest__'
 
 let s:loaded = {}
@@ -98,6 +97,7 @@ let s:Vital.load = s:_function('s:load')
 
 function! s:unload() abort dict
   let s:loaded = {}
+  let s:cache_sid = {}
   unlet! s:vital_files
 endfunction
 let s:Vital.unload = s:_function('s:unload')
@@ -126,12 +126,14 @@ endfunction
 let s:Vital.search = s:_function('s:search')
 
 function! s:_self_vital_files() abort
-  let base = s:vital_base_dir . '/*/**/*.vim'
-  return split(glob(base, 1), "\n")
+  let builtin = printf('%s/__%s__/', s:vital_base_dir, s:plugin_name)
+  let installed = printf('%s/_%s/', s:vital_base_dir, s:plugin_name)
+  let base = builtin . ',' . installed
+  return split(globpath(base, '**/*.vim', 1), "\n")
 endfunction
 
 function! s:_global_vital_files() abort
-  let pattern = 'autoload/vital/__latest__/**/*.vim'
+  let pattern = 'autoload/vital/__*__/**/*.vim'
   return split(globpath(&runtimepath, pattern, 1), "\n")
 endfunction
 
@@ -179,31 +181,31 @@ function! s:_get_module(name) abort dict
   try
     let module = vital#_{self.plugin_name}#{substitute(a:name, '\.', '#', 'g')}#import()
   catch /E117: Unknown function:/
-    if !s:has_latest_module
-      throw 'vital: module not found: ' . a:name
-    endif
     " Retry to support loading self modules.
-    let module = s:_get_latest_module(a:name)
+    let module = s:_get_builtin_module(a:name)
   endtry
   return module
 endfunction
 let s:Vital._get_module = s:_function('s:_get_module')
 
-function! s:_get_latest_module(name) abort
+function! s:_get_builtin_module(name) abort
  return s:sid2sfuncs(s:_module_sid(a:name))
 endfunction
 
+let s:vital_builtin_dir = printf('autoload/vital/__%s__/', s:is_vital_vim ? '*' : s:plugin_name)
+
 function! s:_module_sid(name) abort
-  let module_rel_path = 'autoload/vital/__latest__/' . substitute(a:name, '\.', '/', 'g') . '.vim'
-  let module_full_path = s:_unify_path(get(split(globpath(s:_module_sid_base_dir(), module_rel_path, 0), "\n"), 0, ''))
-  if !filereadable(module_full_path)
+  let module_path = substitute(a:name, '\.', '/', 'g') . '.vim'
+  let module_rel_path = s:vital_builtin_dir . module_path
+  let path = get(split(globpath(s:_module_sid_base_dir(), module_rel_path, 1), "\n"), 0, '')
+  if !filereadable(path)
     throw 'vital: module not found: ' . a:name
   endif
-  let p = substitute(module_rel_path, '/', '[/\\\\]\\+', 'g')
-  let sid = s:_sid(module_full_path, p)
+  let p = substitute('autoload/vital/__\w\+__/' . module_path, '/', '[/\\\\]\\+', 'g')
+  let sid = s:_sid(path, p)
   if !sid
-    call s:_source(module_full_path)
-    let sid = s:_sid(module_full_path, p)
+    call s:_source(path)
+    let sid = s:_sid(path, p)
     if !sid
       throw 'vital: cannot get <SID> from path'
     endif
@@ -219,29 +221,21 @@ function! s:_source(path) abort
   execute 'source' fnameescape(a:path)
 endfunction
 
-function! s:_sid(fullpath, filter_pattern) abort
-  if has_key(s:cache_sid, a:fullpath)
-    return s:cache_sid[a:fullpath]
+" @vimlint(EVL102, 1, l:_)
+" @vimlint(EVL102, 1, l:__)
+function! s:_sid(path, filter_pattern) abort
+  let unified_path = s:_unify_path(a:path)
+  if has_key(s:cache_sid, unified_path)
+    return s:cache_sid[unified_path]
   endif
-  for [path, sid] in items(filter(s:_scriptnames(), 'v:key =~# a:filter_pattern'))
-    if s:_unify_path(path) is# a:fullpath
-      let s:cache_sid[a:fullpath] = sid
-      return s:cache_sid[a:fullpath]
+  for line in filter(split(s:_redir(':scriptnames'), "\n"), 'v:val =~# a:filter_pattern')
+    let [_, sid, path; __] = matchlist(line, '^\s*\(\d\+\):\s\+\(.\+\)\s*$')
+    if s:_unify_path(path) is# unified_path
+      let s:cache_sid[unified_path] = sid
+      return s:cache_sid[unified_path]
     endif
   endfor
   return 0
-endfunction
-
-" @vimlint(EVL102, 1, l:_)
-" @vimlint(EVL102, 1, l:__)
-" @return {path: sid}
-function! s:_scriptnames() abort
-  let sdict = {}
-  for line in split(s:_redir(':scriptnames'), "\n")
-    let [_, sid, path; __] = matchlist(line, '^\s*\(\d\+\):\s\+\(.\+\)\s*$')
-    let sdict[path] = sid
-  endfor
-  return sdict
 endfunction
 
 function! s:_redir(cmd) abort
@@ -254,7 +248,7 @@ function! s:_redir(cmd) abort
   return res
 endfunction
 
-if filereadable(expand('<sfile>:r') . '.VIM')
+if filereadable(expand('<sfile>:r') . '.VIM') " is case-insensitive or not
   let s:_unify_path_cache = {}
   " resolve() is slow, so we cache results.
   " Note: On windows, vim can't expand path names from 8.3 formats.

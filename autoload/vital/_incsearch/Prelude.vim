@@ -248,6 +248,10 @@ function! s:escape_file_searching(buffer_name) abort
 endfunction
 
 function! s:escape_pattern(str) abort
+  call s:_warn_deprecated(
+        \ 'escape_pattern',
+        \ 'Data.String.escape_pattern',
+        \)
   return escape(a:str, '~"\.^$[]*')
 endfunction
 
