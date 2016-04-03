@@ -9,8 +9,6 @@ set cpo&vim
 
 let s:DIRECTION = { 'forward': 1, 'backward': 0 } " see :h v:searchforward
 
-let s:V = incsearch#vital()
-
 function! incsearch#cli#get() abort
   try
     " It returns current cli object
@@ -56,8 +54,8 @@ function! incsearch#cli#set(cli, config) abort
   return a:cli
 endfunction
 
-let s:cli = s:V.import('Over.Commandline').make_default('/')
-let s:modules = s:V.import('Over.Commandline.Modules')
+let s:cli = vital#incsearch#import('Over.Commandline').make_default('/')
+let s:modules = vital#incsearch#import('Over.Commandline.Modules')
 
 " Add modules
 call s:cli.connect('BufferComplete')

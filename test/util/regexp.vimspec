@@ -1,6 +1,6 @@
 Describe util.regexp
   Before all
-    let SL = vital#of('vital').import('Vim.ScriptLocal')
+    let SL = vital#vital#import('Vim.ScriptLocal')
     let U = SL.sfuncs('autoload/incsearch/util.vim')
   End
 
