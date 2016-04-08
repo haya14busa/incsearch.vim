@@ -180,8 +180,14 @@ function! s:funcmanage() abort
   return s:funcmanage
 endfunction
 
+let s:dictfuncname_i = 0
+function! s:dictfuncname() abort
+  let s:dictfuncname_i += 1
+  return 'dictfunc_' . s:dictfuncname_i
+endfunction
+
 function! s:dictfunction(dictfunc, dict) abort
-  let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
+  let funcname = s:dictfuncname()
   let s:funcmanage[funcname] = {
   \   'func': a:dictfunc,
   \   'dict': a:dict
