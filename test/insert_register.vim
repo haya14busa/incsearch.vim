@@ -92,8 +92,6 @@ endfunction
 
 function! s:suite.search()
   let @/ = 'emacs'
-  " Throws /Vim(normal):E486: Pattern not found: vimpattern_vim_2/
-  " \   :exec "normal" "/vim\<C-r>/\<CR>"
   exec "normal" "/\<C-r>/ vim3/e\<CR>"
   call s:assert.equals(s:get_pos_char(), 3)
 endfunction
