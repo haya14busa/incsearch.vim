@@ -46,6 +46,7 @@ function! s:suite.after()
   unmap g/
   :1,$ delete
   set incsearch&
+  let @/ = ''
 endfunction
 
 
@@ -88,3 +89,10 @@ function! s:suite.cWord()
   call s:assert.equals(getline('.'), s:line_texts[5])
   call s:assert.equals(@/, 's:4pattern4')
 endfunction
+
+function! s:suite.search()
+  let @/ = 'emacs'
+  exec "normal" "/\<C-r>/ vim3/e\<CR>"
+  call s:assert.equals(s:get_pos_char(), 3)
+endfunction
+
