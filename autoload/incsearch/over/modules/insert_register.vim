@@ -10,7 +10,7 @@ set cpo&vim
 let s:modules = vital#incsearch#import('Over.Commandline.Modules')
 
 let s:InsertRegister = s:modules.get('InsertRegister').make()
-let s:InsertRegister_orig_on_char_pre = function(s:InsertRegister.on_char_pre)
+let s:InsertRegister_orig_on_char_pre = s:InsertRegister.on_char_pre
 let s:InsertRegister.search_register = ''
 
 function! s:InsertRegister.on_enter(cmdline) abort
