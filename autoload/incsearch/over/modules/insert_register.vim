@@ -13,12 +13,12 @@ let s:InsertRegister = s:modules.get('InsertRegister').make()
 let s:InsertRegister_orig_on_char_pre = s:InsertRegister.on_char_pre
 let s:InsertRegister.search_register = ''
 
-function! s:InsertRegister.on_enter(cmdline) abort
+function! s:InsertRegister.on_enter(...) abort
   let self.search_register = @/
 endfunction
 
 function! s:InsertRegister.on_char_pre(cmdline) abort
-  if exists("self.prefix_key") && a:cmdline.get_tap_key() == self.prefix_key
+  if exists('self.prefix_key') && a:cmdline.get_tap_key() == self.prefix_key
     call a:cmdline.setline(self.old_line)
     call a:cmdline.setpos(self.old_pos)
     let char = a:cmdline.input_key()
