@@ -181,7 +181,7 @@ function! s:funcmanage() abort
 endfunction
 
 function! s:dictfunction(dictfunc, dict) abort
-  let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
+  silent! let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
   let s:funcmanage[funcname] = {
   \   'func': a:dictfunc,
   \   'dict': a:dict
