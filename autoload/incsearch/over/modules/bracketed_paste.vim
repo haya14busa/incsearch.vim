@@ -15,11 +15,17 @@ let s:bracketed_paste =  {
 \}
 
 function! s:bracketed_paste.on_enter(cmdline) abort
+  if !exists('&t_BE')
+    return
+  endif
   let self.t_BE = &t_BE
   set t_BE=
 endfunction
 
 function! s:bracketed_paste.on_leave(cmdline) abort
+  if !exists('&t_BE')
+    return
+  endif
   let &t_BE = self.t_BE
 endfunction
 
