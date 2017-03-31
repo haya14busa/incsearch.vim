@@ -94,6 +94,7 @@ unlet s:KeyMapping s:emacs_like s:vim_cmap s:smartbackword
 
 call s:cli.connect(incsearch#over#modules#pattern_saver#make())
 call s:cli.connect(incsearch#over#modules#bulk_input_char#make())
+call s:cli.connect(incsearch#over#modules#bracketed_paste#make())
 call s:cli.connect(incsearch#over#modules#incsearch#make())
 
 function! s:cli.__keymapping__() abort
