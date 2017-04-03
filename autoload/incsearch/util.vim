@@ -181,7 +181,11 @@ function! s:funcmanage() abort
 endfunction
 
 function! s:dictfunction(dictfunc, dict) abort
-  let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
+  if has('patch-7.4.1842')
+    let funcname = '_' . get(a:dictfunc, 'name')
+  else
+    let funcname = '_' . matchstr(string(a:dictfunc), '\d\+')
+  endif
   let s:funcmanage[funcname] = {
   \   'func': a:dictfunc,
   \   'dict': a:dict
