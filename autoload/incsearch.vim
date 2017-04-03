@@ -91,7 +91,7 @@ let g:incsearch#_go_config = {}
 "   specify config.is_expr, it automatically set config.is_expr TRUE for
 "   operator-pending mode
 " USAGE:
-"   :noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
+"   :noremap <silent><expr> <Plug>(incsearch-/)  incsearch#go({'command': '/'})
 "   " FIXME?: Calling this with feedkeys() is ugly... Reason: incsearch#go()
 "   is optimize the situation which calling from <expr> mappings, and do not
 "   take care from calling directly or some defined command.

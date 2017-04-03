@@ -1,9 +1,10 @@
 let s:suite = themis#suite('default_behaviors')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+map /  <Plug>(incsearch-/)
+map ?  <Plug>(incsearch-?)
+map g/ <Plug>(incsearch-stay-/)
+map g? <Plug>(incsearch-stay-?)
 
 " Helper:
 function! s:add_line(str)
@@ -52,9 +53,10 @@ function! s:reset_buffer()
 endfunction
 
 function! s:suite.before()
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   let s:line_texts = [
   \     'pattern1 pattern2 pattern3'
   \   , 'pattern4 pattern5 pattern6'

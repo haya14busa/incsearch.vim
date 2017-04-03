@@ -39,9 +39,10 @@ set cpo&vim
 " }}}
 
 " <silent>: do not show command in command line
-noremap <silent><expr> <Plug>(incsearch-forward)  incsearch#go({'command': '/'})
-noremap <silent><expr> <Plug>(incsearch-backward) incsearch#go({'command': '?'})
-noremap <silent><expr> <Plug>(incsearch-stay)     incsearch#go({'command': '/', 'is_stay': 1})
+noremap <silent><expr> <Plug>(incsearch-/)      incsearch#go({'command': '/'})
+noremap <silent><expr> <Plug>(incsearch-?)      incsearch#go({'command': '?'})
+noremap <silent><expr> <Plug>(incsearch-stay-/) incsearch#go({'command': '/', 'is_stay': 1})
+noremap <silent><expr> <Plug>(incsearch-stay-?) incsearch#go({'command': '?', 'is_stay': 1})
 
 " Apply automatic :h :nohlsearch with :h :autocmd
 " NOTE:

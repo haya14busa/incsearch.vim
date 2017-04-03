@@ -1,9 +1,10 @@
 let s:suite = themis#suite('operator_pending_behavior')
 let s:assert = themis#helper('assert')
 
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
+map /  <Plug>(incsearch-/)
+map ?  <Plug>(incsearch-?)
+map g/ <Plug>(incsearch-stay-/)
+map g? <Plug>(incsearch-stay-?)
 
 " NOTE: Also see repetition.vim spec
 " :h o_v
@@ -36,9 +37,10 @@ function! s:suite.before_each()
 endfunction
 
 function! s:suite.before()
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  map g/ <Plug>(incsearch-stay)
+  map /  <Plug>(incsearch-/)
+  map ?  <Plug>(incsearch-?)
+  map g/ <Plug>(incsearch-stay-/)
+  map g? <Plug>(incsearch-stay-?)
   let s:line_texts = ['1pattern_a', '2pattern_b', '3pattern_c', '4pattern_d', '5pattern_e']
 endfunction
 

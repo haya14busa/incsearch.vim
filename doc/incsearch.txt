@@ -62,20 +62,25 @@ USAGE							*incsearch-usage*
 ------------------------------------------------------------------------------
 Basic usage~
 							*incsearch-basic-usage*
-						*<Plug>(incsearch-forward)*
-						*<Plug>(incsearch-backward)*
-						*<Plug>(incsearch-stay)*
+						*<Plug>(incsearch-/)*
+						*<Plug>(incsearch-?)*
+						*<Plug>(incsearch-stay-/)*
+						*<Plug>(incsearch-stay-?)*
 	Write following lines to your vimrc:
 >
-		map /  <Plug>(incsearch-forward)
-		map ?  <Plug>(incsearch-backward)
-		map g/ <Plug>(incsearch-stay)
+		map /  <Plug>(incsearch-/)
+		map ?  <Plug>(incsearch-?)
+		map g/ <Plug>(incsearch-stay-/)
+		map g? <Plug>(incsearch-stay-?)
 <
-    <Plug>(incsearch-forward):   Incremental searching forward
-    <Plug>(incsearch-backward):  Incremental searching backward
-    <Plug>(incsearch-stay):      It doesn't move the cursor unless you
-                                 explicitly use cursor move commands during
-                                 incremental search.
+    <Plug>(incsearch-/):           Incremental searching forward
+    <Plug>(incsearch-?):           Incremental searching backward
+    <Plug>(incsearch-stay-/):      It doesn't move the cursor unless you
+                                   explicitly use cursor move commands during
+                                   incremental search forward.
+    <Plug>(incsearch-stay-?):      It doesn't move the cursor unless you
+                                   explicitly use cursor move commands during
+                                   incremental search backward.
 
 ------------------------------------------------------------------------------
 Additional usage~
