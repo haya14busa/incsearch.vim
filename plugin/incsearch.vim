@@ -71,6 +71,9 @@ noremap        <Plug>(_incsearch-#)  #
 noremap        <Plug>(_incsearch-g*) g*
 noremap        <Plug>(_incsearch-g#) g#
 
+" For incsearch after visual selection
+vnoremap / y/<C-R>"<CR>
+
 " CommandLine Mapping {{{
 let g:incsearch_cli_key_mappings = get(g:, 'incsearch_cli_key_mappings', {})
 
