@@ -38,8 +38,7 @@ let s:U = incsearch#util#import()
 
 " Management:
 
-let s:V = vital#incsearch#of()
-let s:hi = s:V.import('Coaster.Highlight').make()
+let s:hi = vital#incsearch#import('Coaster.Highlight').make()
 let g:incsearch#highlight#_hi = s:hi
 
 function! incsearch#highlight#update() abort
