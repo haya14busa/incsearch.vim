@@ -103,7 +103,7 @@ endfunction
 
 function! s:suite.forward_pattern()
   let U = incsearch#util#import()
-  let L = vital#incsearch#of().import('Data.List')
+  let L = vital#incsearch#new().import('Data.List')
   let from = [3,3]
   let pat = incsearch#highlight#forward_pattern('pattern', from)
   :1
@@ -124,7 +124,7 @@ endfunction
 
 function! s:suite.backward_pattern()
   let U = incsearch#util#import()
-  let L = vital#incsearch#of().import('Data.List')
+  let L = vital#incsearch#new().import('Data.List')
   let from = [3,3]
   let pat = incsearch#highlight#backward_pattern('pattern', from)
   :$
