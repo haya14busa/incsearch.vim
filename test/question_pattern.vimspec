@@ -20,7 +20,7 @@ Describe question_pattern
 
   Before all
     let V = vital#of('vital')
-    let PowerAssert = V.import('Vim.PowerAssert')
+    let PowerAssert = powerassert#import()
     execute PowerAssert.define('PowerAssert')
     let s:assert = PowerAssert.assert
 

@@ -13,8 +13,6 @@ install:
   - git clone https://github.com/syngan/vim-vimlint --depth 1 /tmp/vim-vimlint
   - git clone https://github.com/ynkdir/vim-vimlparser --depth 1 /tmp/vim-vimlparser
   - git clone https://github.com/vim-jp/vital.vim --depth 1 /tmp/vital.vim
-  - git clone https://github.com/haya14busa/vital-vimlcompiler --depth 1 /tmp/vital-vimlcompiler
-  - git clone https://github.com/haya14busa/vital-safe-string --depth 1 /tmp/vital-safe-string
   - git clone https://github.com/haya14busa/vital-power-assert --depth 1 /tmp/vital-power-assert
 
 before_script:
