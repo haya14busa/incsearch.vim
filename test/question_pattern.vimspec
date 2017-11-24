@@ -19,7 +19,6 @@ Describe question_pattern
   endfunction
 
   Before all
-    let V = vital#of('vital')
     let PowerAssert = powerassert#import()
     execute PowerAssert.define('PowerAssert')
     let s:assert = PowerAssert.assert
