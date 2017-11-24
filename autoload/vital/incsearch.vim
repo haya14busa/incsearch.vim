@@ -21,7 +21,7 @@ else
   endfunction
 endif
 
-function! vital#{s:plugin_name}#of() abort
+function! vital#{s:plugin_name}#new() abort
   return s:new(s:plugin_name)
 endfunction
 
@@ -170,7 +170,7 @@ function! s:_import(name) abort dict
   let s:loaded[a:name] = export_module
   if has_key(module, '_vital_loaded')
     try
-      call module._vital_loaded(vital#{s:plugin_name}#of())
+      call module._vital_loaded(vital#{s:plugin_name}#new())
     catch
       unlet s:loaded[a:name]
       throw 'vital: fail to call ._vital_loaded(): ' . v:exception
@@ -183,11 +183,11 @@ let s:Vital._import = s:_function('s:_import')
 " s:_get_module() returns module object wihch has all script local functions.
 function! s:_get_module(name) abort dict
   let funcname = s:_import_func_name(self.plugin_name(), a:name)
-  if s:_exists_autoload_func_with_source(funcname)
+  try
     return call(funcname, [])
-  else
+  catch /^Vim\%((\a\+)\)\?:E117/
     return s:_get_builtin_module(a:name)
-  endif
+  endtry
 endfunction
 
 function! s:_get_builtin_module(name) abort
@@ -236,22 +236,6 @@ function! s:_dot_to_sharp(name) abort
   return substitute(a:name, '\.', '#', 'g')
 endfunction
 
-" It will sources autoload file if a given func is not already defined.
-function! s:_exists_autoload_func_with_source(funcname) abort
-  if exists('*' . a:funcname)
-    " Return true if a given func is already defined
-    return 1
-  endif
-  " source a file which may include a given func definition and try again.
-  let path = 'autoload/' . substitute(substitute(a:funcname, '#[^#]*$', '.vim', ''), '#', '/', 'g')
-  call s:_runtime(path)
-  return exists('*' . a:funcname)
-endfunction
-
-function! s:_runtime(path) abort
-  execute 'runtime' fnameescape(a:path)
-endfunction
-
 function! s:_source(path) abort
   execute 'source' fnameescape(a:path)
 endfunction
@@ -263,7 +247,7 @@ function! s:_sid(path, filter_pattern) abort
   if has_key(s:cache_sid, unified_path)
     return s:cache_sid[unified_path]
   endif
-  for line in filter(split(s:_redir(':scriptnames'), "\n"), 'v:val =~# a:filter_pattern')
+  for line in filter(split(s:_execute(':scriptnames'), "\n"), 'v:val =~# a:filter_pattern')
     let [_, sid, path; __] = matchlist(line, '^\s*\(\d\+\):\s\+\(.\+\)\s*$')
     if s:_unify_path(path) is# unified_path
       let s:cache_sid[unified_path] = sid
@@ -273,15 +257,20 @@ function! s:_sid(path, filter_pattern) abort
   return 0
 endfunction
 
-function! s:_redir(cmd) abort
-  let [save_verbose, save_verbosefile] = [&verbose, &verbosefile]
-  set verbose=0 verbosefile=
-  redir => res
-    silent! execute a:cmd
-  redir END
-  let [&verbose, &verbosefile] = [save_verbose, save_verbosefile]
-  return res
-endfunction
+" A bug of execute() is fixed in Vim 8.0.0264
+if has('patch-8.0.0264')
+  let s:_execute = function('execute')
+else
+  function! s:_execute(cmd) abort
+    let [save_verbose, save_verbosefile] = [&verbose, &verbosefile]
+    set verbose=0 verbosefile=
+    redir => res
+      silent! execute a:cmd
+    redir END
+    let [&verbose, &verbosefile] = [save_verbose, save_verbosefile]
+    return res
+  endfunction
+endif
 
 if filereadable(expand('<sfile>:r') . '.VIM') " is case-insensitive or not
   let s:_unify_path_cache = {}
@@ -307,7 +296,7 @@ endif
 " copied and modified from Vim.ScriptLocal
 let s:SNR = join(map(range(len("\<SNR>")), '"[\\x" . printf("%0x", char2nr("\<SNR>"[v:val])) . "]"'), '')
 function! s:sid2sfuncs(sid) abort
-  let fs = split(s:_redir(printf(':function /^%s%s_', s:SNR, a:sid)), "\n")
+  let fs = split(s:_execute(printf(':function /^%s%s_', s:SNR, a:sid)), "\n")
   let r = {}
   let pattern = printf('\m^function\s<SNR>%d_\zs\w\{-}\ze(', a:sid)
   for fname in map(fs, 'matchstr(v:val, pattern)')
