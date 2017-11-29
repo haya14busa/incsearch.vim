@@ -1,13 +1,23 @@
 language: generic
 
-env:
-  - PPA=yes
-  - PPA=no
+matrix:
+  include:
+    - os: linux
+      env: VIM_VERSION=v7.4
+    - os: linux
+      env: VIM_VERSION=v8.0.0000
+    - os: linux
+      env: VIM_VERSION=master
+    - os: osx
+
+addons:
+  apt:
+    packages:
+      - vim
 
 install:
-  - if [ x"$PPA" == "xyes" ] ; then sudo add-apt-repository ppa:pi-rho/dev -y; fi
-  - sudo apt-get update -q
-  - sudo apt-get install vim-nox
+  - bash scripts/install-vim.sh
+  - export PATH=$HOME/vim/bin:$PATH
   - sudo pip install vim-vint
   - git clone https://github.com/thinca/vim-themis --branch v1.5 --single-branch --depth 1 /tmp/vim-themis
   - git clone https://github.com/syngan/vim-vimlint --depth 1 /tmp/vim-vimlint
