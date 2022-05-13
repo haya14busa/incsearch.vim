@@ -5,6 +5,7 @@
 > See:
 > - https://medium.com/@haya14busa/incsearch-vim-is-dead-long-live-incsearch-2b7070d55250
 > - https://github.com/vim/vim/pull/2198
+> - Successor plugin: https://github.com/haya14busa/is.vim
 
 
 ![incsearch.vim](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incsearch_logo.png)
