@@ -1,3 +1,12 @@
+
+> ⚠️ **Deprecated**
+> This plugin is no longer necessary since the main functionality is now built into vim/neovim
+>
+> See:
+> - https://medium.com/@haya14busa/incsearch-vim-is-dead-long-live-incsearch-2b7070d55250
+> - https://github.com/vim/vim/pull/2198
+
+
 ![incsearch.vim](https://raw.githubusercontent.com/haya14busa/i/master/incsearch.vim/incsearch_logo.png)
 
 [![Build Status](https://travis-ci.org/haya14busa/incsearch.vim.svg?branch=master)](https://travis-ci.org/haya14busa/incsearch.vim)
